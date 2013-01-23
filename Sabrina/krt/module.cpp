@@ -212,8 +212,6 @@ void ModuleLoader::loadStringTable()
 
 	for (unsigned int i = 0; i < rowCount; ++i)
 	{
-		//uint32_t length = *(uint32_t *)(stream + pos);
-		//pos += sizeof(uint32_t);
 		_VREAD(length, uint32_t);
 
 		unsigned char *row = new unsigned char[length];
@@ -247,7 +245,9 @@ void ModuleLoader::loadTypeTable()
 		_READ(row.dim, uint16_t);
 
 		if (row.tag & K_UDT)
+		{
 			_READ(row.token, uint16_t);
+		}
 	}
 
 	this->typeTable.rowCount = (uint32_t)rowCount;
