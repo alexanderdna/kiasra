@@ -30,115 +30,51 @@ enum TypeTag : uint16_t
 	K_PRIMITIVE = K_BOOL | K_INT | K_FLOAT | K_STRING,
 	K_VALUE     = K_BOOL | K_INT | K_FLOAT,
 	K_REFERENCE = K_STRING | K_CLASS | K_DELEGATE,
+	K_UDT       = K_CLASS | K_DELEGATE,
 };
 
 // module attributes
-typedef int kmoduleattr_t;
-#define KMODA_SYS  0x01
-#define KMODA_USER 0x02
-#define KMODA_DLL  0x04
-#define KMODA_KASM 0x08
+enum ModuleAttribute
+{
+	KMODA_SYS  = 0x01,
+	KMODA_USER = 0x02,
+	KMODA_DLL  = 0x04,
+	KMODA_KASM = 0x08,
+};
 
 // class attributes
-typedef int kclassattr_t;
-#define KCA_PUBLIC  0x00
-#define KCA_PRIVATE 0x01
-#define KCA_STATIC  0x02
+enum ClassAttribute
+{
+	KCA_PUBLIC  = 0x00,
+	KCA_PRIVATE = 0x01,
+	KCA_STATIC  = 0x02,
+};
 
 // field attributes
-typedef int kfieldattr_t;
-#define KFA_PUBLIC  0x00
-#define KFA_PRIVATE 0x01
-#define KFA_STATIC  0x02
-#define KFA_FINAL   0x04
+enum FieldAttribute
+{
+	KFA_PUBLIC  = 0x00,
+	KFA_PRIVATE = 0x01,
+	KFA_STATIC  = 0x02,
+	KFA_FINAL   = 0x04,
+};
 
 // method attributes
-typedef int kmethodattr_t;
-#define KMA_PUBLIC  0x00
-#define KMA_PRIVATE 0x01
-#define KMA_STATIC  0x02
-#define KMA_CTOR    0x04
-#define KMA_NATIVE  0x0100
-#define KMA_SPECIAL 0x1000
-
-//===================================================================
-// Runtime metadata
-//===================================================================
-
-struct ModuleDef;
-struct ClassDef;
-struct DelegateDef;
-struct FieldDef;
-struct MethodDef;
-struct ParamDef;
-
-struct TypeDef
+enum MethodAttribute
 {
-	TypeTag tag;
-	uint16_t dim;	// dimensions count
-	union
-	{
-		const ClassDef *classDef;
-		const DelegateDef *delegateDef;
-	};
-};
-
-struct ModuleDef
-{
-	kmoduleattr_t attrs;
-	ClassDef *classes;
-	DelegateDef *delegates;
-};
-
-struct ClassDef
-{
-	kcstring_t name;
-	kclassattr_t attrs;
-
-	FieldDef *fields;
-	MethodDef *methods;
-
-	MethodDef *ctor;
-	MethodDef *cctor;
-};
-
-struct DelegateDef
-{
-	kcstring_t name;
-	kclassattr_t attrs;
-
-	TypeDef *returnType;
-	ParamDef *params;
-};
-
-struct FieldDef
-{
-	kcstring_t name;
-	kfieldattr_t attrs;
-
-	TypeDef *declType;
-};
-
-struct MethodDef
-{
-	kcstring_t name;
-	kmethodattr_t attrs;
-
-	TypeDef *returnType;
-	ParamDef *params;
-};
-
-struct ParamDef
-{
-	kcstring_t name;
-	TypeDef *declType;
-	bool byRef;
+	KMA_PUBLIC  = 0x00,
+	KMA_PRIVATE = 0x01,
+	KMA_STATIC  = 0x02,
+	KMA_CTOR    = 0x04,
+	KMA_NATIVE  = 0x0100,
+	KMA_SPECIAL = 0x1000,
 };
 
 //===================================================================
-// Compile time metadata
+// Metadata
 //===================================================================
 
+struct MetaModuleDef;
 struct MetaTypeDef;
 struct MetaClassDef;
 struct MetaDelegateDef;
@@ -146,61 +82,123 @@ struct MetaFieldDef;
 struct MetaMethodDef;
 struct MetaParamDef;
 
+struct MetaModuleDef
+{
+	kcstring_t path;
+	uint32_t hash;
+
+	ktoken_t globalIndex;
+
+	MetaModuleDef() : path(NULL), hash(0), globalIndex(0) { }
+
+	MetaModuleDef(kcstring_t path, uint32_t hash)
+		: path(path), hash(hash), globalIndex(0) { }
+};
+
 struct MetaTypeDef
 {
 	TypeTag tag;
 	uint16_t dim;
 	ktoken_t token;
 
-	TypeDef *rt;
+	ktoken_t globalToken;
+
+	MetaTypeDef() : tag(K_VOID), dim(0), token(0) { }
+
+	MetaTypeDef(TypeTag tag)
+		: tag(tag), dim(0), token(0) { }
+
+	MetaTypeDef(TypeTag tag, uint16_t dim)
+		: tag(tag), dim(dim), token(0) { }
+
+	MetaTypeDef(TypeTag tag, ktoken_t token)
+		: tag(tag), dim(0), token(token) { }
+
+	MetaTypeDef(TypeTag tag, uint16_t dim, ktoken_t token)
+		: tag(tag), dim(dim), token(token) { }
 };
 
 struct MetaClassDef
 {
 	kcstring_t name;
-	kclassattr_t attrs;
+	ClassAttribute attrs;
 
 	ktoken_t firstField;
-	uint16_t fieldCount;
+	ktoken_t firstMethod;
 
-	ktoken_t fieldMethod;
-	uint16_t methodCount;
+	ktoken_t moduleIndex;
+	ktoken_t farIndex;
 
-	ClassDef *rt;
+	ktoken_t globalToken;
+
+	MetaClassDef() : name(NULL), attrs(KCA_PUBLIC), firstField(0), firstMethod(0),
+		moduleIndex(0), farIndex(0), globalToken(0) { }
+
+	MetaClassDef(uint16_t attrs, kcstring_t name, ktoken_t firstField, ktoken_t firstMethod)
+		: attrs((ClassAttribute)attrs), name(name), firstField(firstField), firstMethod(firstMethod),
+		moduleIndex(0), farIndex(0), globalToken(0) { }
+
+	MetaClassDef(uint16_t attrs, kcstring_t name, ktoken_t moduleIndex, ktoken_t farIndex, int farDummy)
+		: attrs((ClassAttribute)attrs), name(name), moduleIndex(moduleIndex), farIndex(farIndex),
+		firstField(0), firstMethod(0), globalToken(0) { }
 };
 
 struct MetaDelegateDef
 {
 	kcstring_t name;
-	kclassattr_t attrs;
+	ClassAttribute attrs;
 
 	ktoken_t returnType;
 	ktoken_t firstParam;
-	uint16_t paramCount;
 
-	DelegateDef *rt;
+	ktoken_t moduleIndex;
+	ktoken_t farIndex;
+
+	ktoken_t globalToken;
+
+	MetaDelegateDef() : name(NULL), attrs(KCA_PUBLIC), returnType(0), firstParam(0),
+		moduleIndex(0), farIndex(0), globalToken(0) { }
+
+	MetaDelegateDef(uint16_t attrs, kcstring_t name, ktoken_t returnType, ktoken_t firstParam)
+		: attrs((ClassAttribute)attrs), name(name), returnType(returnType), firstParam(firstParam),
+		moduleIndex(0), farIndex(0), globalToken(0) { }
+
+	MetaDelegateDef(uint16_t attrs, kcstring_t name, ktoken_t moduleIndex, ktoken_t farIndex, int farDummy)
+		: attrs((ClassAttribute)attrs), name(name), moduleIndex(moduleIndex), farIndex(farIndex),
+		returnType(0), firstParam(0), globalToken(0) { }
 };
 
 struct MetaFieldDef
 {
 	kcstring_t name;
-	kfieldattr_t attrs;
+	FieldAttribute attrs;
 
 	ktoken_t declType;
 
-	FieldDef *rt;
+	ktoken_t localToken;
+
+	MetaFieldDef() : name(NULL), attrs(KFA_PUBLIC), declType(0), localToken(0) { }
+
+	MetaFieldDef(uint16_t attrs, kcstring_t name, ktoken_t declType)
+		: attrs((FieldAttribute)attrs), name(name), declType(declType),
+		localToken(0) { }
 };
 
 struct MetaMethodDef
 {
 	kcstring_t name;
-	kmethodattr_t attrs;
+	MethodAttribute attrs;
 
 	ktoken_t returnType;
 	ktoken_t firstParam;
-	uint16_t paramCount;
 
-	MethodDef *rt;
+	ktoken_t localToken;
+
+	MetaMethodDef() : name(NULL), attrs(KMA_PUBLIC), returnType(0), firstParam(0), localToken(0) { }
+
+	MetaMethodDef(uint16_t attrs, kcstring_t name, ktoken_t returnType, ktoken_t firstParam)
+		: attrs((MethodAttribute)attrs), name(name), returnType(returnType), firstParam(firstParam),
+		localToken(0) { }
 };
 
 struct MetaParamDef
@@ -209,7 +207,13 @@ struct MetaParamDef
 	ktoken_t declType;
 	bool byRef;
 
-	ParamDef *rt;
+	ktoken_t localToken;
+
+	MetaParamDef() : name(NULL), declType(0), byRef(false) { }
+
+	MetaParamDef(bool byRef, kcstring_t name, ktoken_t declType)
+		: byRef(byRef), name(name), declType(declType),
+		localToken(0) { }
 };
 
 //===================================================================
@@ -322,7 +326,6 @@ public:
 
 	virtual void loadNewObject(const ktoken_t classToken) =0;
 	virtual void loadNewDelegate(const ktoken_t delegateTypeToken) =0;
-	virtual void loadNewArray(const TypeDef &arrType) =0;
 	virtual void loadNewArray(const ktoken_t arrTypeToken) =0;
 
 	virtual void loadNull() =0;
@@ -353,5 +356,5 @@ public:
 	virtual void invokeObject() =0; //for delegate instance
 	
 	// allocates and initializes local variable
-	virtual void allocLocals(const TypeDef *localTypes) =0;
+	virtual void allocLocals(const ktoken_t *localTypes) =0;
 };
