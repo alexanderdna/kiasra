@@ -49,7 +49,43 @@ private:
 		MetaClassDef *rows;
 	} classTable;
 
-	// TO-DO: add other tables
+	struct
+	{
+		uint16_t rowCount;
+		MetaDelegateDef *rows;
+	} delegateTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaFieldDef *rows;
+	} fieldTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaMethodDef *rows;
+	} methodTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaParamDef *rows;
+	} paramTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaParamDef *rows;
+	} dparamTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		ktypetoken_t *rows;
+	} localTable;
+
+	unsigned char *code;
 
 	ModuleType moduleType;
 	bool hasDebugInfo;
@@ -61,6 +97,7 @@ private:
 
 	unsigned char *stream;
 	uint32_t pos;
+	uint32_t streamLength;
 	bool isCleaned;
 
 public:
@@ -68,7 +105,7 @@ public:
 	~ModuleLoader();
 
 public:
-	bool load(unsigned char *stream);
+	bool load(unsigned char *stream, uint32_t streamLength);
 	void clean();
 
 private:
@@ -77,4 +114,11 @@ private:
 	void loadTypeTable();
 	void loadModuleTable();
 	void loadClassTable();
+	void loadDelegateTable();
+	void loadFieldTable();
+	void loadMethodTable();
+	void loadParamTable();
+	void loadDelegateParamTable();
+	void loadLocalTable();
+	void loadCode();
 };
