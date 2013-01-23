@@ -15,6 +15,15 @@ typedef       wchar_t *kstring_t;
 typedef const wchar_t *kcstring_t;
 
 typedef uint16_t ktoken_t;
+typedef uint32_t ktypetoken_t;
+
+enum NativeFunctionResult
+{
+	NFR_OK = 0,
+	NFR_ERROR = 1,
+};
+
+typedef NativeFunctionResult (*NativeFunction)();
 
 enum TypeTag : uint16_t
 {
@@ -111,9 +120,6 @@ struct MetaTypeDef
 	MetaTypeDef(TypeTag tag, uint16_t dim)
 		: tag(tag), dim(dim), token(0) { }
 
-	MetaTypeDef(TypeTag tag, ktoken_t token)
-		: tag(tag), dim(0), token(token) { }
-
 	MetaTypeDef(TypeTag tag, uint16_t dim, ktoken_t token)
 		: tag(tag), dim(dim), token(token) { }
 };
@@ -148,7 +154,7 @@ struct MetaDelegateDef
 	kcstring_t name;
 	ClassAttribute attrs;
 
-	ktoken_t returnType;
+	ktypetoken_t returnType;
 	ktoken_t firstParam;
 
 	ktoken_t moduleIndex;
@@ -159,7 +165,7 @@ struct MetaDelegateDef
 	MetaDelegateDef() : name(NULL), attrs(KCA_PUBLIC), returnType(0), firstParam(0),
 		moduleIndex(0), farIndex(0), globalToken(0) { }
 
-	MetaDelegateDef(uint16_t attrs, kcstring_t name, ktoken_t returnType, ktoken_t firstParam)
+	MetaDelegateDef(uint16_t attrs, kcstring_t name, ktypetoken_t returnType, ktoken_t firstParam)
 		: attrs((ClassAttribute)attrs), name(name), returnType(returnType), firstParam(firstParam),
 		moduleIndex(0), farIndex(0), globalToken(0) { }
 
@@ -173,13 +179,13 @@ struct MetaFieldDef
 	kcstring_t name;
 	FieldAttribute attrs;
 
-	ktoken_t declType;
+	ktypetoken_t declType;
 
 	ktoken_t localToken;
 
 	MetaFieldDef() : name(NULL), attrs(KFA_PUBLIC), declType(0), localToken(0) { }
 
-	MetaFieldDef(uint16_t attrs, kcstring_t name, ktoken_t declType)
+	MetaFieldDef(uint16_t attrs, kcstring_t name, ktypetoken_t declType)
 		: attrs((FieldAttribute)attrs), name(name), declType(declType),
 		localToken(0) { }
 };
@@ -189,29 +195,36 @@ struct MetaMethodDef
 	kcstring_t name;
 	MethodAttribute attrs;
 
-	ktoken_t returnType;
+	ktypetoken_t returnType;
 	ktoken_t firstParam;
+	ktoken_t firstLocal;
+
+	union
+	{
+		uint32_t address;
+		NativeFunction nativeFunction;
+	};
 
 	ktoken_t localToken;
 
-	MetaMethodDef() : name(NULL), attrs(KMA_PUBLIC), returnType(0), firstParam(0), localToken(0) { }
+	MetaMethodDef() : name(NULL), attrs(KMA_PUBLIC), returnType(0), firstParam(0), firstLocal(0), address(0), localToken(0) { }
 
-	MetaMethodDef(uint16_t attrs, kcstring_t name, ktoken_t returnType, ktoken_t firstParam)
-		: attrs((MethodAttribute)attrs), name(name), returnType(returnType), firstParam(firstParam),
-		localToken(0) { }
+	MetaMethodDef(uint16_t attrs, kcstring_t name, ktypetoken_t returnType, ktoken_t firstParam, NativeFunction nativeFunction)
+		: attrs((MethodAttribute)attrs), name(name), returnType(returnType), firstParam(firstParam), nativeFunction(nativeFunction),
+		firstLocal(0), localToken(0) { }
 };
 
 struct MetaParamDef
 {
 	kcstring_t name;
-	ktoken_t declType;
+	ktypetoken_t declType;
 	bool byRef;
 
 	ktoken_t localToken;
 
 	MetaParamDef() : name(NULL), declType(0), byRef(false) { }
 
-	MetaParamDef(bool byRef, kcstring_t name, ktoken_t declType)
+	MetaParamDef(bool byRef, kcstring_t name, ktypetoken_t declType)
 		: byRef(byRef), name(name), declType(declType),
 		localToken(0) { }
 };
