@@ -1,0 +1,253 @@
+#labels Featured
+#KLI feature demonstration using the Ciasra programming language.
+
+= Introduction =
+
+The *Kiasra Language Infrastructure* has some common programming features such as static typing (with user-defined types), delegation, encapsulation, modules, native libraries, etc..
+
+In order to make use of KLI's features, _Project Sabrina_ provides two programming languages, called Flora and Ciasra. Ciasra is a C-like programming language. In this wiki page, you can have a look at some tasks that the language and the KLI can perform.
+
+
+= Hello World =
+
+Let us start with a simple program:
+
+<code language="c">
+using System.*;
+
+namespace AnhSoftware.Demo
+{
+	class Program
+	{
+		public static void Main()
+		{
+			Console.WriteLine("Hello World!");
+			Console.ReadLine();
+		}
+	}
+}
+</code>
+
+The first line in the code above is a directive telling the compiler that we are about to use some class(es) in the System namespace.
+
+Next, we declare a namespace called `AnhSoftware.Demo` in which we define our only class `Program`.
+
+The class `Program` has only one method, `Main`, which is also the entry point of our program. It is a compiler rule that a method declared `Main` with the `static` specifier is supposed to be the entry point method.
+
+In our example, we do not need `Main` to return any value, so it is declared `void`. `Main` can also be declared `int`. In addition, it can have one parameter of the type `string[]` (a string array) which is the command arguments passed to the program when it is executed.
+
+We have two function calls in `Main`. The first is a call to `Console.WriteLine` to print the string "Hello World!" onto the screen. And the second is to make the console wait for the user to type Enter before the program terminates.
+
+`Console` is a class defined inside `System`. As we use only this class in our example, we can have the following directive instead of the one used in the code above:
+
+<code language="c">
+using System.Console;
+</code>
+
+= Data types =
+
+The KLI has a static type system. There are 5 kinds of data types:
+ # Primitive types;
+ # Array types;
+ # Class types;
+ # Delegate types;
+ # Object type.
+
+Primitive types are:
+ * *bool*: Boolean values _true_ and _false_.
+ * *int*: 32-bit integers.
+ * *float*: 64-bit floating-point numbers.
+ * *string*: Unicode string, currently implemented using _`wchar_t`_.
+
+Arrays can only be single-dimensional. But the element type can be an array type. Therefore you have arrays of arrays like `int[][]`, `float[][][]`, etc.. The biggest number of dimensions is 65535. Array index starts from 0.
+
+Classes are the first kind of user-defined types. They can have fields and methods which can be declared `static`. Fields can be `final` (read-only after initialization). OOP features are currently not supported, except for a little encapsulation with the `public` and `private` specifiers.
+
+Delegates are the second kind of user-defined types. They are like function pointers in C, yet more type-safe. Unlike .NET delegates, KLI delegates are not classes.
+
+The `object` type is a storage type, meaning it is used to declare storage units, including local variables, function parameters and return value and class fields, which can store values of any types. To use the actual data in an `object` storage unit, one has to cast it to the desired type.
+
+String, array, class and delagate are reference types. This means the default value is `null`. Other types are value types which have their own default values (_false_ for _bool_, _0_ for _int_ and _+0.0_ for _float_).
+
+== Examples ==
+
+=== Primitive and array types ===
+
+The following method demonstrates primitive and array types:
+
+<code language="c">
+void PrimitiveExample()
+{
+	bool b = false;
+	int n = 10;
+	float f = 3.14;
+	string s = "Hello World!";
+
+	Console.WriteLine(n * 4);
+	Console.WriteLine(n << 2);
+
+	b = f > 0;
+	if (b)
+		Console.WriteLine("f is positive.");
+
+	Console.WriteLine(String.sub(s, 5));
+
+	int[] arr = new int[] { 1, 2, 3, 4 };
+	for (int i = 0; i < arr.Length; ++i)
+		Console.WriteFormat("a[%d] = %d\n", new object[] { i, arr[i] });
+}
+</code>
+
+The interesting part in the code above is about how you can get the length of an array. As we know, `arr` is declared as array, not class, so it cannot have a field like `Length`. Therefore `arr.Length` should be illegal.
+
+However, the Ciasra compiler is smart enough to know what we need to evaluate. It will compile the expression `arr.Length` to something like this in bytecode:
+{{{
+	ldloc arr
+	ldlen
+}}}
+
+in which `ldlen` is the bytecode instruction to get the length of an array *or a string*. So yes, since the variable `s` is declared as string, we are allowed to write `s.Length` as the length of the string stored in `s`.
+
+Ciasra provides type inferrence for array types as demonstrated in the following example:
+
+<code language="c">
+int[] a1 = { 3, 4, 5 };
+// instead of new int[] { 3, 4, 5 };
+
+Console.WriteFormat("%d %s %f", { 10, "hi", 3.14 });
+// instead of new object[] { 10, "hi", 3.14 }
+</code>
+
+=== Class types ===
+
+In the following example, we will see the definition of a class:
+
+<code language="c">
+using System.*
+class Person
+{
+	public static final string DefaultName;
+
+	private string name;
+	private Date birthday;
+
+	// the static constructor
+	static()
+	{
+		DefaultName = "John Smith";
+	}
+
+	// the instance constructor
+	public new(string name, Date birthday)
+	{
+		if (name == null)
+			this.name = Person.DefaultName;
+		else
+			this.name = name;
+
+		if (birthday == null)
+			throw Exception.fromCode(Exception.ArgumentNull);
+		else
+			this.birthday = birthday;
+	}
+
+	public string getName()
+	{
+		return name;
+	}
+
+	public int getAge()
+	{
+		return Date.getToday().getYear() - birthday.getYear();
+	}
+
+	public void sayHi()
+	{
+		Console.WriteFormat("Hi, my name is %s and I'm %d years old.",
+			{ this.getName(), this.getAge() });
+	}
+}
+</code>
+
+In the example above, we made use of the Exception class. An exception can be of a common kind such as null argument, invalid argument, invalid operation, etc.. But sometimes it is so specific that it cannot be put in any category. Therefore only one constructor is not sufficient for creating an exception object. The task is provided by the factory methods _fromCode_ and _fromMessage_. _fromCode_ takes an exception code which can be retrieved from a static final field defined in the Exception class. _fromMessage_ takes a string as the exception message, in which case the exception code will be Exception.Custom.
+
+=== Delegate types ===
+
+The following example demonstrates the use of delegates:
+
+<code language="c">
+using System.EventArgs;
+
+delegate void OnWorkListener(object sender, EventArgs e);
+
+class Person
+{
+	public OnWorkListener onWork;
+	private string name;
+
+	public new(string name)
+	{
+		this.name = name;
+	}
+
+	public string getName()
+	{
+		return name;
+	}
+
+	public void DoStuff()
+	{
+		if (onWork != null)
+			onWork(sender, new EventArgs());
+	}
+}
+
+class Program
+{
+	public static void Main()
+	{
+		Person john = new Person("John");
+		Person jane = new Person("Jane");
+
+		// listens for onWork event
+		john.onWork = Person_Work;
+		jane.onWork = delegate void(object sender, EventArgs e)
+		{
+			Console.WriteLine("Listener as anonymous function.");
+		};
+
+		john.DoStuff();
+		// printed: John is now working.
+	}
+
+	private static void Person_Work(object sender, EventArgs e)
+	{
+		Person p = (Person)sender;
+		Console.WriteFormat("%s is now working", { p.getName() });
+	}
+}
+</code>
+
+= Modules and libraries =
+
+A KLI program is stored in a module file. This file can be compiled from one or more source files. A module can also be a library which provides user-defined types but is not executable.
+
+An example of compiling some source files into a module using the Ciasra compiler:
+
+{{{
+ciasra.exe -tcon -oprog.km -fsourceA.cia -fsourceB.cia -fsourceC.cia
+}}}
+
+A program or library can reference (use) types from other libraries. As a matter of fact, all programs and libraries have to reference at least the _kcorlib.dll_ library as it contains the `System` namespace with many essential functionalities.
+
+The compile command would look like
+{{{
+ciasra.exe -tcon -oprog.km -fprog.cia -rkcorlib.dll -rmylib.km
+}}}
+
+Meaning of the switches:
+
+|| -t || Module type, `con` for console, `win` for window (gui), `lib` for library. ||
+|| -o || Output file. ||
+|| -f || Source file. ||
+|| -r || Referenced module. ||
