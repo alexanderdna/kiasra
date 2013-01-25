@@ -235,14 +235,14 @@ A KLI program is stored in a module file. This file can be compiled from one or 
 An example of compiling some source files into a module using the Ciasra compiler:
 
 {{{
-ciasra.exe -tcon -oprog.km -fsourceA.cia -fsourceB.cia -fsourceC.cia
+ciasra.exe -t con -o prog.km -f sourceA.cia -f sourceB.cia -f sourceC.cia
 }}}
 
 A program or library can reference (use) types from other libraries. As a matter of fact, all programs and libraries have to reference at least the _kcorlib.dll_ library as it contains the `System` namespace with many essential functionalities.
 
 The compile command would look like
 {{{
-ciasra.exe -tcon -oprog.km -fprog.cia -rkcorlib.dll -rmylib.km
+ciasra.exe -t con -o prog.km -f prog.cia -r kcorlib.dll -r mylib.km
 }}}
 
 Meaning of the switches:
