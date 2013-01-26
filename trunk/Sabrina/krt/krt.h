@@ -1,3 +1,5 @@
+#pragma once
+
 #include "kcore.h"
 
 #ifdef KRT_EXPORTS
