@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "module.h"
+#include <memory> //memcpy
 
 // ===I know what I am doing===
 
@@ -45,7 +46,7 @@ bool ModuleLoader::load(unsigned char *stream, uint32_t streamLength)
 	this->streamLength = streamLength;
 	this->isCleaned = false;
 
-	if (this->validateHeader() == false)
+	if (this->validateHeader() != ModuleValidationResult::OK)
 		return false;
 
 	this->loadStringTable();
@@ -157,26 +158,26 @@ ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 		|| stream[2] != 0xCA
 		|| stream[3] != 0xDE)
 	{
-		return MVR_INVALID_MAGIC;
+		return ModuleValidationResult::InvalidMagic;
 	}
 
 	if (stream[4] != 0x01 || stream[5] != 0x00)
-		return MVR_INVALID_VERSION;
+		return ModuleValidationResult::InvalidVersion;
 
 	switch (stream[6])
 	{
 	case 0x00:
-		this->moduleType = MT_WINDOW;
+		this->moduleType = ModuleType::Window;
 		break;
 	case 0x01:
-		this->moduleType = MT_CONSOLE;
+		this->moduleType = ModuleType::Console;
 		break;
 	case 0x02:
-		this->moduleType = MT_LIBRARY;
+		this->moduleType = ModuleType::Library;
 		break;
 
 	default:
-		return MVR_INVALID_MODULE_TYPE;
+		return ModuleValidationResult::InvalidModuleType;
 	}
 
 	if (stream[7] == 0x01)
@@ -184,20 +185,36 @@ ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 	else if (stream[7] == 0x00)
 		this->hasDebugInfo = false;
 	else
-		return MVR_INVALID_MODULE_FORMAT;
+		return ModuleValidationResult::InvalidModuleFormat;
 
+	// TO-DO: the following hash code is used to check for
+	// metadata integrity, so we will need a function to
+	// calculate a hash from the collected metadata then
+	// compare it with the hash we read here.
 	this->hash = *(uint32_t *)(stream + 8);
 	pos = 8 + sizeof(uint32_t);
 
-	this->entryClass = *(ktoken_t *)(stream + pos);
-	pos += sizeof(ktoken_t);
+	if (this->moduleType == ModuleType::Library)
+	{
+		uint32_t entry = *(uint32_t *)(stream + pos);
+		pos += sizeof(uint32_t);
 
-	this->entryMethod = *(ktoken_t *)(stream + pos);
-	pos += sizeof(ktoken_t);
+		// libraries should not have entry point
+		if (entry != 0)
+			return ModuleValidationResult::InvalidModuleFormat;
+	}
+	else
+	{
+		this->entryClass = *(ktoken_t *)(stream + pos);
+		pos += sizeof(ktoken_t);
+
+		this->entryMethod = *(ktoken_t *)(stream + pos);
+		pos += sizeof(ktoken_t);
+	}
 
 	this->pos = pos;
 
-	return MVR_OK;
+	return ModuleValidationResult::OK;
 }
 
 void ModuleLoader::loadStringTable()
@@ -500,11 +517,11 @@ void ModuleLoader::loadCode()
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
 
-	uint32_t codeSize = this->streamLength - pos;
+	uint32_t codeSize = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	unsigned char *code = new unsigned char[codeSize];
-	for (unsigned int i = 0, j = pos; i < codeSize; ++i, ++j)
-		code[i] = stream[j];
+	memcpy(code, stream + pos, (size_t)codeSize);
 
 	this->code = code;
 	this->pos = pos + codeSize;

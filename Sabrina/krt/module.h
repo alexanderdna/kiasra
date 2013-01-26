@@ -1,25 +1,25 @@
+#pragma once
+
 #include "krt.h"
 
 class ModuleLoader
 {
 public:
-	enum ModuleValidationResult
+	enum class ModuleValidationResult
 	{
-		MVR_OK = 0,
+		OK = 0,
 
-		MVR_INVALID_MAGIC,
-		MVR_INVALID_VERSION,
-		MVR_INVALID_MODULE_TYPE,
-		MVR_INVALID_MODULE_FORMAT
+		InvalidMagic,
+		InvalidVersion,
+		InvalidModuleType,
+		InvalidModuleFormat,
 	};
 
-	enum ModuleType
+	enum class ModuleType
 	{
-		MT_WINDOW,
-		MT_CONSOLE,
-		MT_LIBRARY,
-
-		MT_EXECUTABLE = MT_WINDOW | MT_CONSOLE
+		Window,
+		Console,
+		Library,
 	};
 
 private:

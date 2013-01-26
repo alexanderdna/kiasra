@@ -14,13 +14,16 @@ typedef double         kfloat_t;
 typedef       wchar_t *kstring_t;
 typedef const wchar_t *kcstring_t;
 
+// token for fields, methods, variables
 typedef uint16_t ktoken_t;
+
+// token for types (in the Type Table)
 typedef uint32_t ktypetoken_t;
 
-enum NativeFunctionResult
+enum class NativeFunctionResult
 {
-	NFR_OK = 0,
-	NFR_ERROR = 1,
+	OK = 0,
+	Error = 1,
 };
 
 typedef NativeFunctionResult (*NativeFunction)();
@@ -43,7 +46,7 @@ enum TypeTag : uint16_t
 };
 
 // module attributes
-enum ModuleAttribute
+enum ModuleAttribute : uint16_t
 {
 	KMODA_SYS  = 0x01,
 	KMODA_USER = 0x02,
@@ -52,7 +55,7 @@ enum ModuleAttribute
 };
 
 // class attributes
-enum ClassAttribute
+enum ClassAttribute : uint16_t
 {
 	KCA_PUBLIC  = 0x00,
 	KCA_PRIVATE = 0x01,
@@ -60,7 +63,7 @@ enum ClassAttribute
 };
 
 // field attributes
-enum FieldAttribute
+enum FieldAttribute : uint16_t
 {
 	KFA_PUBLIC  = 0x00,
 	KFA_PRIVATE = 0x01,
@@ -69,7 +72,7 @@ enum FieldAttribute
 };
 
 // method attributes
-enum MethodAttribute
+enum MethodAttribute : uint16_t
 {
 	KMA_PUBLIC  = 0x00,
 	KMA_PRIVATE = 0x01,

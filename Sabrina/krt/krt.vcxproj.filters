@@ -30,6 +30,12 @@
     <ClInclude Include="module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="kobject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kmachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -42,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="module.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kobject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

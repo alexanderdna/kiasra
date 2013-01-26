@@ -75,6 +75,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="kcore.h" />
+    <ClInclude Include="kmachine.h" />
+    <ClInclude Include="kobject.h" />
     <ClInclude Include="krt.h" />
     <ClInclude Include="module.h" />
     <ClInclude Include="stdafx.h" />
@@ -89,6 +91,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="kobject.cpp" />
     <ClCompile Include="krt.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="stdafx.cpp">
