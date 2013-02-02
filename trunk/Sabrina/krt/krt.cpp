@@ -2,4 +2,5 @@
 #include "krt.h"
 #include "kobject.h"
 #include "kmachine.h"
+#include "kni.h"
 

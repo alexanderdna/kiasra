@@ -3,16 +3,20 @@
 #include <cstdint>
 #include <cwchar>
 
+#include "kni.h"
+
 //===================================================================
 // Types
 //===================================================================
 
-typedef bool           kbool_t;
-typedef int32_t        kint_t;
-typedef double         kfloat_t;
+//typedef bool           kbool_t;
+//typedef int32_t        kint_t;
+//typedef double         kfloat_t;
+//
+//typedef       wchar_t *kstring_t;
+//typedef const wchar_t *kcstring_t;
 
-typedef       wchar_t *kstring_t;
-typedef const wchar_t *kcstring_t;
+typedef const kstring_t kcstring_t;
 
 // token for fields, methods, variables
 typedef uint16_t ktoken_t;
@@ -28,22 +32,22 @@ enum class NativeFunctionResult
 
 typedef NativeFunctionResult (*NativeFunction)();
 
-enum TypeTag : uint16_t
-{
-	K_VOID     = 0x0001,
-	K_BOOL     = 0x0002,
-	K_INT      = 0x0004,
-	K_FLOAT    = 0x0008,
-	K_STRING   = 0x0010,
-	K_CLASS    = 0x0020,
-	K_DELEGATE = 0x0040,
-	K_OBJECT   = 0x1000,
-
-	K_PRIMITIVE = K_BOOL | K_INT | K_FLOAT | K_STRING,
-	K_VALUE     = K_BOOL | K_INT | K_FLOAT,
-	K_REFERENCE = K_STRING | K_CLASS | K_DELEGATE,
-	K_UDT       = K_CLASS | K_DELEGATE,
-};
+//enum TypeTag : uint16_t
+//{
+//	K_VOID     = 0x0001,
+//	K_BOOL     = 0x0002,
+//	K_INT      = 0x0004,
+//	K_FLOAT    = 0x0008,
+//	K_STRING   = 0x0010,
+//	K_CLASS    = 0x0020,
+//	K_DELEGATE = 0x0040,
+//	K_OBJECT   = 0x1000,
+//
+//	K_PRIMITIVE = K_BOOL | K_INT | K_FLOAT | K_STRING,
+//	K_VALUE     = K_BOOL | K_INT | K_FLOAT,
+//	K_REFERENCE = K_STRING | K_CLASS | K_DELEGATE,
+//	K_UDT       = K_CLASS | K_DELEGATE,
+//};
 
 // module attributes
 enum ModuleAttribute : uint16_t
@@ -115,7 +119,7 @@ struct MetaTypeDef
 
 	ktoken_t globalToken;
 
-	MetaTypeDef() : tag(K_VOID), dim(0), token(0) { }
+	MetaTypeDef() : tag(KT_VOID), dim(0), token(0) { }
 
 	MetaTypeDef(TypeTag tag)
 		: tag(tag), dim(0), token(0) { }
@@ -236,7 +240,7 @@ struct MetaParamDef
 // Machine
 //===================================================================
 
-class KVM
+class KVM_old
 {
 public:
 	// conversions
