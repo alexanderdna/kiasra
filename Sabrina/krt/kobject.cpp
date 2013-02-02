@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "kobject.h"
 #include <cstring>
 
@@ -28,9 +30,9 @@ KObject & KObject::operator=(const KObject &src)
 		this->vm = src.vm;
 
 		this->accept(src);
-
-		return *this;
 	}
+
+	return *this;
 }
 
 KObject::KObject(KMachine *vm, const TypeDef *type)
@@ -99,7 +101,7 @@ void KObject::cleanUp()
 			this->vm->freeObjects(this->vObj);
 			this->vObj = NULL;
 		}
-		else if (type->tag & K_STRING)
+		else if (type->tag == KT_STRING)
 		{
 			// string
 			delete [] this->vString;
@@ -118,7 +120,7 @@ void KObject::accept(const KObject &src)
 		this->vObj = src.vObj;
 		this->vm->referObjects(this->vObj);
 	}
-	else if (type->tag & K_STRING && src.vString != NULL)
+	else if (type->tag == KT_STRING && src.vString != NULL)
 	{
 		// non-null string
 		kstring_t s = new wchar_t[this->length];

@@ -2,7 +2,9 @@
 
 #include "krt.h"
 
-class KMachine : public KVM
+class KObject;
+
+class KMachine : public KVM_old
 {
 private:
 	TypeDef *allTypes;
