@@ -1,6 +1,7 @@
 #pragma once
 
 #include "krt.h"
+#include "kmeta.hpp"
 
 class ModuleLoader
 {
@@ -28,7 +29,7 @@ private:
 	struct
 	{
 		uint32_t rowCount;
-		kcstring_t *rows;
+		kstring_t *rows;
 	} stringTable;
 
 	struct
@@ -82,7 +83,7 @@ private:
 	struct
 	{
 		uint16_t rowCount;
-		ktypetoken_t *rows;
+		ktoken32_t *rows;
 	} localTable;
 
 	unsigned char *code;
@@ -92,8 +93,8 @@ private:
 	uint32_t hash;
 
 	// two-part token for the entry point
-	ktoken_t entryClass;
-	ktoken_t entryMethod;
+	ktoken16_t entryClass;
+	ktoken16_t entryMethod;
 
 	unsigned char *stream;
 	uint32_t pos;

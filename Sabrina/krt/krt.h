@@ -1,83 +1,69 @@
-#pragma once
+#ifndef _KRT_H
+#define _KRT_H
 
-#include "kcore.h"
+#include "kni.h"
 
-#ifdef KRT_EXPORTS
-#define KRT_API __declspec(dllexport)
-#else
-#define KRT_API __declspec(dllimport)
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-//===================================================================
-// Runtime metadata
-//===================================================================
+#ifdef _MSC_VER
+	#ifdef KRT_EXPORTS
+		#define KRT_API __declspec(dllexport)
+	#else
+		#define KRT_API __declspec(dllimport)
+	#endif
+#else
+	#define KRT_API
+#endif
 
-struct ModuleDef;
-struct ClassDef;
-struct DelegateDef;
-struct FieldDef;
-struct MethodDef;
-struct ParamDef;
+// Handle of Execution Environment
+typedef void * HKENV;
 
-struct TypeDef
+// Handle of module
+typedef void * HKMODULE;
+
+// Handle of exception
+typedef void * HKEXCEPTION;
+
+typedef enum KRESULT
 {
-	TypeTag tag;
-	uint16_t dim;	// dimensions count
-	union
-	{
-		const ClassDef *classDef;
-		const DelegateDef *delegateDef;
-	};
-};
+	KRESULT_OK,
+	KRESULT_ERR
+} KRESULT;
 
-struct ModuleDef
-{
-	ModuleAttribute attrs;
-	ClassDef *classes;
-	DelegateDef *delegates;
-};
+// Creates a new execution environment
+KRT_API KRESULT KrtCreateEnvironment(HKENV *pHKEnv);
 
-struct ClassDef
-{
-	kcstring_t name;
-	ClassAttribute attrs;
+// Destroys an execution environment and all its resources
+KRT_API void KrtDestroyEnvironment(HKENV *pHKEnv);
 
-	FieldDef *fields;
-	MethodDef *methods;
+// Loads a module from the specified path
+KRT_API KRESULT KrtLoadModule(HKENV hKEnv, kstring_t ksPath, HKMODULE *pHKModule);
 
-	MethodDef *ctor;
-	MethodDef *cctor;
-};
+// Runs a loaded module
+KRT_API KRESULT KrtRunModule(HKENV hKEnv, HKMODULE hKModule);
 
-struct DelegateDef
-{
-	kcstring_t name;
-	ClassAttribute attrs;
+// Releases the module and all its resources
+KRT_API void KrtFreeModule(HKMODULE *pHKModule);
 
-	TypeDef *returnType;
-	ParamDef *params;
-};
+// Gets the message describing why the last task failed
+KRT_API kstring_t KrtGetFailReason(void);
 
-struct FieldDef
-{
-	kcstring_t name;
-	FieldAttribute attrs;
+// Gets the last exception if any
+KRT_API HKEXCEPTION KrtGetException(HKENV hKEnv);
 
-	TypeDef *declType;
-};
+// Gets the message in the specified exception
+KRT_API kstring_t KrtGetExceptionMessage(HKENV hKEnv, HKEXCEPTION hKException);
 
-struct MethodDef
-{
-	kcstring_t name;
-	MethodAttribute attrs;
+// Gets the stack trace from the specified exception
+KRT_API kstring_t KrtGetExceptionTrace(HKENV hKEnv, HKEXCEPTION hKException);
 
-	TypeDef *returnType;
-	ParamDef *params;
-};
+// Releases a string retrieved from a KRT API function
+KRT_API void KrtFreeString(kstring_t *pKString);
 
-struct ParamDef
-{
-	kcstring_t name;
-	TypeDef *declType;
-	bool byRef;
-};
+#ifdef __cplusplus
+}
+#endif
+
+#endif//_KRT_H
