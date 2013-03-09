@@ -55,9 +55,18 @@ The KLI has a static type system. There are 5 kinds of data types:
 
 Primitive types are:
  * *bool*: Boolean values _true_ and _false_.
- * *int*: 32-bit integers.
- * *float*: 64-bit floating-point numbers.
- * *string*: Unicode string, currently implemented using _`wchar_t`_.
+ * *char*: 16-bit Unicode characters.
+ * *byte*: 8-bit unsigned integers.
+ * *sbyte*: 8-bit signed integers.
+ * *short*: 16-bit signed integers.
+ * *ushort*: 16-bit unsigned integers.
+ * *int*: 32-bit signed integers.
+ * *uint*: 32-bit unsigned integers.
+ * *long*: 64-bit signed integers.
+ * *ulong*: 64-bit unsigned integers.
+ * *float*: 32-bit floating-point numbers.
+ * *double*: 64-bit floating-point numbers.
+ * *string*: Unicode strings.
 
 Arrays can only be single-dimensional. But the element type can be an array type. Therefore you have arrays of arrays like `int[][]`, `float[][][]`, etc.. The biggest number of dimensions is 65535. Array index starts from 0.
 
@@ -67,7 +76,7 @@ Delegates are the second kind of user-defined types. They are like function poin
 
 The `object` type is a storage type, meaning it is used to declare storage units, including local variables, function parameters and return value and class fields, which can store values of any types. To use the actual data in an `object` storage unit, one has to cast it to the desired type.
 
-String, array, class and delagate are reference types. This means the default value is `null`. Other types are value types which have their own default values (_false_ for _bool_, _0_ for _int_ and _+0.0_ for _float_).
+String, array, class and delagate are reference types. This means the default value is `null`. Other types are value types which have their own default values (_false_ for _bool_, _0_ for _integers_ and _+0.0_ for _floating-pointer_).
 
 == Examples ==
 
@@ -146,7 +155,7 @@ class Person
 			this.name = name;
 
 		if (birthday == null)
-			throw Exception.fromCode(Exception.ArgumentNull);
+			throw Exception.fromCode(Exception.NullArgument);
 		else
 			this.birthday = birthday;
 	}
@@ -235,14 +244,14 @@ A KLI program is stored in a module file. This file can be compiled from one or 
 An example of compiling some source files into a module using the Ciasra compiler:
 
 {{{
-ciasra.exe -t con -o prog.km -f sourceA.cia -f sourceB.cia -f sourceC.cia
+ciasra.exe -tcon -oprog.km -fsourceA.cia -fsourceB.cia -fsourceC.cia
 }}}
 
 A program or library can reference (use) types from other libraries. As a matter of fact, all programs and libraries have to reference at least the _kcorlib.dll_ library as it contains the `System` namespace with many essential functionalities.
 
 The compile command would look like
 {{{
-ciasra.exe -t con -o prog.km -f prog.cia -r kcorlib.dll -r mylib.km
+ciasra.exe -tcon -oprog.km -fprog.cia -rkcorlib.dll -rmylib.km
 }}}
 
 Meaning of the switches:
