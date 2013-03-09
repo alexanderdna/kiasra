@@ -47,7 +47,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KRT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -60,7 +60,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -74,15 +74,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="kcore.h" />
-    <ClInclude Include="kmachine.h" />
+    <ClInclude Include="kenv.hpp" />
+    <ClInclude Include="kgc.hpp" />
+    <ClInclude Include="kmeta.hpp" />
     <ClInclude Include="kni.h" />
-    <ClInclude Include="kobject.h" />
+    <ClInclude Include="kobject.hpp" />
     <ClInclude Include="krt.h" />
-    <ClInclude Include="module.h" />
+    <ClInclude Include="kmodule.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -93,14 +92,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="kmachine.cpp" />
+    <ClCompile Include="kenv.cpp" />
+    <ClCompile Include="kgc.cpp" />
     <ClCompile Include="kobject.cpp" />
     <ClCompile Include="krt.cpp" />
-    <ClCompile Include="module.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="kmodule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="krt.rc" />
