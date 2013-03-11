@@ -15,12 +15,6 @@ class KGC
 	friend class KEnvironment;
 
 protected:
-	enum color_t : uint8_t
-	{
-		KGC_WHITE = 0x00,
-		KGC_BLACK = 0x02,
-	};
-
 	enum phase_t : uint8_t
 	{
 		KGC_IDLE  = 0,
@@ -32,7 +26,7 @@ protected:
 	{
 		Header *next;
 		size_t  len;
-		uint8_t mark; //low nibble: 0 for white, 1 for black; high nibble: 0 for KObject*, 1 for KEvalStack*.
+		uint8_t mark; //low nibble: 0 for white, 1 for black; high nibble: 0 for class/delegate/array, 1 for evalstack.
 	};
 
 	typedef std::  set<Header *> rootset_t;

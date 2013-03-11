@@ -1,13 +1,18 @@
 #include "kobject.hpp"
+
 #include "kgc.hpp"
+#include "kconfig.hpp"
 
 #include <cstring>
 
-#define IS_STRING(type) (type && (type->tag == KT_STRING && !type->dim))
-#define IS_REF(type)    (type && (type->dim || (type->tag & (KT_CLASS | KT_DELEGATE | KT_ARRAY))))
+#define IS_STRING(type) (type && ((type->tag & KT_SCALAR_MASK) == KT_STRING && !type->dim))
+#define IS_REF(type)    (type && (type->dim || (type->cls)))
 
 KEnvironment *KObject::env;
 KGC          *KObject::gc;
+
+const TypeDef *KObject::objectType;
+const TypeDef *KObject::nullType;
 
 //public
 KObject::KObject(void)
@@ -50,6 +55,29 @@ KObject & KObject::operator=(const KObject &obj)
 	}
 
 	return *this;
+}
+
+//public
+void KObject::accept(const KObject &obj)
+{
+	if (this != &obj)
+	{
+		this->clean();
+
+		if (obj.type != KObject::nullType)
+			this->type = obj.type;
+		
+		this->length = obj.length;
+		this->vLong = obj.vLong;
+		if (IS_STRING(obj.type))
+			this->vString = KObject::strdup(obj.vString, obj.length);
+	}
+}
+
+//public
+const TypeDef * KObject::getType(void) const
+{
+	return this->type;
 }
 
 //public
@@ -149,15 +177,35 @@ kref_t KObject::getRaw(void) const
 }
 
 //public
-const KObject & KObject::getField(ktoken16_t tok) const
+KObject & KObject::getField(ktoken16_t tok) const
 {
 	return this->vObj[tok];
 }
 
 //public
-const KObject & KObject::getElement(kint_t idx) const
+KObject & KObject::getElement(knuint_t idx) const
 {
 	return this->vObj[idx];
+}
+
+//public
+knint_t KObject::getNInt(void) const
+{
+#ifdef IS64BIT
+	return (knint_t)this->vLong;
+#else
+	return (knint_t)this->vInt;
+#endif
+}
+
+//public
+knuint_t KObject::getNUInt(void) const
+{
+#ifdef IS64BIT
+	return (knuint_t)this->vULong;
+#else
+	return (knuint_t)this->vUInt;
+#endif
 }
 
 //public
@@ -272,16 +320,16 @@ void KObject::setRaw(kref_t raw)
 //public
 void KObject::setField(ktoken16_t tok, const KObject &obj)
 {
-	this->vObj[tok] = obj;
+	this->vObj[tok].accept(obj);
 
 	if (IS_REF(obj.type) && obj.vObj)
 		KObject::gc->mark(obj.vObj);
 }
 
 //public
-void KObject::setElement(kint_t idx, const KObject &obj)
+void KObject::setElement(knuint_t idx, const KObject &obj)
 {
-	this->vObj[idx] = obj;
+	this->vObj[idx].accept(obj);
 
 	if (IS_REF(obj.type) && obj.vObj)
 		KObject::gc->mark(obj.vObj);
@@ -294,13 +342,16 @@ void KObject::clean(void)
 	if (IS_STRING(this->type) && this->vString)
 	{
 		delete [] this->vString;
-		this->vString = NULL;
+		this->vLong = NULL; //long to ensure 64 bits are unset
 	}
 }
 
 //protected static
 knuint_t KObject::strlen(kstring_t s)
 {
+	if (!s)
+		return 0;
+
 	knuint_t len;
 	for (len = 0; s[len]; ++len)
 		;

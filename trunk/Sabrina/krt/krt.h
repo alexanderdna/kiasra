@@ -3,6 +3,8 @@
 
 #include "kni.h"
 
+/*===================================================*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,50 +19,47 @@ extern "C" {
 	#define KRT_API
 #endif
 
-// Handle of Execution Environment
-typedef void * HKENV;
+/*===================================================*/
 
-// Handle of module
+/* Handle of module */
 typedef void * HKMODULE;
 
-// Handle of exception
+/* Handle of exception */
 typedef void * HKEXCEPTION;
 
-typedef enum KRESULT
-{
-	KRESULT_OK,
-	KRESULT_ERR
-} KRESULT;
+/*===================================================*/
 
-// Creates a new execution environment
-KRT_API KRESULT KrtCreateEnvironment(HKENV *pHKEnv);
+/* Creates a new execution environment */
+KRESULT KRT_API KrtCreateEnvironment(HKENV *pHKEnv);
 
-// Destroys an execution environment and all its resources
-KRT_API void KrtDestroyEnvironment(HKENV *pHKEnv);
+/* Destroys an execution environment and all its resources */
+void KRT_API KrtDestroyEnvironment(HKENV *pHKEnv);
 
-// Loads a module from the specified path
-KRT_API KRESULT KrtLoadModule(HKENV hKEnv, kstring_t ksPath, HKMODULE *pHKModule);
+/* Loads a module from the specified path */
+KRESULT KRT_API KrtLoadModule(HKENV hKEnv, kstring_t ksPath, HKMODULE *pHKModule);
 
-// Runs a loaded module
-KRT_API KRESULT KrtRunModule(HKENV hKEnv, HKMODULE hKModule);
+/* Runs a loaded module */
+KRESULT KRT_API KrtRunModule(HKENV hKEnv, HKMODULE hKModule);
 
-// Releases the module and all its resources
-KRT_API void KrtFreeModule(HKMODULE *pHKModule);
+/* Releases the module and all its resources */
+void KRT_API KrtFreeModule(HKMODULE *pHKModule);
 
-// Gets the message describing why the last task failed
-KRT_API kstring_t KrtGetFailReason(void);
+/* Gets the message describing why the last task failed */
+kstring_t KRT_API KrtGetFailReason(void);
 
-// Gets the last exception if any
-KRT_API HKEXCEPTION KrtGetException(HKENV hKEnv);
+/* Gets the last exception if any */
+HKEXCEPTION KRT_API KrtGetException(HKENV hKEnv);
 
-// Gets the message in the specified exception
-KRT_API kstring_t KrtGetExceptionMessage(HKENV hKEnv, HKEXCEPTION hKException);
+/* Gets the message in the specified exception */
+kstring_t KRT_API KrtGetExceptionMessage(HKENV hKEnv, HKEXCEPTION hKException);
 
-// Gets the stack trace from the specified exception
-KRT_API kstring_t KrtGetExceptionTrace(HKENV hKEnv, HKEXCEPTION hKException);
+/* Gets the stack trace from the specified exception */
+kstring_t KRT_API KrtGetExceptionTrace(HKENV hKEnv, HKEXCEPTION hKException);
 
-// Releases a string retrieved from a KRT API function
-KRT_API void KrtFreeString(kstring_t *pKString);
+/* Releases a string retrieved from a KRT API function */
+void KRT_API KrtFreeString(kstring_t *pKString);
+
+/*===================================================*/
 
 #ifdef __cplusplus
 }

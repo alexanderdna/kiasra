@@ -2,6 +2,9 @@
 
 #include "krt.h"
 #include "kmeta.hpp"
+#include "kobject.hpp"
+
+class KEnvironment;
 
 class ModuleLoader
 {
