@@ -16,3 +16,6 @@
 	#define INIT_DEFAULT_VALUE(obj, t) { obj.type = (t); obj.vULong = 0; obj.length = 0; }
 #endif
 
+#if defined(_WIN32) || defined(_MSC_VER)
+#define ISWIN
+#endif

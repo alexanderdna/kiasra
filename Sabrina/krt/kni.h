@@ -640,14 +640,14 @@ KRESULT KNI_API KniInvoke(HKENV hKEnv, HKMETHOD hKMethod);
 KRESULT KNI_API KniInvokeObject(HKENV hKEnv);
 
 /* Marks the beginning of a protected region */
-void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC pKExcFunc);
+void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC *pKExcFunc);
 /* Marks the end of a protected region */
-void KNI_API KniLeaveProtectedRegion(HKENV hKEnv, KEXCFUNC pKExcFunc);
+void KNI_API KniLeaveProtectedRegion(HKENV hKEnv);
 /* Throws an exception loaded onto stack */
 void KNI_API KniThrowException(HKENV hKEnv);
 
 /* Initializes local variables for current native method */
-void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes);
+void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes, kushort_t count);
 
 /*===================================================*/
 

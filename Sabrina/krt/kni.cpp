@@ -5,6 +5,7 @@
 #include "kenv.hpp"
 #include "kobject.hpp"
 #include "kstringutils.hpp"
+#include "kmodule.hpp"
 
 //===================================================
 // Defines
@@ -1397,12 +1398,20 @@ KRESULT KNI_API KniInvokeObject(HKENV hKEnv)
 		return KRESULT_ERR;
 }
 
-void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC pKExcFunc)
+void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC *pKExcFunc)
 {
+	KExceptionHandler handler = { };
+	handler.native = true;
+	handler.excType = (TypeDef *)hKTypeExc;
+	handler.frame = Env->frame;
+	handler.func = pKExcFunc;
+
+	Env->catchStack->push(handler);
 }
 
-void KNI_API KniLeaveProtectedRegion(HKENV hKEnv, KEXCFUNC pKExcFunc)
+void KNI_API KniLeaveProtectedRegion(HKENV hKEnv)
 {
+	Env->catchStack->pop();
 }
 
 void KNI_API KniThrowException(HKENV hKEnv)
@@ -1410,8 +1419,9 @@ void KNI_API KniThrowException(HKENV hKEnv)
 	Env->throwException();
 }
 
-void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKType)
+void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKType, kushort_t count)
 {
+	Env->initLocals((const TypeDef **)pHKType, count);
 }
 
 //===================================================
@@ -1466,12 +1476,12 @@ HKTYPE KNI_API KniGetTypeIndirect(HKENV hKEnv)
 
 HKCLASS KNI_API KniGetClass(HKENV hKEnv, kstring_t ksName)
 {
-	return Env->findClass(ksName, Env->rootModule);
+	return Env->findClass(ksName, Env->rootModule->getModule());
 }
 
 HKDELEGATE KNI_API KniGetDelegate(HKENV hKEnv, kstring_t ksName)
 {
-	return Env->findDelegate(ksName, Env->rootModule);
+	return Env->findDelegate(ksName, Env->rootModule->getModule());
 }
 
 HKFIELD KNI_API KniGetField(HKENV HKEnv, HKCLASS hKClass, kstring_t ksName)
@@ -1499,7 +1509,7 @@ HKMETHOD KNI_API KniGetMethod(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName)
 
 HKTYPE KNI_API KniGetPrimitiveType(HKENV hKEnv, ktypetag_t tag)
 {
-	return &Env->primitiveTypes[tag];
+	return &KEnvironment::primitiveTypes[tag];
 }
 
 HKTYPE KNI_API KniCreateType(HKENV hKEnv, ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate)
