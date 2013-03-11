@@ -25,8 +25,7 @@
 #define MAX_MARK	5
 #define MAX_SWEEP	5
 
-#define KT_REF_MASK ((KT_CLASS | KT_DELEGATE | KT_ARRAY) & ~KT_REF)
-#define IS_REF(type)    (type->dim || (type->tag & KT_REF_MASK))
+#define IS_REF(type)    (type->dim || ((type->tag & KT_SCALAR_MASK) == KT_CLASS || (type->tag & KT_SCALAR_MASK) == KT_DELEGATE))
 
 KGC::KGC(void)
 	: paused(false), phase(KGC_IDLE),

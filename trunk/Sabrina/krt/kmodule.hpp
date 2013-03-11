@@ -6,9 +6,21 @@
 
 class KEnvironment;
 
-class ModuleLoader
+class KModuleLoader
 {
 public:
+	enum class ModuleLoadError
+	{
+		OK = 0,
+
+		InvalidPath,
+		InvalidLib,
+		CannotOpen,
+		CannotLoadLib,
+		CannotLoadImportedModule,
+		CannotLoadNativeFunction,
+	};
+
 	enum class ModuleValidationResult
 	{
 		OK = 0,
@@ -19,6 +31,14 @@ public:
 		InvalidModuleFormat,
 	};
 
+	enum class ModuleLoadPhase
+	{
+		Initial = 0,
+		Opened,
+		Loaded,
+		Baked,
+	};
+
 	enum class ModuleType
 	{
 		Window,
@@ -26,9 +46,7 @@ public:
 		Library,
 	};
 
-private:
-	ModuleLoader **modules;
-
+protected:
 	struct
 	{
 		uint32_t rowCount;
@@ -89,6 +107,14 @@ private:
 		ktoken32_t *rows;
 	} localTable;
 
+	kstring_t importerPath;
+	kstring_t path;
+	ModuleAttributes attrs;
+
+	KModuleLoader **moduleLoaders;
+
+	ModuleLoadError err;
+
 	unsigned char *code;
 
 	ModuleType moduleType;
@@ -102,17 +128,39 @@ private:
 	unsigned char *stream;
 	uint32_t pos;
 	uint32_t streamLength;
+
 	bool isCleaned;
+	
+#ifdef ISWIN
+	HMODULE     libHandle;
+#else
+	void       *libHandle;
+#endif
+
+	ModuleLoadPhase loadPhase;
+
+	ModuleDef *module;
+
+	KEnvironment *env;
 
 public:
-	ModuleLoader();
-	~ModuleLoader();
+	KModuleLoader(KEnvironment *env, kstring_t importerPath, kstring_t path, uint32_t hash);
+	~KModuleLoader(void);
 
 public:
-	bool load(unsigned char *stream, uint32_t streamLength);
+	bool load(void);
+
+	ModuleDef * getModule(void);
+	kstring_t getPath(void);
+
+	void onDispose(void);
+
+protected:
+	bool open(void);
+	bool loadMeta(void);
+	bool bake(void);
 	void clean();
 
-private:
 	ModuleValidationResult validateHeader();
 	void loadStringTable();
 	void loadTypeTable();

@@ -9,9 +9,11 @@
 #include "ktypetree.hpp"
 #include "kexchandler.hpp"
 #include "kstringutils.hpp"
+#include "kmodule.hpp"
 
 #include <set>
 #include <cstdlib>
+#include <cstdio>
 
 //===================================================
 // Defines
@@ -26,6 +28,8 @@
 
 //===================================================
 // Static fields
+
+kstring_t KEnvironment::systemLibPath;
 
 const TypeDef **KEnvironment::primitiveTypes;
 const TypeDef  *KEnvironment::voidType;
@@ -46,6 +50,17 @@ KEnvironment::KEnvironment(void)
 	code(NULL), ip(0),
 	exc(NULL)
 {
+	KEnvironment::initSystemLibPath();
+
+	//===================================
+	// prepare executors
+
+	for (knuint_t i = 0; i < OP_OPCODE_COUNT; ++i)
+		KEnvironment::executors[i] = KEnvironment::defaultExecutors[i];
+
+	for (knuint_t i = OP_OPCODE_COUNT; i < 256; ++i)
+		KEnvironment::executors[i] = KEnvironment::do_InvalidOpcode;
+
 	//===================================
 	// prepare basic types
 
@@ -68,10 +83,10 @@ KEnvironment::KEnvironment(void)
 	//===================================
 	// prepare kcorlib
 
-	std::set<ModuleDef *> *loadedModules = new std::set<ModuleDef *>;
+	std::set<KModuleLoader *> *loadedModules = new std::set<KModuleLoader *>;
 	this->loadedModules = loadedModules;
 
-	//TODO: load kcorlib
+	this->initCorLib();
 
 	//===================================
 	// prepare GC
@@ -86,6 +101,8 @@ KEnvironment::KEnvironment(void)
 
 	this->callStack = new kcallstack_t;
 	this->catchStack = new kcatchstack_t;
+
+	this->traceDeque = new ktracedeque_t;
 	
 	//===================================
 	// misc
@@ -93,11 +110,26 @@ KEnvironment::KEnvironment(void)
 	KObject::env = const_cast<KEnvironment *>(this);
 	KObject::objectType = KEnvironment::objectType;
 	KObject::nullType = KEnvironment::nullType;
+
 }
 
 //public
 KEnvironment::~KEnvironment(void)
 {
+	if (this->loadedModules)
+	{
+		for (std::set<KModuleLoader *>::iterator it = this->loadedModules->begin();
+			it != this->loadedModules->end(); ++it)
+		{
+			KModuleLoader *moduleLoader = *it;
+			moduleLoader->onDispose();
+			delete moduleLoader;
+		}
+
+		delete this->loadedModules;
+		this->loadedModules = NULL;
+	}
+
 	if (this->typeTree)
 	{
 		delete this->typeTree;
@@ -116,19 +148,196 @@ KEnvironment::~KEnvironment(void)
 		KEnvironment::nullType = NULL;
 	}
 
+	if (this->callStack)
+	{
+		delete this->callStack;
+		this->callStack = NULL;
+	}
+
+	if (this->catchStack)
+	{
+		delete this->catchStack;
+		this->catchStack = NULL;
+	}
+
+	if (this->traceDeque)
+	{
+		delete this->traceDeque;
+		this->traceDeque = NULL;
+	}
+
 	if (this->gc)
 	{
-		GC_UNREGISTER(this->stack);
-
 		delete this->gc;
 		this->gc = NULL;
 	}
+
+	if (KEnvironment::systemLibPath)
+	{
+		delete [] KEnvironment::systemLibPath;
+		KEnvironment::systemLibPath = NULL;
+	}
+}
+
+//===================================================
+
+//protected static
+void KEnvironment::initSystemLibPath(void)
+{
+#ifdef ISWIN
+	{
+		LPSTR buffer = (LPSTR)malloc(1024 * sizeof(CHAR));
+		DWORD result = GetModuleFileNameA(NULL, buffer, 1024);
+		if (result == ERROR_INSUFFICIENT_BUFFER)
+		{
+			buffer[1023] = 0;
+		}
+
+		CHAR * lastSlash = strrchr(buffer, '\\');
+		knuint_t len = lastSlash - buffer + 1;
+		
+		buffer[lastSlash - buffer + 1] = 0;
+
+		kchar_t *s = new kchar_t[len + 1];
+		for (knuint_t i = 0; i < len; ++i)
+			s[i] = buffer[i];
+		s[len] = 0;
+		KEnvironment::systemLibPath = s;
+	}
+#else
+	{
+		char *buffer = (char *)malloc(1024 * sizeof(char));
+		ssize_t _len = readlink("/proc/self/exe", buffer, 1023);
+		if (_len != -1)
+			buffer[_len] = 0;
+		else
+			buffer[0] = 0;
+
+		char * lastSlash = strrchr(buffer, '/');
+		knuint_t len = lastSlash - buffer + 1;
+		
+		buffer[lastSlash - buffer + 1] = 0;
+
+		kchar_t *s = new kchar_t[len + 1];
+		for (knuint_t i = 0; i < len; ++i)
+			s[i] = buffer[i];
+		s[len] = 0;
+		KEnvironment::systemLibPath = s;
+	}
+#endif
+}
+
+//protected
+void KEnvironment::initCorLib(void)
+{
+	KModuleLoader *moduleLoader = this->createModuleLoader(KEnvironment::systemLibPath, L"Dkcorlib.dll", 0);
+	if (!moduleLoader->load())
+	{
+		fprintf(stderr, "Cannot load Core Library. Installation may have been corrupt.\n");
+		exit(1);
+	}
+}
+
+//protected
+KRESULT KEnvironment::execute(void)
+{
+start:
+	while (this->running)
+	{
+		unsigned char opcode = this->code[this->ip++];
+		if (opcode == OP_RET)
+			return KRESULT_OK;
+		else
+			KEnvironment::executors[opcode](this);
+	}
+
+	if (this->hasException)
+	{
+		this->traceDeque->clear();
+
+		while (!this->catchStack->empty())
+		{
+			KExceptionHandler &handler = this->catchStack->top();
+			KFrame *frame = handler.frame;
+
+			for (; this->frame != frame; )
+			{
+				// push current method for tracing
+				this->traceDeque->push_back(this->method);
+				// then leave
+				this->leaveMethod();
+			}
+
+			if (handler.excType == this->exc->type)
+			{
+				// found an appropriate handler
+				if (handler.native)
+				{
+					KEXCFUNC *func = handler.func;
+					this->catchStack->pop();
+
+					this->running = true;
+					this->hasException = false;
+
+					this->stackPush(*this->exc);
+					(*func)(this);
+
+					this->leaveMethod();
+					return KRESULT_OK;
+				}
+				else
+				{
+					knuint_t addr = handler.addr;
+					this->catchStack->pop();
+					
+					this->running = true;
+					this->hasException = false;
+
+					this->stackPush(*this->exc);
+					this->ip = handler.addr;
+					
+					goto start;
+				}
+			}
+
+			// handler not found YET
+			this->catchStack->pop();
+		}
+
+		// exception not handled
+		return KRESULT_ERR;
+	}
+
+	return KRESULT_OK;
+}
+
+//===================================================
+
+//public
+KModuleLoader * KEnvironment::createModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash)
+{
+	for (std::set<KModuleLoader *>::iterator it = this->loadedModules->begin();
+		it != this->loadedModules->end(); ++it)
+	{
+		if (krt_strequ((*it)->getPath(), path))
+			return (*it);
+	}
+
+	KModuleLoader *moduleLoader = new KModuleLoader(const_cast<KEnvironment *>(this), importerPath, path, hash);
+	this->loadedModules->insert(moduleLoader);
+	return moduleLoader;
+}
+
+//public
+kstring_t KEnvironment::getSystemLibPath(void)
+{
+	return KEnvironment::systemLibPath;
 }
 
 //===================================================
 // Meta
 
-//protected static
+//public static
 const ClassDef * KEnvironment::findClass(kstring_t name, const ModuleDef *module)
 {
 	const ClassDef *res;
@@ -136,9 +345,9 @@ const ClassDef * KEnvironment::findClass(kstring_t name, const ModuleDef *module
 	kushort_t moduleCount = module->moduleCount;
 	if (moduleCount)
 	{
-		ModuleDef *moduleList = module->moduleList;
+		ModuleDef **moduleList = module->moduleList;
 		for (kushort_t i = 0; i < moduleCount; ++i)
-			if (res = KEnvironment::findClass(name, &moduleList[i]))
+			if (res = KEnvironment::findClass(name, moduleList[i]))
 				return res;
 	}
 	else
@@ -154,7 +363,7 @@ const ClassDef * KEnvironment::findClass(kstring_t name, const ModuleDef *module
 	return NULL;
 }
 
-//protected static
+//public static
 const DelegateDef * KEnvironment::findDelegate(kstring_t name, const ModuleDef *module)
 {
 	const DelegateDef *res;
@@ -162,9 +371,9 @@ const DelegateDef * KEnvironment::findDelegate(kstring_t name, const ModuleDef *
 	kushort_t moduleCount = module->moduleCount;
 	if (moduleCount)
 	{
-		ModuleDef *moduleList = module->moduleList;
+		ModuleDef **moduleList = module->moduleList;
 		for (kushort_t i = 0; i < moduleCount; ++i)
-			if (res = KEnvironment::findDelegate(name, &moduleList[i]))
+			if (res = KEnvironment::findDelegate(name, moduleList[i]))
 				return res;
 	}
 	else
@@ -180,38 +389,38 @@ const DelegateDef * KEnvironment::findDelegate(kstring_t name, const ModuleDef *
 	return NULL;
 }
 
-//protected
+//public
 const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim)
 {
 	return this->typeTree->add(tag, dim, NULL);
 }
 
-//protected
+//public
 const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, ClassDef *cls)
 {
 	return this->typeTree->add(tag, dim, cls);
 }
 
-//protected
+//public
 const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, DelegateDef *del)
 {
 	return this->typeTree->add(tag, dim, del);
 }
 
 
-//protected
+//public
 const TypeDef * KEnvironment::makeByRefType(const TypeDef *typeDef)
 {
 	return this->typeTree->add((ktypetag_t)(typeDef->tag | KT_REF), typeDef->dim, typeDef->cls);
 }
 
-//protected
+//public
 const TypeDef * KEnvironment::makeArrayType(const TypeDef *typeDef)
 {
 	return this->typeTree->add((ktypetag_t)typeDef->tag, typeDef->dim + 1, typeDef->cls);
 }
 
-//protected
+//public
 const TypeDef * KEnvironment::makeElementType(const TypeDef *typeDef)
 {
 	return this->typeTree->add((ktypetag_t)typeDef->tag, typeDef->dim - 1, typeDef->cls);
@@ -278,6 +487,18 @@ void KEnvironment::allocArrayBaking(const TypeDef *arrayType, knuint_t length, K
 	outObj.length = length;
 }
 
+//protected
+void KEnvironment::initLocals(const TypeDef **types, knuint_t count)
+{
+	KObject *locals = GC_ALLOC(count);
+	GC_REGISTER(locals);
+
+	for (knuint_t i = 0; i < count; ++i)
+		INIT_DEFAULT_VALUE(locals[i], types[i]);
+
+	this->frame->locals = locals;
+}
+
 //===================================================
 // Calls
 
@@ -309,16 +530,7 @@ KRESULT KEnvironment::invoke(const MethodDef *methodDef)
 	}
 	else
 	{
-		while (this->running)
-		{
-			unsigned char opcode = this->code[this->ip++];
-			if (opcode == OP_RET)
-				break;
-			else
-				KEnvironment::executors[opcode](this);
-		}
-
-		if (this->hasException)
+		if (this->execute() == KRESULT_ERR)
 			return KRESULT_ERR;
 	}
 
@@ -357,16 +569,7 @@ KRESULT KEnvironment::invokeLastThis(const MethodDef *methodDef)
 	}
 	else
 	{
-		while (this->running)
-		{
-			unsigned char opcode = this->code[this->ip++];
-			if (opcode == OP_RET)
-				break;
-			else
-				KEnvironment::executors[opcode](this);
-		}
-
-		if (this->hasException)
+		if (this->execute() == KRESULT_ERR)
 			return KRESULT_ERR;
 	}
 

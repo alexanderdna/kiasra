@@ -1,7 +1,15 @@
 #pragma once
 
+#include "kconfig.hpp"
 #include "krt.h"
 #include "kni.h"
+
+#ifdef ISWIN
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 class KObject;
 
@@ -91,10 +99,10 @@ struct ModuleDef
 	kstring_t       *strings;
 
 	kushort_t        moduleCount;
-	ModuleDef       *moduleList;	// array of imported modules
+	ModuleDef      **moduleList;	// array of imported modules
 
 	kuint_t          typeCount;
-	TypeDef        **typeList;		// array of pointers to types
+	const TypeDef  **typeList;		// array of pointers to types
 
 	kushort_t        classCount;
 	ClassDef       **classList;		// array of pointers to internal and external classes
@@ -117,18 +125,23 @@ struct ModuleDef
 	ParamDef        *dparamList;	// array of delegate parameters
 
 	kushort_t        localCount;
-	TypeDef        **localList;		// array of pointers to elements of `types`
-
-	ktoken16_t       rtIndex;		// position in importing module
+	const TypeDef  **localList;		// array of pointers to elements of `types`
 
 	KObject         *staticData;	// objects to store static fields
 	const unsigned char *code;		// module bytecode
+
+#ifdef ISWIN
+		HMODULE      libHandle;
+#else
+		void        *libHandle;
+#endif
 };
 
 struct MetaModuleDef
 {
 	ModuleAttributes attrs;
 	ktoken32_t       path;
+	uint32_t         hash;
 };
 
 struct ClassDef
@@ -145,7 +158,6 @@ struct ClassDef
 	ModuleDef      *module;		// pointer to importing module
 
 	ktoken16_t      localIndex;	// position in defining module
-	ktoken16_t      rtIndex;	// position in importing module
 
 	kushort_t       iFieldCount;
 	FieldDef      **iFieldList;	// instance fields
@@ -153,8 +165,12 @@ struct ClassDef
 	kushort_t       sFieldCount;
 	FieldDef      **sFieldList; // static fields
 
+	kushort_t       iMethodCount;
 	MethodDef     **iMethodList;// instance method
+
+	kushort_t       sMethodCount;
 	MethodDef     **sMethodList;// static method
+
 	MethodDef      *ctor;		// instance constructor
 	MethodDef      *cctor;		// static constructor
 };
@@ -182,7 +198,6 @@ struct DelegateDef
 	ModuleDef      *module;		// pointer to importing module
 
 	ktoken16_t      localIndex;	// position in defining module
-	ktoken16_t      rtIndex;	// position in importing module
 };
 
 struct MetaDelegateDef
@@ -242,7 +257,7 @@ struct MetaMethodDef
 	ktoken32_t       returnType;
 	ktoken16_t       paramList;
 	ktoken16_t       localList;
-	ktoken32_t       addr;
+	kuint_t          addr;
 };
 
 struct ParamDef

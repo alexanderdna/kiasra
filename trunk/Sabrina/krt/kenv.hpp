@@ -4,12 +4,16 @@
 #include "kmeta.hpp"
 #include "kframe.hpp"
 #include "kexchandler.hpp"
+
 #include <set>
+#include <deque>
 
 class KGC;
 class KObject;
 struct ModuleDef;
 class KTypeTree;
+
+class KModuleLoader;
 
 class KEnvironment
 {
@@ -19,7 +23,11 @@ public:
 	static KEnvironment *instance;
 
 protected:
+	static kstring_t systemLibPath;
+
+protected:
 	typedef void (EXECUTOR)(KEnvironment *env);
+	typedef std::deque<const MethodDef *> ktracedeque_t;
 
 protected:
 	static EXECUTOR *executors[256];
@@ -37,8 +45,8 @@ protected:
 
 	KGC *gc;
 
-	ModuleDef             *rootModule;
-	std::set<ModuleDef *> *loadedModules;
+	KModuleLoader             *rootModule;
+	std::set<KModuleLoader *> *loadedModules;
 
 	KObject *stack;
 	knuint_t stackSize;
@@ -60,12 +68,14 @@ protected:
 
 	KObject       *exc;			// latest unhandled exception
 	kcatchstack_t *catchStack;	// stack of exception handlers
+	ktracedeque_t *traceDeque;	// deque of methods traced from exception
 
 public:
 	KEnvironment(void);
 	~KEnvironment(void);
 
-protected:
+	KModuleLoader * createModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash);
+	kstring_t getSystemLibPath(void);
 
 	// Meta
 
@@ -80,12 +90,20 @@ protected:
 	const TypeDef * makeArrayType(const TypeDef *typeDef);
 	const TypeDef * makeElementType(const TypeDef *typeDef);
 
+protected:
+	static void initSystemLibPath(void);
+	void initCorLib(void);
+
+	KRESULT execute(void);
+
 	// Objects
 
 	void allocClassInstance(const ClassDef *classDef, KObject &outObj);
 	void allocDelegateInstance(const DelegateDef *delegateDef, KObject *objThis, const MethodDef *method, KObject &outObj);
 	void allocArray(const TypeDef *arrayType, knuint_t length, KObject &outObj);
 	void allocArrayBaking(const TypeDef *arrayType, knuint_t length, KObject &outObj);
+
+	void initLocals(const TypeDef **types, knuint_t count);
 	
 	// Calls
 
@@ -495,11 +513,11 @@ protected:
 	friend KRESULT KniInvokeStatic(HKENV hKEnv, HKCLASS hKClass, HKMETHOD hKMethod);
 	friend KRESULT KniInvokeObject(HKENV hKEnv);
 
-	friend void KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC pKExcFunc);
-	friend void KniLeaveProtectedRegion(HKENV hKEnv, KEXCFUNC pKExcFunc);
+	friend void KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC *pKExcFunc);
+	friend void KniLeaveProtectedRegion(HKENV hKEnv);
 	friend void KniThrowException(HKENV hKEnv);
 
-	friend void KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes);
+	friend void KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes, kushort_t count);
 
 	friend HKTYPE KniGetType(HKENV hKEnv);
 
