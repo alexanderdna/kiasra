@@ -10,11 +10,14 @@ class KGC;
 
 class KObject
 {
+	friend class KEnvironment;
 	friend class KGC;
 
 public:
 	static KEnvironment *env;
 	static KGC *gc;
+	static const TypeDef *objectType;
+	static const TypeDef *nullType;
 
 protected:
 	const TypeDef *type;
@@ -50,6 +53,11 @@ public:
 
 	KObject & operator=(const KObject &obj);
 
+	// for assignment (storing)
+	void accept(const KObject &obj);
+
+	const TypeDef * getType(void) const;
+
 	knuint_t getLength(void) const;
 
 	kbool_t getBool(void) const;
@@ -69,8 +77,11 @@ public:
 	KObject * getRef(void) const;
 	kref_t getRaw(void) const;
 
-	const KObject & getField(ktoken16_t tok) const;
-	const KObject & getElement(kint_t idx) const;
+	KObject & getField(ktoken16_t tok) const;
+	KObject & getElement(knuint_t idx) const;
+
+	knint_t getNInt(void) const;
+	knuint_t getNUInt(void) const;
 
 	void setBool(kbool_t val);
 	void setChar(kchar_t val);
@@ -90,7 +101,7 @@ public:
 	void setRaw(kref_t raw);
 
 	void setField(ktoken16_t tok, const KObject &obj);
-	void setElement(kint_t idx, const KObject &obj);
+	void setElement(knuint_t idx, const KObject &obj);
 
 protected:
 	void clean(void);

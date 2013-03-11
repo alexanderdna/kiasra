@@ -2,8 +2,28 @@
 #define _KNI_H
 
 #include <stdint.h>
+#include <wchar.h>
 
-enum ktypetag_t : uint16_t
+/*===================================================*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef _MSC_VER
+	#ifdef KRT_EXPORTS
+		#define KNI_API __declspec(dllexport)
+	#else
+		#define KNI_API __declspec(dllimport)
+	#endif
+#else
+	#define KNI_API
+#endif
+
+/*===================================================*/
+
+/* Type tags */
+typedef enum ktypetag_t
 {
 	KT_VOID    = 0x0000,
 	KT_BOOL    = 0x0001,
@@ -25,381 +45,658 @@ enum ktypetag_t : uint16_t
 	KT_OBJECT  = 0x1000,
 	KT_RAW     = 0x2000,
 	KT_REF     = 0x4000,
-};
 
-struct KVM;
+	KT_SCALAR_MASK = KT_VOID | KT_BOOL | KT_CHAR | KT_BYTE | KT_SBYTE |
+					KT_SHORT | KT_USHORT | KT_INT | KT_UINT | KT_LONG | KT_ULONG |
+					KT_FLOAT | KT_DOUBLE | KT_STRING |
+					KT_CLASS | KT_DELEGATE,
 
-enum NINVOKE_RESULT
+	KT_REF_MASK = KT_ARRAY | KT_OBJECT | KT_RAW
+} ktypetag_t;
+
+/*===================================================*/
+
+typedef enum KRESULT
+{
+	KRESULT_OK,
+	KRESULT_ERR
+} KRESULT;
+
+typedef enum NINVOKE_RESULT
 {
 	NINVOKE_OK = 0,
 	NINVOKE_ERR = 1
-};
+} NINVOKE_RESULT;
 
-typedef NINVOKE_RESULT (*NFUNC)(KVM *vm);
+/* Handle of Execution Environment */
+typedef void * HKENV;
 
-typedef unsigned char kbool_t;
-typedef wchar_t       kchar_t;
-typedef int8_t        kbyte_t;
-typedef uint8_t       ksbyte_t;
-typedef int16_t       kshort_t;
-typedef uint16_t      kushort_t;
-typedef int32_t       kint_t;
-typedef uint32_t      kuint_t;
-typedef int64_t       klong_t;
-typedef uint64_t      kulong_t;
+/* Native extern function prototype */
+typedef NINVOKE_RESULT (*NFUNC)(HKENV hKEnv);
 
-typedef float         kfloat_t;
-typedef double        kdouble_t;
+/* Exception handling function prototype */
+typedef void (*KEXCFUNC)(HKENV hKEnv);
 
-typedef kchar_t      *kstring_t;
+typedef unsigned char  kbool_t;
+typedef wchar_t        kchar_t;
+typedef int8_t         kbyte_t;
+typedef uint8_t        ksbyte_t;
+typedef int16_t        kshort_t;
+typedef uint16_t       kushort_t;
+typedef int32_t        kint_t;
+typedef uint32_t       kuint_t;
+typedef int64_t        klong_t;
+typedef uint64_t       kulong_t;
 
-// reference to a variable or a field
-typedef void         *kref_t;
+typedef float          kfloat_t;
+typedef double         kdouble_t;
 
-// user-defined type (class or delegate)
-typedef const void    *UdtId;
-typedef UdtId          ClassId;
-typedef UdtId          DelegateId;
-typedef const void    *MethodId;
-typedef const void    *FieldId;
-typedef const void    *TypeId;
+typedef const kchar_t *kstring_t;
 
-// native int
-typedef int           knint_t;
-// native unsigned int
-typedef unsigned int  knuint_t;
+/* Reference to userdata */
+typedef void          *kref_t;
 
-// 16-bit token
+/* User-defined type (class or delegate) */
+typedef const void    *HKUSERTYPE;
+
+/* Handle of ClassDef */
+typedef HKUSERTYPE     HKCLASS;
+
+/* Handle of DelegateDef */
+typedef HKUSERTYPE     HKDELEGATE;
+
+/* Handle of MethodDef */
+typedef const void    *HKMETHOD;
+
+/* Handle of FieldDef */
+typedef const void    *HKFIELD;
+
+/* Handle of TypeDef */
+typedef const void    *HKTYPE;
+
+/* Native integer */
+typedef ptrdiff_t     knint_t;
+/* Native unsigned integer */
+typedef size_t        knuint_t;
+
+/* 16-bit token */
 typedef uint16_t      ktoken16_t;
-// 32-bit token
+/* 32-bit token */
 typedef uint32_t      ktoken32_t;
 
-struct KVM
-{
-	// getting data
-	
-	virtual kbool_t getBool_loc(kushort_t index) =0;
-	virtual kbool_t getBool_arg(kushort_t index) =0;
-	virtual kbool_t getBool_fld(FieldId id) =0;
-	virtual kbool_t getBool_sfld(FieldId id) =0;
-	virtual kbool_t getBool_elem(knuint_t index) =0;
-	virtual kbool_t getBool_ind() =0;
+/*===================================================*/
 
-	virtual kchar_t getChar_loc(kushort_t index) =0;
-	virtual kchar_t getChar_arg(kushort_t index) =0;
-	virtual kchar_t getChar_fld(FieldId id) =0;
-	virtual kchar_t getChar_sfld(FieldId id) =0;
-	virtual kchar_t getChar_elem(knuint_t index) =0;
-	virtual kchar_t getChar_ind() =0;
+/* Gets primitive values */
 
-	virtual kbyte_t getByte_loc(kushort_t index) =0;
-	virtual kbyte_t getByte_arg(kushort_t index) =0;
-	virtual kbyte_t getByte_fld(FieldId id) =0;
-	virtual kbyte_t getByte_sfld(FieldId id) =0;
-	virtual kbyte_t getByte_elem(knuint_t index) =0;
-	virtual kbyte_t getByte_ind() =0;
+/* Gets local variable as bool value */
+kbool_t KNI_API KniGetLocalBool(HKENV hKEnv, kushort_t index);
+/* Gets local variable as char value */
+kchar_t KNI_API KniGetLocalChar(HKENV hKEnv, kushort_t index);
+/* Gets local variable as byte value */
+kbyte_t KNI_API KniGetLocalByte(HKENV hKEnv, kushort_t index);
+/* Gets local variable as sbool value */
+ksbyte_t KNI_API KniGetLocalSByte(HKENV hKEnv, kushort_t index);
+/* Gets local variable as short value */
+kshort_t KNI_API KniGetLocalShort(HKENV hKEnv, kushort_t index);
+/* Gets local variable as ushort value */
+kushort_t KNI_API KniGetLocalUShort(HKENV hKEnv, kushort_t index);
+/* Gets local variable as int value */
+kint_t KNI_API KniGetLocalInt(HKENV hKEnv, kushort_t index);
+/* Gets local variable as uint value */
+kuint_t KNI_API KniGetLocalUInt(HKENV hKEnv, kushort_t index);
+/* Gets local variable as long value */
+klong_t KNI_API KniGetLocalLong(HKENV hKEnv, kushort_t index);
+/* Gets local variable as ulong value */
+kulong_t KNI_API KniGetLocalULong(HKENV hKEnv, kushort_t index);
+/* Gets local variable as float value */
+kfloat_t KNI_API KniGetLocalFloat(HKENV hKEnv, kushort_t index);
+/* Gets local variable as double value */
+kdouble_t KNI_API KniGetLocalDouble(HKENV hKEnv, kushort_t index);
+/* Gets local variable as string value */
+kstring_t KNI_API KniGetLocalString(HKENV hKEnv, kushort_t index);
+/* Gets length of string or array local variable */
+knuint_t KNI_API KniGetLocalLength(HKENV hKEnv, kushort_t index);
 
-	virtual ksbyte_t getSByte_loc(kushort_t index) =0;
-	virtual ksbyte_t getSByte_arg(kushort_t index) =0;
-	virtual ksbyte_t getSByte_fld(FieldId id) =0;
-	virtual ksbyte_t getSByte_sfld(FieldId id) =0;
-	virtual ksbyte_t getSByte_elem(knuint_t index) =0;
-	virtual ksbyte_t getSByte_ind() =0;
-	
-	virtual kshort_t getShort_loc(kushort_t index) =0;
-	virtual kshort_t getShort_arg(kushort_t index) =0;
-	virtual kshort_t getShort_fld(FieldId id) =0;
-	virtual kshort_t getShort_sfld(FieldId id) =0;
-	virtual kshort_t getShort_elem(knuint_t index) =0;
-	virtual kshort_t getShort_ind() =0;
 
-	virtual kushort_t getUShort_loc(kushort_t index) =0;
-	virtual kushort_t getUShort_arg(kushort_t index) =0;
-	virtual kushort_t getUShort_fld(FieldId id) =0;
-	virtual kushort_t getUShort_sfld(FieldId id) =0;
-	virtual kushort_t getUShort_elem(knuint_t index) =0;
-	virtual kushort_t getUShort_ind() =0;
-	
-	virtual kint_t getInt_loc(kushort_t index) =0;
-	virtual kint_t getInt_arg(kushort_t index) =0;
-	virtual kint_t getInt_fld(FieldId id) =0;
-	virtual kint_t getInt_sfld(FieldId id) =0;
-	virtual kint_t getInt_elem(knuint_t index) =0;
-	virtual kint_t getInt_ind() =0;
-	
-	virtual kuint_t getUInt_loc(kushort_t index) =0;
-	virtual kuint_t getUInt_arg(kushort_t index) =0;
-	virtual kuint_t getUInt_fld(FieldId id) =0;
-	virtual kuint_t getUInt_sfld(FieldId id) =0;
-	virtual kuint_t getUInt_elem(knuint_t index) =0;
-	virtual kuint_t getUInt_ind() =0;
-	
-	virtual klong_t getLong_loc(kushort_t index) =0;
-	virtual klong_t getLong_arg(kushort_t index) =0;
-	virtual klong_t getLong_fld(FieldId id) =0;
-	virtual klong_t getLong_sfld(FieldId id) =0;
-	virtual klong_t getLong_elem(knuint_t index) =0;
-	virtual klong_t getLong_ind() =0;
-	
-	virtual kulong_t getULong_loc(kushort_t index) =0;
-	virtual kulong_t getULong_arg(kushort_t index) =0;
-	virtual kulong_t getULong_fld(FieldId id) =0;
-	virtual kulong_t getULong_sfld(FieldId id) =0;
-	virtual kulong_t getULong_elem(knuint_t index) =0;
-	virtual kulong_t getULong_ind() =0;
-	
-	virtual kfloat_t getFloat_loc(kushort_t index) =0;
-	virtual kfloat_t getFloat_arg(kushort_t index) =0;
-	virtual kfloat_t getFloat_fld(FieldId id) =0;
-	virtual kfloat_t getFloat_sfld(FieldId id) =0;
-	virtual kfloat_t getFloat_elem(knuint_t index) =0;
-	virtual kfloat_t getFloat_ind() =0;
-	
-	virtual kdouble_t getDouble_loc(kushort_t index) =0;
-	virtual kdouble_t getDouble_arg(kushort_t index) =0;
-	virtual kdouble_t getDouble_fld(FieldId id) =0;
-	virtual kdouble_t getDouble_sfld(FieldId id) =0;
-	virtual kdouble_t getDouble_elem(knuint_t index) =0;
-	virtual kdouble_t getDouble_ind() =0;
+/* Gets argument as bool value */
+kbool_t KNI_API KniGetArgBool(HKENV hKEnv, kushort_t index);
+/* Gets argument as char value */
+kchar_t KNI_API KniGetArgChar(HKENV hKEnv, kushort_t index);
+/* Gets argument as byte value */
+kbyte_t KNI_API KniGetArgByte(HKENV hKEnv, kushort_t index);
+/* Gets argument as sbyte value */
+ksbyte_t KNI_API KniGetArgSByte(HKENV hKEnv, kushort_t index);
+/* Gets argument as short value */
+kshort_t KNI_API KniGetArgShort(HKENV hKEnv, kushort_t index);
+/* Gets argument as ushort value */
+kushort_t KNI_API KniGetArgUShort(HKENV hKEnv, kushort_t index);
+/* Gets argument as int value */
+kint_t KNI_API KniGetArgInt(HKENV hKEnv, kushort_t index);
+/* Gets argument as uint value */
+kuint_t KNI_API KniGetArgUInt(HKENV hKEnv, kushort_t index);
+/* Gets argument as long value */
+klong_t KNI_API KniGetArgLong(HKENV hKEnv, kushort_t index);
+/* Gets argument as ulong value */
+kulong_t KNI_API KniGetArgULong(HKENV hKEnv, kushort_t index);
+/* Gets argument as float value */
+kfloat_t KNI_API KniGetArgFloat(HKENV hKEnv, kushort_t index);
+/* Gets argument as double value */
+kdouble_t KNI_API KniGetArgDouble(HKENV hKEnv, kushort_t index);
+/* Gets argument as string value */
+kstring_t KNI_API KniGetArgString(HKENV hKEnv, kushort_t index);
+/* Gets length of string or array argument */
+knuint_t KNI_API KniGetArgLength(HKENV hKEnv, kushort_t index);
 
-	virtual const kstring_t getString_loc(kushort_t index) =0;
-	virtual const kstring_t getString_arg(kushort_t index) =0;
-	virtual const kstring_t getString_fld(FieldId id) =0;
-	virtual const kstring_t getString_sfld(FieldId id) =0;
-	virtual const kstring_t getString_elem(knuint_t index) =0;
-	virtual const kstring_t getString_ind() =0;
 
-	virtual knuint_t getLength_loc(kushort_t index) =0;
-	virtual knuint_t getLength_arg(kushort_t index) =0;
-	virtual knuint_t getLength_fld(FieldId id) =0;
-	virtual knuint_t getLength_sfld(FieldId id) =0;
-	virtual knuint_t getLength_elem(knuint_t index) =0;
-	virtual knuint_t getLength();
+/* Gets instance field as bool value */
+kbool_t KNI_API KniGetFieldBool(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as char value */
+kchar_t KNI_API KniGetFieldChar(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as byte value */
+kbyte_t KNI_API KniGetFieldByte(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as sbyte value */
+ksbyte_t KNI_API KniGetFieldSByte(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as short value */
+kshort_t KNI_API KniGetFieldShort(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as ushort value */
+kushort_t KNI_API KniGetFieldUShort(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as int value */
+kint_t KNI_API KniGetFieldInt(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as uint value */
+kuint_t KNI_API KniGetFieldUInt(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as long value */
+klong_t KNI_API KniGetFieldLong(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as ulong value */
+kulong_t KNI_API KniGetFieldULong(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as float value */
+kfloat_t KNI_API KniGetFieldFloat(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as double value */
+kdouble_t KNI_API KniGetFieldDouble(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as string value */
+kstring_t KNI_API KniGetFieldString(HKENV hKEnv, HKFIELD hKField);
+/* Gets length of string or array instance field */
+knuint_t KNI_API KniGetFieldLength(HKENV hKEnv, HKFIELD hKField);
 
-	// setting data
+/* Gets static field as bool value */
+kbool_t KNI_API KniGetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as char value */
+kchar_t KNI_API KniGetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as byte value */
+kbyte_t KNI_API KniGetStaticFieldByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as sbyte value */
+ksbyte_t KNI_API KniGetStaticFieldSByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as short value */
+kshort_t KNI_API KniGetStaticFieldShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as ushort value */
+kushort_t KNI_API KniGetStaticFieldUShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as int value */
+kint_t KNI_API KniGetStaticFieldInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as uint value */
+kuint_t KNI_API KniGetStaticFieldUInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as long value */
+klong_t KNI_API KniGetStaticFieldLong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as ulong value */
+kulong_t KNI_API KniGetStaticFieldULong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as float value */
+kfloat_t KNI_API KniGetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as double value */
+kdouble_t KNI_API KniGetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as string value */
+kstring_t KNI_API KniGetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets length of string or array static field */
+knuint_t KNI_API KniGetStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 
-	virtual void setBool_loc(kushort_t index, kbool_t value) =0;
-	virtual void setBool_arg(kushort_t index, kbool_t value) =0;
-	virtual void setBool_fld(FieldId id, kbool_t value) =0;
-	virtual void setBool_sfld(FieldId id, kbool_t value) =0;
-	virtual void setBool_elem(knuint_t index, kbool_t value) =0;
-	virtual void setBool_ind(kbool_t value) =0;
 
-	virtual void setChar_loc(kushort_t index, kchar_t value) =0;
-	virtual void setChar_arg(kushort_t index, kchar_t value) =0;
-	virtual void setChar_fld(FieldId id, kchar_t value) =0;
-	virtual void setChar_sfld(FieldId id, kchar_t value) =0;
-	virtual void setChar_elem(knuint_t index, kchar_t value) =0;
-	virtual void setChar_ind(kchar_t value) =0;
+/* Gets element as bool value */
+kbool_t KNI_API KniGetElementBool(HKENV hKEnv, knuint_t index);
+/* Gets element as char value */
+kchar_t KNI_API KniGetElementChar(HKENV hKEnv, knuint_t index);
+/* Gets element as byte value */
+kbyte_t KNI_API KniGetElementByte(HKENV hKEnv, knuint_t index);
+/* Gets element as sbyte value */
+ksbyte_t KNI_API KniGetElementSByte(HKENV hKEnv, knuint_t index);
+/* Gets element as short value */
+kshort_t KNI_API KniGetElementShort(HKENV hKEnv, knuint_t index);
+/* Gets element as ushort value */
+kushort_t KNI_API KniGetElementUShort(HKENV hKEnv, knuint_t index);
+/* Gets element as int value */
+kint_t KNI_API KniGetElementInt(HKENV hKEnv, knuint_t index);
+/* Gets element as uint value */
+kuint_t KNI_API KniGetElementUInt(HKENV hKEnv, knuint_t index);
+/* Gets element as long value */
+klong_t KNI_API KniGetElementLong(HKENV hKEnv, knuint_t index);
+/* Gets element as ulong value */
+kulong_t KNI_API KniGetElementULong(HKENV hKEnv, knuint_t index);
+/* Gets element as float value */
+kfloat_t KNI_API KniGetElementFloat(HKENV hKEnv, knuint_t index);
+/* Gets element as double value */
+kdouble_t KNI_API KniGetElementDouble(HKENV hKEnv, knuint_t index);
+/* Gets element as string value */
+kstring_t KNI_API KniGetElementString(HKENV hKEnv, knuint_t index);
+/* Gets length of string or array typed element */
+knuint_t KNI_API KniGetElementLength(HKENV hKEnv, knuint_t index);
 
-	virtual void setByte_loc(kushort_t index, kbyte_t value) =0;
-	virtual void setByte_arg(kushort_t index, kbyte_t value) =0;
-	virtual void setByte_fld(FieldId id, kbyte_t value) =0;
-	virtual void setByte_sfld(FieldId id, kbyte_t value) =0;
-	virtual void setByte_elem(knuint_t index, kbyte_t value) =0;
-	virtual void setByte_ind(kbyte_t value) =0;
 
-	virtual void setSByte_loc(kushort_t index, ksbyte_t value) =0;
-	virtual void setSByte_arg(kushort_t index, ksbyte_t value) =0;
-	virtual void setSByte_fld(FieldId id, ksbyte_t value) =0;
-	virtual void setSByte_sfld(FieldId id, ksbyte_t value) =0;
-	virtual void setSByte_elem(knuint_t index, ksbyte_t value) =0;
-	virtual void setSByte_ind(ksbyte_t value) =0;
+/* Gets indirect object as bool value */
+kbool_t KNI_API KniGetIndirectBool(HKENV hKEnv);
+/* Gets indirect object as char value */
+kchar_t KNI_API KniGetIndirectChar(HKENV hKEnv);
+/* Gets indirect object as byte value */
+kbyte_t KNI_API KniGetIndirectByte(HKENV hKEnv);
+/* Gets indirect object as sbyte value */
+ksbyte_t KNI_API KniGetIndirectSByte(HKENV hKEnv);
+/* Gets indirect object as short value */
+kshort_t KNI_API KniGetIndirectShort(HKENV hKEnv);
+/* Gets indirect object as ushort value */
+kushort_t KNI_API KniGetIndirectUShort(HKENV hKEnv);
+/* Gets indirect object as int value */
+kint_t KNI_API KniGetIndirectInt(HKENV hKEnv);
+/* Gets indirect object as uint value */
+kuint_t KNI_API KniGetIndirectUInt(HKENV hKEnv);
+/* Gets indirect object as long value */
+klong_t KNI_API KniGetIndirectLong(HKENV hKEnv);
+/* Gets indirect object as ulong value */
+kulong_t KNI_API KniGetIndirectULong(HKENV hKEnv);
+/* Gets indirect object as float value */
+kfloat_t KNI_API KniGetIndirectFloat(HKENV hKEnv);
+/* Gets indirect object as double value */
+kdouble_t KNI_API KniGetIndirectDouble(HKENV hKEnv);
+/* Gets indirect object as string value */
+kstring_t KNI_API KniGetIndirectString(HKENV hKEnv);
+/* Gets length of string or array indirect object */
+knuint_t KNI_API KniGetIndirectLength(HKENV hKEnv);
 
-	virtual void setShort_loc(kushort_t index, kshort_t value) =0;
-	virtual void setShort_arg(kushort_t index, kshort_t value) =0;
-	virtual void setShort_fld(FieldId id, kshort_t value) =0;
-	virtual void setShort_sfld(FieldId id, kshort_t value) =0;
-	virtual void setShort_elem(knuint_t index, kshort_t value) =0;
-	virtual void setShort_ind(kshort_t value) =0;
+/*===================================================*/
 
-	virtual void setUShort_loc(kushort_t index, kushort_t value) =0;
-	virtual void setUShort_arg(kushort_t index, kushort_t value) =0;
-	virtual void setUShort_fld(FieldId id, kushort_t value) =0;
-	virtual void setUShort_sfld(FieldId id, kushort_t value) =0;
-	virtual void setUShort_elem(knuint_t index, kushort_t value) =0;
-	virtual void setUShort_ind(kushort_t value) =0;
+/* Sets primitive values */
 
-	virtual void setInt_loc(kushort_t index, kint_t value) =0;
-	virtual void setInt_arg(kushort_t index, kint_t value) =0;
-	virtual void setInt_fld(FieldId id, kint_t value) =0;
-	virtual void setInt_sfld(FieldId id, kint_t value) =0;
-	virtual void setInt_elem(knuint_t index, kint_t value) =0;
-	virtual void setInt_ind(kint_t value) =0;
+/* Sets bool value to local variable */
+void KNI_API KniSetLocalBool(HKENV hKEnv, kushort_t index, kbool_t val);
+/* Sets char value to local variable */
+void KNI_API KniSetLocalChar(HKENV hKEnv, kushort_t index, kchar_t val);
+/* Sets byte value to local variable */
+void KNI_API KniSetLocalByte(HKENV hKEnv, kushort_t index, kbyte_t val);
+/* Sets sbyte value to local variable */
+void KNI_API KniSetLocalSByte(HKENV hKEnv, kushort_t index, ksbyte_t val);
+/* Sets short value to local variable */
+void KNI_API KniSetLocalShort(HKENV hKEnv, kushort_t index, kshort_t val);
+/* Sets ushort value to local variable */
+void KNI_API KniSetLocalUShort(HKENV hKEnv, kushort_t index, kushort_t val);
+/* Sets int value to local variable */
+void KNI_API KniSetLocalInt(HKENV hKEnv, kushort_t index, kint_t val);
+/* Sets uint value to local variable */
+void KNI_API KniSetLocalUInt(HKENV hKEnv, kushort_t index, kuint_t val);
+/* Sets long value to local variable */
+void KNI_API KniSetLocalLong(HKENV hKEnv, kushort_t index, klong_t val);
+/* Sets ulong value to local variable */
+void KNI_API KniSetLocalULong(HKENV hKEnv, kushort_t index, kulong_t val);
+/* Sets float value to local variable */
+void KNI_API KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
+/* Sets double value to local variable */
+void KNI_API KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
+/* Sets string value to local variable */
+void KNI_API KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val);
 
-	virtual void setUInt_loc(kushort_t index, kuint_t value) =0;
-	virtual void setUInt_arg(kushort_t index, kuint_t value) =0;
-	virtual void setUInt_fld(FieldId id, kuint_t value) =0;
-	virtual void setUInt_sfld(FieldId id, kuint_t value) =0;
-	virtual void setUInt_elem(knuint_t index, kuint_t value) =0;
-	virtual void setUInt_ind(kuint_t value) =0;
+/* Sets bool value to argument */
+void KNI_API KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val);
+/* Sets char value to argument */
+void KNI_API KniSetArgChar(HKENV hKEnv, kushort_t index, kchar_t val);
+/* Sets byte value to argument */
+void KNI_API KniSetArgByte(HKENV hKEnv, kushort_t index, kbyte_t val);
+/* Sets sbyte value to argument */
+void KNI_API KniSetArgSByte(HKENV hKEnv, kushort_t index, ksbyte_t val);
+/* Sets short value to argument */
+void KNI_API KniSetArgShort(HKENV hKEnv, kushort_t index, kshort_t val);
+/* Sets ushort value to argument */
+void KNI_API KniSetArgUShort(HKENV hKEnv, kushort_t index, kushort_t val);
+/* Sets int value to argument */
+void KNI_API KniSetArgInt(HKENV hKEnv, kushort_t index, kint_t val);
+/* Sets uint value to argument */
+void KNI_API KniSetArgUInt(HKENV hKEnv, kushort_t index, kuint_t val);
+/* Sets long value to argument */
+void KNI_API KniSetArgLong(HKENV hKEnv, kushort_t index, klong_t val);
+/* Sets ulong value to argument */
+void KNI_API KniSetArgULong(HKENV hKEnv, kushort_t index, kulong_t val);
+/* Sets float value to argument */
+void KNI_API KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
+/* Sets double value to argument */
+void KNI_API KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
+/* Sets string value to argument */
+void KNI_API KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val);
 
-	virtual void setLong_loc(kushort_t index, klong_t value) =0;
-	virtual void setLong_arg(kushort_t index, klong_t value) =0;
-	virtual void setLong_fld(FieldId id, klong_t value) =0;
-	virtual void setLong_sfld(FieldId id, klong_t value) =0;
-	virtual void setLong_elem(knuint_t index, klong_t value) =0;
-	virtual void setLong_ind(klong_t value) =0;
 
-	virtual void setULong_loc(kushort_t index, kulong_t value) =0;
-	virtual void setULong_arg(kushort_t index, kulong_t value) =0;
-	virtual void setULong_fld(FieldId id, kulong_t value) =0;
-	virtual void setULong_sfld(FieldId id, kulong_t value) =0;
-	virtual void setULong_elem(knuint_t index, kulong_t value) =0;
-	virtual void setULong_ind(kulong_t value) =0;
+/* Sets bool value to instance field */
+void KNI_API KniSetFieldBool(HKENV hKEnv, HKFIELD hKField, kbool_t val);
+/* Sets char value to instance field */
+void KNI_API KniSetFieldChar(HKENV hKEnv, HKFIELD hKField, kchar_t val);
+/* Sets byte value to instance field */
+void KNI_API KniSetFieldByte(HKENV hKEnv, HKFIELD hKField, kbyte_t val);
+/* Sets sbyte value to instance field */
+void KNI_API KniSetFieldSByte(HKENV hKEnv, HKFIELD hKField, ksbyte_t val);
+/* Sets short value to instance field */
+void KNI_API KniSetFieldShort(HKENV hKEnv, HKFIELD hKField, kshort_t val);
+/* Sets ushort value to instance field */
+void KNI_API KniSetFieldUShort(HKENV hKEnv, HKFIELD hKField, kushort_t val);
+/* Sets int value to instance field */
+void KNI_API KniSetFieldInt(HKENV hKEnv, HKFIELD hKField, kint_t val);
+/* Sets uint value to instance field */
+void KNI_API KniSetFieldUInt(HKENV hKEnv, HKFIELD hKField, kuint_t val);
+/* Sets long value to instance field */
+void KNI_API KniSetFieldLong(HKENV hKEnv, HKFIELD hKField, klong_t val);
+/* Sets ulong value to instance field */
+void KNI_API KniSetFieldULong(HKENV hKEnv, HKFIELD hKField, kulong_t val);
+/* Sets float value to instance field */
+void KNI_API KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val);
+/* Sets double value to instance field */
+void KNI_API KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val);
+/* Sets string value to instance field */
+void KNI_API KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val);
 
-	virtual void setFloat_loc(kushort_t index, kfloat_t value) =0;
-	virtual void setFloat_arg(kushort_t index, kfloat_t value) =0;
-	virtual void setFloat_fld(FieldId id, kfloat_t value) =0;
-	virtual void setFloat_sfld(FieldId id, kfloat_t value) =0;
-	virtual void setFloat_elem(knuint_t index, kfloat_t value) =0;
-	virtual void setFloat_ind(kfloat_t value) =0;
 
-	virtual void setDouble_loc(kushort_t index, kdouble_t value) =0;
-	virtual void setDouble_arg(kushort_t index, kdouble_t value) =0;
-	virtual void setDouble_fld(FieldId id, kdouble_t value) =0;
-	virtual void setDouble_sfld(FieldId id, kdouble_t value) =0;
-	virtual void setDouble_elem(knuint_t index, kdouble_t value) =0;
-	virtual void setDouble_ind(kdouble_t value) =0;
+/* Sets bool value to static field */
+void KNI_API KniSetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbool_t val);
+/* Sets char value to static field */
+void KNI_API KniSetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kchar_t val);
+/* Sets byte value to static field */
+void KNI_API KniSetStaticFieldByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbyte_t val);
+/* Sets sbyte value to static field */
+void KNI_API KniSetStaticFieldSByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, ksbyte_t val);
+/* Sets short value to static field */
+void KNI_API KniSetStaticFieldShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kshort_t val);
+/* Sets ushort value to static field */
+void KNI_API KniSetStaticFieldUShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kushort_t val);
+/* Sets int value to static field */
+void KNI_API KniSetStaticFieldInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kint_t val);
+/* Sets uint value to static field */
+void KNI_API KniSetStaticFieldUInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kuint_t val);
+/* Sets long value to static field */
+void KNI_API KniSetStaticFieldLong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, klong_t val);
+/* Sets ulong value to static field */
+void KNI_API KniSetStaticFieldULong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kulong_t val);
+/* Sets float value to static field */
+void KNI_API KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kfloat_t val);
+/* Sets double value to static field */
+void KNI_API KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
+/* Sets string value to static field */
+void KNI_API KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val);
 
-	virtual void setString_loc(kushort_t index, const kstring_t value) =0;
-	virtual void setString_arg(kushort_t index, const kstring_t value) =0;
-	virtual void setString_fld(FieldId id, const kstring_t value) =0;
-	virtual void setString_sfld(FieldId id, const kstring_t value) =0;
-	virtual void setString_elem(knuint_t index, const kstring_t value) =0;
-	virtual void setString_ind(const kstring_t value) =0;
 
-	// loading data onto stack
+/* Sets bool value to array element */
+void KNI_API KniSetElementBool(HKENV hKEnv, knuint_t index, kbool_t val);
+/* Sets char value to array element */
+void KNI_API KniSetElementChar(HKENV hKEnv, knuint_t index, kchar_t val);
+/* Sets byte value to array element */
+void KNI_API KniSetElementByte(HKENV hKEnv, knuint_t index, kbyte_t val);
+/* Sets sbyte value to array element */
+void KNI_API KniSetElementSByte(HKENV hKEnv, knuint_t index, ksbyte_t val);
+/* Sets short value to array element */
+void KNI_API KniSetElementShort(HKENV hKEnv, knuint_t index, kshort_t val);
+/* Sets ushort value to array element */
+void KNI_API KniSetElementUShort(HKENV hKEnv, knuint_t index, kushort_t val);
+/* Sets int value to array element */
+void KNI_API KniSetElementInt(HKENV hKEnv, knuint_t index, kint_t val);
+/* Sets uint value to array element */
+void KNI_API KniSetElementUInt(HKENV hKEnv, knuint_t index, kuint_t val);
+/* Sets long value to array element */
+void KNI_API KniSetElementLong(HKENV hKEnv, knuint_t index, klong_t val);
+/* Sets ulong value to array element */
+void KNI_API KniSetElementULong(HKENV hKEnv, knuint_t index, kulong_t val);
+/* Sets float value to array element */
+void KNI_API KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val);
+/* Sets double value to array element */
+void KNI_API KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val);
+/* Sets string value to array element */
+void KNI_API KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val);
 
-	virtual void loadBool(kbool_t value) =0;
-	virtual void loadChar(kchar_t value) =0;
-	virtual void loadByte(kbyte_t value) =0;
-	virtual void loadSByte(ksbyte_t value) =0;
-	virtual void loadShort(kshort_t value) =0;
-	virtual void loadUShort(kushort_t value) =0;
-	virtual void loadInt(kint_t value) =0;
-	virtual void loadUInt(kuint_t value) =0;
-	virtual void loadLong(klong_t value) =0;
-	virtual void loadULong(kulong_t value) =0;
-	virtual void loadFloat(kfloat_t value) =0;
-	virtual void loadDouble(kdouble_t value) =0;
-	virtual void loadString(const kstring_t value) =0;
-	
-	virtual void load_loc(kushort_t index) =0;
-	virtual void load_arg(kushort_t index) =0;
-	virtual void load_fld(FieldId id) =0;
-	virtual void load_sfld(FieldId id) =0;
-	virtual void load_elem(knuint_t index) =0;
 
-	virtual void loadLength_loc(kushort_t index) =0;
-	virtual void loadLength_arg(kushort_t index) =0;
-	virtual void loadLength_fld(FieldId id) =0;
-	virtual void loadLength_sfld(FieldId id) =0;
-	virtual void loadLength_elem(knuint_t index) =0;
+/* Sets bool value to indirect object */
+void KNI_API KniSetIndirectBool(HKENV hKEnv, kbool_t val);
+/* Sets char value to indirect object */
+void KNI_API KniSetIndirectChar(HKENV hKEnv, kchar_t val);
+/* Sets byte value to indirect object */
+void KNI_API KniSetIndirectByte(HKENV hKEnv, kbyte_t val);
+/* Sets sbyte value to indirect object */
+void KNI_API KniSetIndirectSByte(HKENV hKEnv, ksbyte_t val);
+/* Sets short value to indirect object */
+void KNI_API KniSetIndirectShort(HKENV hKEnv, kshort_t val);
+/* Sets ushort value to indirect object */
+void KNI_API KniSetIndirectUShort(HKENV hKEnv, kushort_t val);
+/* Sets int value to indirect object */
+void KNI_API KniSetIndirectInt(HKENV hKEnv, kint_t val);
+/* Sets uint value to indirect object */
+void KNI_API KniSetIndirectUInt(HKENV hKEnv, kuint_t val);
+/* Sets long value to indirect object */
+void KNI_API KniSetIndirectLong(HKENV hKEnv, klong_t val);
+/* Sets ulong value to indirect object */
+void KNI_API KniSetIndirectULong(HKENV hKEnv, kulong_t val);
+/* Sets float value to indirect object */
+void KNI_API KniSetIndirectFloat(HKENV hKEnv, kfloat_t val);
+/* Sets double value to indirect object */
+void KNI_API KniSetIndirectDouble(HKENV hKEnv, kdouble_t val);
+/* Sets string value to indirect object */
+void KNI_API KniSetIndirectString(HKENV hKEnv, kstring_t val);
 
-	virtual void loadElem_loc(kushort_t index, knuint_t elemIndex) =0;
-	virtual void loadElem_arg(kushort_t index, knuint_t elemIndex) =0;
-	virtual void loadElem_fld(FieldId id, knuint_t elemIndex) =0;
-	virtual void loadElem_sfld(FieldId id, knuint_t elemIndex) =0;
-	virtual void loadElem_elem(knuint_t index, knuint_t elemIndex) =0;
+/*===================================================*/
 
-	virtual void loadAddress_loc(kushort_t index) =0;
-	virtual void loadAddress_arg(kushort_t index) =0;
-	virtual void loadAddress_fld(FieldId id) =0;
-	virtual void loadAddress_sfld(FieldId id) =0;
-	virtual void loadAddress_elem(knuint_t index) =0;
+/* Loads values onto stack */
 
-	virtual void loadNull() =0;
-	virtual void loadThis() =0;
+/* Loads bool value onto stack */
+void KNI_API KniLoadBool(HKENV hKEnv, kbool_t val);
+/* Loads char value onto stack */
+void KNI_API KniLoadChar(HKENV hKEnv, kchar_t val);
+/* Loads byte value onto stack */
+void KNI_API KniLoadByte(HKENV hKEnv, kbyte_t val);
+/* Loads sbyte value onto stack */
+void KNI_API KniLoadSByte(HKENV hKEnv, ksbyte_t val);
+/* Loads short value onto stack */
+void KNI_API KniLoadShort(HKENV hKEnv, kshort_t val);
+/* Loads ushort value onto stack */
+void KNI_API KniLoadUShort(HKENV hKEnv, kushort_t val);
+/* Loads int value onto stack */
+void KNI_API KniLoadInt(HKENV hKEnv, kint_t val);
+/* Loads uint value onto stack */
+void KNI_API KniLoadUInt(HKENV hKEnv, kuint_t val);
+/* Loads long value onto stack */
+void KNI_API KniLoadLong(HKENV hKEnv, klong_t val);
+/* Loads ulong value onto stack */
+void KNI_API KniLoadULong(HKENV hKEnv, kulong_t val);
+/* Loads float value onto stack */
+void KNI_API KniLoadFloat(HKENV hKEnv, kfloat_t val);
+/* Loads double value onto stack */
+void KNI_API KniLoadDouble(HKENV hKEnv, kdouble_t val);
+/* Loads string value onto stack */
+void KNI_API KniLoadString(HKENV hKEnv, kstring_t val);
 
-	virtual void loadNewClassInstance(ClassId cls) =0;
-	virtual void loadNewDelegateInstance(DelegateId del, MethodId met) =0;
-	virtual void loadNewDelegateInstance(DelegateId del, NFUNC nativeFunction) =0;
-	virtual void loadNewArray(TypeId arrType, knuint_t length) =0;
+/* Loads local variable onto stack */
+void KNI_API KniLoadLocal(HKENV hKEnv, kushort_t index);
+/* Loads argument onto stack */
+void KNI_API KniLoadArg(HKENV hKEnv, kushort_t index);
+/* Loads ByRef argument onto stack */
+void KNI_API KniLoadArgByRef(HKENV hKEnv, kushort_t index);
+/* Loads instance field onto stack */
+void KNI_API KniLoadField(HKENV hKEnv, HKFIELD hKField);
+/* Loads static field onto stack */
+void KNI_API KniLoadStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Loads array element onto stack */
+void KNI_API KniLoadElement(HKENV hKEnv, knuint_t index);
+/* Loads indirect object onto stack */
+void KNI_API KniLoadIndirect(HKENV hKEnv);
 
-	// reference checking
+/* Loads length of string or array local variable onto stack */
+void KNI_API KniLoadLocalLength(HKENV hKEnv, kushort_t index);
+/* Loads length of string or array argument onto stack */
+void KNI_API KniLoadArgLength(HKENV hKEnv, kushort_t index);
+/* Loads length of string or array ByRef argument onto stack */
+void KNI_API KniLoadArgLengthByRef(HKENV hKEnv, kushort_t index);
+/* Loads length of string or array instance field onto stack */
+void KNI_API KniLoadFieldLength(HKENV hKEnv, HKFIELD hKField);
+/* Loads length of string or array static field onto stack */
+void KNI_API KniLoadStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Loads length of string or array typed array element onto stack */
+void KNI_API KniLoadElementLength(HKENV hKEnv, knuint_t index);
+/* Loads length of string or array indirect object onto stack */
+void KNI_API KniLoadIndirectLength(HKENV hKEnv);
 
-	virtual bool isNull() =0;
-	virtual bool isNull_loc(kushort_t index) =0;
-	virtual bool isNull_arg(kushort_t index) =0;
-	virtual bool isNull_fld(FieldId id) =0;
-	virtual bool isNull_sfld(FieldId id) =0;
-	virtual bool isNull_ind() =0;
+/* Loads element of array typed local variable onto stack */
+void KNI_API KniLoadLocalElement(HKENV hKEnv, kushort_t index, knuint_t elemIndex);
+/* Loads element of array typed argument onto stack */
+void KNI_API KniLoadArgElement(HKENV hKEnv, kushort_t index, knuint_t elemIndex);
+/* Loads element of array typed ByRef argument onto stack */
+void KNI_API KniLoadArgElementByRef(HKENV hKEnv, kushort_t index, knuint_t elemIndex);
+/* Loads element of array typed instance field onto stack */
+void KNI_API KniLoadFieldElement(HKENV hKEnv, HKFIELD hKField, knuint_t elemIndex);
+/* Loads element of array typed static field onto stack */
+void KNI_API KniLoadStaticFieldElement(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, knuint_t elemIndex);
+/* Loads element of array typed array element onto stack */
+void KNI_API KniLoadElementElement(HKENV hKEnv, knuint_t index, knuint_t elemIndex);
+/* Loads element of array typed  onto stack */
+void KNI_API KniLoadIndirectElement(HKENV hKEnv, knuint_t elemIndex);
 
-	virtual bool referenceEquals() =0;
+/* Loads address of local variable onto stack */
+void KNI_API KniLoadLocalAddress(HKENV hKEnv, kushort_t index);
+/* Loads address of argument onto stack */
+void KNI_API KniLoadArgAddress(HKENV hKEnv, kushort_t index);
+/* Loads address of instance field onto stack */
+void KNI_API KniLoadFieldAddress(HKENV hKEnv, HKFIELD hKField);
+/* Loads address of static field onto stack */
+void KNI_API KniLoadStaticFieldAddress(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Loads address of array element onto stack */
+void KNI_API KniLoadElementAddress(HKENV hKEnv, knuint_t index);
 
-	// creating and deleting object
+/* Loads null value onto stack */
+void KNI_API KniLoadNull(HKENV hKEnv);
 
-	virtual void createClassInstance(ClassId cls, ...) =0;
-	virtual void createDelegateInstance(DelegateId del, MethodId met) =0;
-	virtual void createDelegateInstance(DelegateId del, NFUNC nativeFunction) =0;
-	virtual void createArray(TypeId arrType, knuint_t length) =0;
+/* Loads new class instance onto stack */
+void KNI_API KniLoadNewObject(HKENV hKEnv, HKCLASS hKClass);
+/* Loads new delegate instance onto stack */
+void KNI_API KniLoadNewDelegate(HKENV hKEnv, HKDELEGATE hKDelegate, HKMETHOD hKMethod);
+/* Loads new array onto stack */
+void KNI_API KniLoadNewArray(HKENV hKEnv, HKTYPE hKType, knuint_t length);
+/* Loads new array onto stack, elements are already loaded */
+void KNI_API KniLoadNewArrayBaking(HKENV hKEnv, HKTYPE hKType, knuint_t length);
 
-	// calling function
+/*===================================================*/
 
-	virtual void invokeVoid(MethodId id) =0;
-	virtual void invokeVoid() =0;
+/* Stores values */
 
-	virtual kbool_t invokeBool(MethodId id) =0;
-	virtual kbool_t invokeBool();
+/* Stores stack top value into local variable */
+void KNI_API KniStoreLocal(HKENV hKEnv, kushort_t index);
+/* Stores stack top value into argument */
+void KNI_API KniStoreArg(HKENV hKEnv, kushort_t index);
+/* Stores stack top value into ByRef argument */
+void KNI_API KniStoreArgByRef(HKENV hKEnv, kushort_t index);
+/* Stores stack top value into instance field */
+void KNI_API KniStoreField(HKENV hKEnv, HKFIELD hKField);
+/* Stores stack top value into static field */
+void KNI_API KniStoreStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Stores stack top value into array element */
+void KNI_API KniStoreElement(HKENV hKEnv, knuint_t index);
+/* Stores stack top value into indirect object */
+void KNI_API KniStoreIndirect(HKENV hKEnv);
 
-	virtual kchar_t invokeChar(MethodId id) =0;
-	virtual kchar_t invokeChar();
-	
-	virtual kbyte_t invokeByte(MethodId id) =0;
-	virtual kbyte_t invokeByte();
+/*===================================================*/
 
-	virtual ksbyte_t invokeSByte(MethodId id) =0;
-	virtual ksbyte_t invokeSByte() =0;
+/* Tests values */
 
-	virtual kshort_t invokeShort(MethodId id) =0;
-	virtual kshort_t invokeShort() =0;
+/* Checks if stack top value is null */
+kbool_t KNI_API KniIsNull(HKENV hKEnv);
+/* Checks if local variable is null */
+kbool_t KNI_API KniIsNullLocal(HKENV hKEnv, kushort_t index);
+/* Checks if argument is null */
+kbool_t KNI_API KniIsNullArg(HKENV hKEnv, kushort_t index);
+/* Checks if ByRef argument is null */
+kbool_t KNI_API KniIsNullArgByRef(HKENV hKEnv, kushort_t index);
+/* Checks if instance field is null */
+kbool_t KNI_API KniIsNullField(HKENV hKEnv, HKFIELD hKField);
+/* Checks if static field is null */
+kbool_t KNI_API KniIsNullStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Checks if array element is null */
+kbool_t KNI_API KniIsNullElement(HKENV hKEnv, knuint_t index);
+/* Checks if indirect object is null */
+kbool_t KNI_API KniIsNullIndirect(HKENV hKEnv);
 
-	virtual kushort_t invokeUShort(MethodId id) =0;
-	virtual kushort_t invokeUShort() =0;
+/* Checks if two stack top values are equal by reference */
+kbool_t KNI_API KniIsReferenceEqual(HKENV hKEnv);
 
-	virtual kint_t invokeInt(MethodId id) =0;
-	virtual kint_t invokeInt() =0;
+/* Checks if stack top value is class instance */
+kbool_t KNI_API KniIsClass(HKENV hKEnv);
+/* Checks if stack top value is delegate instance */
+kbool_t KNI_API KniIsDelegate(HKENV hKEnv);
+/* Checks if stack top value is array */
+kbool_t KNI_API KniIsArray(HKENV hKEnv);
 
-	virtual kuint_t invokeUInt(MethodId id) =0;
-	virtual kuint_t invokeUInt() =0;
+/* Checks if stack top value is instance of the given class */
+kbool_t KNI_API KniIsInstanceOfClass(HKENV hKEnv, HKCLASS hKClass);
+/* Checks if stack top value is instance of the given delegate */
+kbool_t KNI_API KniIsInstanceOfDelegate(HKENV hKEnv, HKDELEGATE hKDelegate);
 
-	virtual klong_t invokeLong(MethodId id) =0;
-	virtual klong_t invokeLong() =0;
+/*===================================================*/
 
-	virtual kulong_t invokeULong(MethodId id) =0;
-	virtual kulong_t invokeULong() =0;
+/* Invokes */
 
-	virtual kfloat_t invokeFloat(MethodId id) =0;
-	virtual kfloat_t invokeFloat() =0;
+/* Invokes a method */
+KRESULT KNI_API KniInvoke(HKENV hKEnv, HKMETHOD hKMethod);
+/* Invokes a delegate object on stack top */
+KRESULT KNI_API KniInvokeObject(HKENV hKEnv);
 
-	virtual kdouble_t invokeDouble(MethodId id) =0;
-	virtual kdouble_t invokeDouble() =0;
+/* Marks the beginning of a protected region */
+void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC pKExcFunc);
+/* Marks the end of a protected region */
+void KNI_API KniLeaveProtectedRegion(HKENV hKEnv, KEXCFUNC pKExcFunc);
+/* Throws an exception loaded onto stack */
+void KNI_API KniThrowException(HKENV hKEnv);
 
-	virtual const kstring_t invokeString(MethodId id) =0;
-	virtual const kstring_t invokeString() =0;
+/* Initializes local variables for current native method */
+void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes);
 
-	virtual void invokeObject(MethodId id) =0;
-	virtual void invokeObject() =0;
+/*===================================================*/
 
-	// metadata
+/* Metadata and types */
 
-	virtual ClassId getClass(const kstring_t name) =0;
-	virtual DelegateId getDelegate(const kstring_t name) =0;
-	virtual MethodId getMethod(ClassId cls, const kstring_t name) =0;
-	virtual FieldId getField(ClassId cls, const kstring_t name) =0;
-	
-	virtual TypeId getType(ktypetag_t tag) =0;
-	virtual TypeId getType(ktypetag_t tag, kushort_t dim) =0;
-	virtual TypeId getType(ktypetag_t tag, kushort_t dim, UdtId id) =0;
+/* Gets datatype of stack top value */
+HKTYPE KNI_API KniGetType(HKENV hKEnv);
 
-	virtual TypeId getObjectType() =0;
+/* Gets datatype of local variable */
+HKTYPE KNI_API KniGetTypeLocal(HKENV hKEnv, kushort_t index);
+/* Gets datatype of argument */
+HKTYPE KNI_API KniGetTypeArg(HKENV hKEnv, kushort_t index);
+/* Gets datatype of ByRef argument */
+HKTYPE KNI_API KniGetTypeArgByRef(HKENV hKEnv, kushort_t index);
+/* Gets datatype of instance field */
+HKTYPE KNI_API KniGetTypeField(HKENV hKEnv, HKFIELD hKField);
+/* Gets datatype of static field */
+HKTYPE KNI_API KniGetTypeStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets datatype of array element */
+HKTYPE KNI_API KniGetTypeElement(HKENV hKEnv, knuint_t index);
+/* Gets datatype of indirect object */
+HKTYPE KNI_API KniGetTypeIndirect(HKENV hKEnv);
 
-	virtual bool isClassInstance() =0;
-	virtual bool isDelegateInstance() =0;
-	virtual bool isArray() =0;
+/* Gets ClassDef having the given name */
+HKCLASS KNI_API KniGetClass(HKENV hKEnv, kstring_t ksName);
+/* Gets DelegateDef having the given name */
+HKDELEGATE KNI_API KniGetDelegate(HKENV hKEnv, kstring_t ksName);
+/* Gets FieldDef having the given name */
+HKFIELD KNI_API KniGetField(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName);
+/* Gets MethodDef having the given name */
+HKMETHOD KNI_API KniGetMethod(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName);
 
-	virtual bool isInstanceOf(UdtId id) =0;
-};
+/* Gets handle of a primitive type */
+HKTYPE KNI_API KniGetPrimitiveType(HKENV hKEnv, ktypetag_t tag);
 
-#endif//_KNI_H
+/* Creates TypeDef from the given attributes */
+HKTYPE KNI_API KniCreateType(HKENV hKEnv, ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate);
+
+/* Checks if the given type is class type */
+kbool_t KNI_API KniIsClassType(HKENV hKEnv, HKTYPE hKType);
+/* Checks if the given type is delegate type */
+kbool_t KNI_API KniIsDelegateType(HKENV hKEnv, HKTYPE hKType);
+/* Checks if the given type is array type */
+kbool_t KNI_API KniIsArrayType(HKENV hKEnv, HKTYPE hKType);
+
+/*===================================================*/
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif/*_KNI_H*/

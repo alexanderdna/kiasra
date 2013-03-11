@@ -74,13 +74,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="kconfig.hpp" />
+    <ClInclude Include="kopcodes.hpp" />
     <ClInclude Include="kenv.hpp" />
+    <ClInclude Include="kframe.hpp" />
     <ClInclude Include="kgc.hpp" />
+    <ClInclude Include="kexchandler.hpp" />
     <ClInclude Include="kmeta.hpp" />
     <ClInclude Include="kni.h" />
     <ClInclude Include="kobject.hpp" />
     <ClInclude Include="krt.h" />
     <ClInclude Include="kmodule.hpp" />
+    <ClInclude Include="kstringutils.hpp" />
+    <ClInclude Include="ktypetree.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -94,9 +100,13 @@
     </ClCompile>
     <ClCompile Include="kenv.cpp" />
     <ClCompile Include="kgc.cpp" />
+    <ClCompile Include="kni.cpp" />
     <ClCompile Include="kobject.cpp" />
     <ClCompile Include="krt.cpp" />
     <ClCompile Include="kmodule.cpp" />
+    <ClCompile Include="kstringutils.cpp" />
+    <ClCompile Include="ktypetree.cpp" />
+    <ClCompile Include="ldo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="krt.rc" />
@@ -104,4 +114,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="krt.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

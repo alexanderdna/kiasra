@@ -3,6 +3,8 @@
 #include "krt.h"
 #include "kni.h"
 
+class KObject;
+
 //===================================================
 
 struct TypeDef;
@@ -27,6 +29,14 @@ struct ParamDef;
 struct MetaParamDef;
 
 //===================================================
+
+enum ModuleAttributes : uint16_t
+{
+	KMODA_SYSTEM,
+	KMODA_USER,
+	KMODA_KIASRA,
+	KMODA_NATIVE,
+};
 
 enum ClassAttributes : uint16_t
 {
@@ -56,7 +66,7 @@ enum MethodAttributes : uint16_t
 
 struct TypeDef
 {
-	ktypetag_t tag;
+	uint16_t tag;
 	kushort_t  dim;
 	union
 	{
@@ -67,19 +77,58 @@ struct TypeDef
 
 struct MetaTypeDef
 {
-	ktypetag_t tag;
+	uint16_t   tag;
 	kushort_t  dim;
 	ktoken16_t tok;
 };
 
 struct ModuleDef
 {
+	ModuleAttributes attrs;
+	kstring_t        path;
 
+	kuint_t          stringCount;
+	kstring_t       *strings;
+
+	kushort_t        moduleCount;
+	ModuleDef       *moduleList;	// array of imported modules
+
+	kuint_t          typeCount;
+	TypeDef        **typeList;		// array of pointers to types
+
+	kushort_t        classCount;
+	ClassDef       **classList;		// array of pointers to internal and external classes
+	MetaClassDef    *metaClassList;	// for internal/external detection
+
+	kushort_t        delegateCount;
+	DelegateDef    **delegateList;	// array of pointers to internal and external delegates
+	MetaDelegateDef *metaDelegateList;	// for internal/external detection
+
+	kushort_t        fieldCount;
+	FieldDef        *fieldList;		// array of class fields
+
+	kushort_t        methodCount;
+	MethodDef       *methodList;	// array of class methods
+
+	kushort_t        paramCount;
+	ParamDef        *paramList;		// array of method parameters
+
+	kushort_t        dparamCount;
+	ParamDef        *dparamList;	// array of delegate parameters
+
+	kushort_t        localCount;
+	TypeDef        **localList;		// array of pointers to elements of `types`
+
+	ktoken16_t       rtIndex;		// position in importing module
+
+	KObject         *staticData;	// objects to store static fields
+	const unsigned char *code;		// module bytecode
 };
 
 struct MetaModuleDef
 {
-
+	ModuleAttributes attrs;
+	ktoken32_t       path;
 };
 
 struct ClassDef
@@ -88,13 +137,26 @@ struct ClassDef
 	kstring_t       name;
 	
 	kushort_t       fieldCount;
-	FieldDef      **fieldList;
+	FieldDef      **fieldList;	// array of pointers to elements of `fields` in ModuleDef
 
 	kushort_t       methodCount;
-	MethodDef     **methodList;
+	MethodDef     **methodList;	// array of pointers to elements of `methods` in ModuleDef
 
-	ktoken16_t     localIndex;
-	ktoken16_t     rtIndex;
+	ModuleDef      *module;		// pointer to importing module
+
+	ktoken16_t      localIndex;	// position in defining module
+	ktoken16_t      rtIndex;	// position in importing module
+
+	kushort_t       iFieldCount;
+	FieldDef      **iFieldList;	// instance fields
+	
+	kushort_t       sFieldCount;
+	FieldDef      **sFieldList; // static fields
+
+	MethodDef     **iMethodList;// instance method
+	MethodDef     **sMethodList;// static method
+	MethodDef      *ctor;		// instance constructor
+	MethodDef      *cctor;		// static constructor
 };
 
 struct MetaClassDef
@@ -112,10 +174,15 @@ struct DelegateDef
 	ClassAttributes attrs;
 	kstring_t       name;
 
-	TypeDef        *returnType;
+	const TypeDef  *returnType;
 	
 	kushort_t       paramCount;
-	ParamDef      **paramList;
+	ParamDef      **paramList;	// array of pointers to elements of `dparams` in ModuleDef
+
+	ModuleDef      *module;		// pointer to importing module
+
+	ktoken16_t      localIndex;	// position in defining module
+	ktoken16_t      rtIndex;	// position in importing module
 };
 
 struct MetaDelegateDef
@@ -132,9 +199,10 @@ struct FieldDef
 {
 	FieldAttributes attrs;
 	kstring_t       name;
-	TypeDef        *declType;
+	const TypeDef  *declType;
 
-	ktoken16_t      localIndex; // position in parent class, instance-static separative
+	ClassDef       *klass;		// pointer to parent class
+	ktoken16_t      localIndex;	// position in parent class, instance-static separative
 };
 
 struct MetaFieldDef
@@ -149,13 +217,13 @@ struct MethodDef
 	MethodAttributes attrs;
 	kstring_t        name;
 
-	TypeDef         *returnType;
+	const TypeDef   *returnType;
 
 	kushort_t        paramCount;
 	ParamDef       **paramList;
 
 	kushort_t        localCount;
-	TypeDef        **localList;
+	const TypeDef  **localList;
 
 	union
 	{
@@ -163,7 +231,8 @@ struct MethodDef
 		NFUNC        func;
 	};
 
-	ktoken16_t       localIndex; // position in parent class
+	ClassDef        *klass;			// pointer to parent class
+	ktoken16_t       localIndex;	// position in parent class
 };
 
 struct MetaMethodDef
@@ -178,9 +247,9 @@ struct MetaMethodDef
 
 struct ParamDef
 {
-	kstring_t name;
-	TypeDef  *declType;
-	bool      byRef;
+	kstring_t       name;
+	const TypeDef  *declType;
+	bool            byRef;
 };
 
 struct MetaParamDef

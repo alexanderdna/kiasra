@@ -7,10 +7,10 @@
 
 #define assert(v) ((void)0)
 
-#define IS_WHITE(hdr) ((hdr->mark & 0x0F) == 0u)
-#define IS_BLACK(hdr) ((hdr->mark & 0x0F) == 1u)
-#define IS_ARRAY(hdr) (((hdr->mark & 0xF0) >> 4) == 0u)
-#define IS_STACK(hdr) (((hdr->mark & 0xF0) >> 4) == 1u)
+#define IS_WHITE(hdr) ((hdr->mark & 0x01) == 0u)
+#define IS_BLACK(hdr) ((hdr->mark & 0x01) == 1u)
+#define IS_ARRAY(hdr) (((hdr->mark & 0x10) >> 4) == 0u)
+#define IS_STACK(hdr) (((hdr->mark & 0x10) >> 4) == 1u)
 
 #define SET_WHITE(hdr) hdr->mark = (uint8_t)(hdr->mark & ~1u)
 #define SET_BLACK(hdr) hdr->mark = (uint8_t)(hdr->mark |  1u)
@@ -25,7 +25,8 @@
 #define MAX_MARK	5
 #define MAX_SWEEP	5
 
-#define IS_REF(type)    (type->dim || (type->tag & (KT_CLASS | KT_DELEGATE | KT_ARRAY)))
+#define KT_REF_MASK ((KT_CLASS | KT_DELEGATE | KT_ARRAY) & ~KT_REF)
+#define IS_REF(type)    (type->dim || (type->tag & KT_REF_MASK))
 
 KGC::KGC(void)
 	: paused(false), phase(KGC_IDLE),
