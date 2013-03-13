@@ -723,7 +723,7 @@ void KEnvironment::do_stloc(void)
 	BCREAD(idx, kushort_t);
 
 	const KObject &obj = KEnvironment::stackPop();
-	KEnvironment::locals[idx].accept(obj);
+	KEnvironment::locals[idx] = obj;
 }
 
 void KEnvironment::do_starg(void)
@@ -732,7 +732,7 @@ void KEnvironment::do_starg(void)
 	BCREAD(idx, kushort_t);
 
 	const KObject &obj = KEnvironment::stackPop();
-	KEnvironment::args[idx].accept(obj);
+	KEnvironment::args[idx] = obj;
 }
 
 void KEnvironment::do_stfld(void)
@@ -792,7 +792,7 @@ void KEnvironment::do_stind(void)
 {
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = KEnvironment::stackPop();
-	obj.getRef()->accept(val);
+	obj.getRef()->operator=(val);
 }
 
 	

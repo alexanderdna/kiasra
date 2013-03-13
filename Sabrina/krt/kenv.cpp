@@ -500,13 +500,13 @@ const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, Delegate
 //public
 const TypeDef * KEnvironment::makeByRefType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag | KT_REF), typeDef->dim, typeDef->cls);
+	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag | KT_BYREF), typeDef->dim, typeDef->cls);
 }
 
 //public
 const TypeDef * KEnvironment::makeByValType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag & ~KT_REF), typeDef->dim, typeDef->cls);
+	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag & ~KT_BYREF), typeDef->dim, typeDef->cls);
 }
 
 //public

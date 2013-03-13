@@ -25,7 +25,8 @@
 #define MAX_MARK	5
 #define MAX_SWEEP	5
 
-#define IS_REF(type)    (type->dim || ((type->tag & KT_SCALAR_MASK) == KT_CLASS || (type->tag & KT_SCALAR_MASK) == KT_DELEGATE))
+// Checks if `type` is array, class or delegate, while not ByRef
+#define IS_REF(type)    (type && ((type->dim || (type->cls)) && ((type->tag & KT_BYREF) == 0)))
 
 KGC::KGC(void)
 	: paused(false), phase(KGC_IDLE),

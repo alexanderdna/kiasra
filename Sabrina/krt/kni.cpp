@@ -1525,47 +1525,47 @@ void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, knuint_t length)
 void KNI_API KniStoreLocal(kushort_t index)
 {
 	const KObject &val = KEnvironment::stackPop();
-	KEnvironment::locals[index].accept(val);
+	KEnvironment::locals[index] = val;
 }
 
 void KNI_API KniStoreArg(kushort_t index)
 {
 	const KObject &val = KEnvironment::stackPop();
-	KEnvironment::args[index].accept(val);
+	KEnvironment::args[index] = val;
 }
 
 void KNI_API KniStoreArgByRef(kushort_t index)
 {
 	const KObject &val = KEnvironment::stackPop();
-	KEnvironment::args[index].getRef()->accept(val);
+	KEnvironment::args[index].getRef()->operator=(val);
 }
 
 void KNI_API KniStoreField(HKFIELD hKField)
 {
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = KEnvironment::stackPop();
-	obj.getField(Fld->localIndex).accept(val);
+	obj.getField(Fld->localIndex) = val;
 }
 
 void KNI_API KniStoreStaticField(HKCLASS hKClass, HKFIELD hKField)
 {
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	obj.getField(Fld->localIndex).accept(val);
+	obj.getField(Fld->localIndex) = val;
 }
 
 void KNI_API KniStoreElement(knuint_t index)
 {
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = KEnvironment::stackPop();
-	obj.getElement(index).accept(val);
+	obj.getElement(index) = val;
 }
 
 void KNI_API KniStoreIndirect(void)
 {
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = KEnvironment::stackPop();
-	obj.getRef()->accept(val);
+	obj.getRef()->operator=(val);
 }
 
 //===================================================
@@ -1704,7 +1704,7 @@ void KNI_API KniPrintExceptionDescription(void)
 void KNI_API KniClearException(void)
 {
 	KEnvironment::hasException = false;
-	KEnvironment::exc->accept(KObject::nullObject);
+	KEnvironment::exc->operator=(KObject::nullObject);
 }
 
 void KNI_API KniThrowException(HKFIELD hKFCode)
