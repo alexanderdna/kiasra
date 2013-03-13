@@ -142,10 +142,8 @@ protected:
 
 	ModuleDef *module;
 
-	KEnvironment *env;
-
 public:
-	KModuleLoader(KEnvironment *env, kstring_t importerPath, kstring_t path, uint32_t hash);
+	KModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash);
 	~KModuleLoader(void);
 
 public:

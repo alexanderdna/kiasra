@@ -2,6 +2,7 @@
 
 #include "kconfig.hpp"
 #include "krt.h"
+#include "kni.h"
 #include "kmeta.hpp"
 #include "kgc.hpp"
 #include "kframe.hpp"
@@ -12,47 +13,49 @@
 
 #include <set>
 #include <cstdlib>
+#include <cstdio>
+#include <cwchar>
 
 //===================================================
 // Defines
 
-#define GC_ALLOC(len)		(env->gc->alloc(len))
-#define GC_REGISTER(p)		env->gc->addRoot(p)
-#define GC_UNREGISTER(p)	env->gc->removeRoot(p)
+#define GC_ALLOC(len)		(KEnvironment::gc->alloc(len))
+#define GC_REGISTER(p)		KEnvironment::gc->addRoot(p)
+#define GC_UNREGISTER(p)	KEnvironment::gc->removeRoot(p)
 
-#define BCREAD(v, t)		v = *(t *)(env->code + env->ip); env->ip += sizeof(t)
+#define BCREAD(v, t)		v = *(t *)(KEnvironment::code + KEnvironment::ip); KEnvironment::ip += sizeof(t)
 
 #define COND_JUMP(OP) \
 	{ \
 		if (a.type == GET_PRIMITIVE_TYPE(KT_DOUBLE)) \
 		{ \
-			if (a.vDouble OP b.vDouble) env->ip += offset; \
+			if (a.vDouble OP b.vDouble) KEnvironment::ip += offset; \
 		} \
 		else if (a.type == GET_PRIMITIVE_TYPE(KT_FLOAT)) \
 		{ \
-			if (a.vFloat OP b.vFloat) env->ip += offset; \
+			if (a.vFloat OP b.vFloat) KEnvironment::ip += offset; \
 		} \
 		else \
 		{ \
 			switch (a.type->tag & KT_SCALAR_MASK) \
 			{ \
 			case KT_CHAR: case KT_BYTE: case KT_USHORT: case KT_UINT: \
-				if (a.vUInt OP b.vUInt) env->ip += offset; \
+				if (a.vUInt OP b.vUInt) KEnvironment::ip += offset; \
 				break; \
 			case KT_ULONG: \
-				if (a.vULong OP b.vULong) env->ip += offset; \
+				if (a.vULong OP b.vULong) KEnvironment::ip += offset; \
 				break; \
 			case KT_SBYTE: \
-				if (a.vSByte OP b.vSByte) env->ip += offset; \
+				if (a.vSByte OP b.vSByte) KEnvironment::ip += offset; \
 				break; \
 			case KT_SHORT: \
-				if (a.vShort OP b.vShort) env->ip += offset; \
+				if (a.vShort OP b.vShort) KEnvironment::ip += offset; \
 				break; \
 			case KT_INT: \
-				if (a.vInt OP b.vInt) env->ip += offset; \
+				if (a.vInt OP b.vInt) KEnvironment::ip += offset; \
 				break; \
 			case KT_LONG: \
-				if (a.vLong OP b.vLong) env->ip += offset; \
+				if (a.vLong OP b.vLong) KEnvironment::ip += offset; \
 				break; \
 			} \
 		} \
@@ -63,37 +66,37 @@
 		switch (a.type->tag & KT_SCALAR_MASK) \
 		{ \
 		case KT_CHAR: \
-			env->stackPushChar(a.vChar OP b.vChar); \
+			KEnvironment::stackPushChar(a.vChar OP b.vChar); \
 			break; \
 		case KT_BYTE: \
-			env->stackPushByte(a.vByte OP b.vByte); \
+			KEnvironment::stackPushByte(a.vByte OP b.vByte); \
 			break; \
 		case KT_SBYTE: \
-			env->stackPushSByte(a.vSByte OP b.vSByte); \
+			KEnvironment::stackPushSByte(a.vSByte OP b.vSByte); \
 			break; \
 		case KT_SHORT: \
-			env->stackPushShort(a.vShort OP b.vShort); \
+			KEnvironment::stackPushShort(a.vShort OP b.vShort); \
 			break; \
 		case KT_USHORT: \
-			env->stackPushUShort(a.vUShort OP b.vUShort); \
+			KEnvironment::stackPushUShort(a.vUShort OP b.vUShort); \
 			break; \
 		case KT_INT: \
-			env->stackPushInt(a.vInt OP b.vInt); \
+			KEnvironment::stackPushInt(a.vInt OP b.vInt); \
 			break; \
 		case KT_UINT: \
-			env->stackPushUInt(a.vUInt OP b.vUInt); \
+			KEnvironment::stackPushUInt(a.vUInt OP b.vUInt); \
 			break; \
 		case KT_LONG: \
-			env->stackPushLong(a.vLong OP b.vLong); \
+			KEnvironment::stackPushLong(a.vLong OP b.vLong); \
 			break; \
 		case KT_ULONG: \
-			env->stackPushULong(a.vULong OP b.vULong); \
+			KEnvironment::stackPushULong(a.vULong OP b.vULong); \
 			break; \
 		case KT_FLOAT: \
-			env->stackPushFloat(a.vFloat OP b.vFloat); \
+			KEnvironment::stackPushFloat(a.vFloat OP b.vFloat); \
 			break; \
 		case KT_DOUBLE: \
-			env->stackPushDouble(a.vDouble OP + b.vDouble); \
+			KEnvironment::stackPushDouble(a.vDouble OP + b.vDouble); \
 			break; \
 		} \
 	}
@@ -103,37 +106,37 @@
 		switch (a.type->tag & KT_SCALAR_MASK) \
 		{ \
 		case KT_CHAR: \
-			env->stackPushBool(a.vChar OP b.vChar); \
+			KEnvironment::stackPushBool(a.vChar OP b.vChar); \
 			break; \
 		case KT_BYTE: \
-			env->stackPushBool(a.vByte OP b.vByte); \
+			KEnvironment::stackPushBool(a.vByte OP b.vByte); \
 			break; \
 		case KT_SBYTE: \
-			env->stackPushBool(a.vSByte OP b.vSByte); \
+			KEnvironment::stackPushBool(a.vSByte OP b.vSByte); \
 			break; \
 		case KT_SHORT: \
-			env->stackPushBool(a.vShort OP b.vShort); \
+			KEnvironment::stackPushBool(a.vShort OP b.vShort); \
 			break; \
 		case KT_USHORT: \
-			env->stackPushBool(a.vUShort OP b.vUShort); \
+			KEnvironment::stackPushBool(a.vUShort OP b.vUShort); \
 			break; \
 		case KT_INT: \
-			env->stackPushBool(a.vInt OP b.vInt); \
+			KEnvironment::stackPushBool(a.vInt OP b.vInt); \
 			break; \
 		case KT_UINT: \
-			env->stackPushBool(a.vUInt OP b.vUInt); \
+			KEnvironment::stackPushBool(a.vUInt OP b.vUInt); \
 			break; \
 		case KT_LONG: \
-			env->stackPushBool(a.vLong OP b.vLong); \
+			KEnvironment::stackPushBool(a.vLong OP b.vLong); \
 			break; \
 		case KT_ULONG: \
-			env->stackPushBool(a.vULong OP b.vULong); \
+			KEnvironment::stackPushBool(a.vULong OP b.vULong); \
 			break; \
 		case KT_FLOAT: \
-			env->stackPushBool(a.vFloat OP b.vFloat); \
+			KEnvironment::stackPushBool(a.vFloat OP b.vFloat); \
 			break; \
 		case KT_DOUBLE: \
-			env->stackPushBool(a.vDouble OP + b.vDouble); \
+			KEnvironment::stackPushBool(a.vDouble OP + b.vDouble); \
 			break; \
 		} \
 	}
@@ -143,34 +146,34 @@
 		switch (a.type->tag & KT_SCALAR_MASK) \
 		{ \
 		case KT_BOOL: \
-			env->stackPushChar(a.vBool LOP b.vBool); \
+			KEnvironment::stackPushChar(a.vBool LOP b.vBool); \
 			break; \
 		case KT_CHAR: \
-			env->stackPushChar(a.vChar BOP b.vChar); \
+			KEnvironment::stackPushChar(a.vChar BOP b.vChar); \
 			break; \
 		case KT_BYTE: \
-			env->stackPushByte(a.vByte BOP b.vByte); \
+			KEnvironment::stackPushByte(a.vByte BOP b.vByte); \
 			break; \
 		case KT_SBYTE: \
-			env->stackPushSByte(a.vSByte BOP b.vSByte); \
+			KEnvironment::stackPushSByte(a.vSByte BOP b.vSByte); \
 			break; \
 		case KT_SHORT: \
-			env->stackPushShort(a.vShort BOP b.vShort); \
+			KEnvironment::stackPushShort(a.vShort BOP b.vShort); \
 			break; \
 		case KT_USHORT: \
-			env->stackPushUShort(a.vUShort BOP b.vUShort); \
+			KEnvironment::stackPushUShort(a.vUShort BOP b.vUShort); \
 			break; \
 		case KT_INT: \
-			env->stackPushInt(a.vInt BOP b.vInt); \
+			KEnvironment::stackPushInt(a.vInt BOP b.vInt); \
 			break; \
 		case KT_UINT: \
-			env->stackPushUInt(a.vUInt BOP b.vUInt); \
+			KEnvironment::stackPushUInt(a.vUInt BOP b.vUInt); \
 			break; \
 		case KT_LONG: \
-			env->stackPushLong(a.vLong BOP b.vLong); \
+			KEnvironment::stackPushLong(a.vLong BOP b.vLong); \
 			break; \
 		case KT_ULONG: \
-			env->stackPushULong(a.vULong BOP b.vULong); \
+			KEnvironment::stackPushULong(a.vULong BOP b.vULong); \
 			break; \
 		} \
 	}
@@ -182,42 +185,42 @@
 			switch (obj.type->tag & KT_SCALAR_MASK) \
 			{ \
 			case KT_BOOL: \
-				env->stackPush##T(obj.vBool ? (t)1 : (t)0); break; \
+				KEnvironment::stackPush##T(obj.vBool ? (t)1 : (t)0); break; \
 			case KT_CHAR: \
-				env->stackPush##T((t)obj.vChar); break; \
+				KEnvironment::stackPush##T((t)obj.vChar); break; \
 			case KT_BYTE: \
-				env->stackPush##T((t)obj.vByte); break; \
+				KEnvironment::stackPush##T((t)obj.vByte); break; \
 			case KT_SBYTE: \
-				env->stackPush##T((t)obj.vSByte); break; \
+				KEnvironment::stackPush##T((t)obj.vSByte); break; \
 			case KT_SHORT: \
-				env->stackPush##T((t)obj.vShort); break; \
+				KEnvironment::stackPush##T((t)obj.vShort); break; \
 			case KT_USHORT: \
-				env->stackPush##T((t)obj.vUShort); break; \
+				KEnvironment::stackPush##T((t)obj.vUShort); break; \
 			case KT_INT: \
-				env->stackPush##T((t)obj.vInt); break; \
+				KEnvironment::stackPush##T((t)obj.vInt); break; \
 			case KT_UINT: \
-				env->stackPush##T((t)obj.vUInt); break; \
+				KEnvironment::stackPush##T((t)obj.vUInt); break; \
 			case KT_LONG: \
-				env->stackPush##T((t)obj.vLong); break; \
+				KEnvironment::stackPush##T((t)obj.vLong); break; \
 			case KT_ULONG: \
-				env->stackPush##T((t)obj.vULong); break; \
+				KEnvironment::stackPush##T((t)obj.vULong); break; \
 			case KT_FLOAT: \
-				env->stackPush##T((t)obj.vFloat); break; \
+				KEnvironment::stackPush##T((t)obj.vFloat); break; \
 			case KT_DOUBLE: \
-				env->stackPush##T((t)obj.vDouble); break; \
+				KEnvironment::stackPush##T((t)obj.vDouble); break; \
 			case KT_STRING: \
-				/* InvalidCast exception */ env->throwException(); break; \
+				KniThrowException(KEnvironment::exceptions.invalidCast); break; \
 			default: \
 				if (obj.type == KObject::nullType) \
-				{ env->stackPush##T((t)0); } \
+				{ KEnvironment::stackPush##T((t)0); } \
 				else \
-				{ /* InvalidCast exception */ env->throwException(); } \
+				{ KniThrowException(KEnvironment::exceptions.invalidCast); } \
 				break; \
 			} \
 		} \
 		else \
 		{ \
-			/* InvalidCast exception */ env->throwException(); \
+			KniThrowException(KEnvironment::exceptions.invalidCast); \
 		} \
 	}
 
@@ -226,39 +229,105 @@
 		switch (srcType->tag & KT_SCALAR_MASK) \
 		{ \
 		case KT_BOOL: \
-			env->stackPush##T(obj.vBool ? (t)1 : (t)0); break; \
+			KEnvironment::stackPush##T(obj.vBool ? (t)1 : (t)0); break; \
 		case KT_CHAR: \
-			env->stackPush##T((t)obj.vChar); break; \
+			KEnvironment::stackPush##T((t)obj.vChar); break; \
 		case KT_BYTE: \
-			env->stackPush##T((t)obj.vByte); break; \
+			KEnvironment::stackPush##T((t)obj.vByte); break; \
 		case KT_SBYTE: \
-			env->stackPush##T((t)obj.vSByte); break; \
+			KEnvironment::stackPush##T((t)obj.vSByte); break; \
 		case KT_SHORT: \
-			env->stackPush##T((t)obj.vShort); break; \
+			KEnvironment::stackPush##T((t)obj.vShort); break; \
 		case KT_USHORT: \
-			env->stackPush##T((t)obj.vUShort); break; \
+			KEnvironment::stackPush##T((t)obj.vUShort); break; \
 		case KT_INT: \
-			env->stackPush##T((t)obj.vInt); break; \
+			KEnvironment::stackPush##T((t)obj.vInt); break; \
 		case KT_UINT: \
-			env->stackPush##T((t)obj.vUInt); break; \
+			KEnvironment::stackPush##T((t)obj.vUInt); break; \
 		case KT_LONG: \
-			env->stackPush##T((t)obj.vLong); break; \
+			KEnvironment::stackPush##T((t)obj.vLong); break; \
 		case KT_ULONG: \
-			env->stackPush##T((t)obj.vULong); break; \
+			KEnvironment::stackPush##T((t)obj.vULong); break; \
 		case KT_FLOAT: \
-			env->stackPush##T((t)obj.vFloat); break; \
+			KEnvironment::stackPush##T((t)obj.vFloat); break; \
 		case KT_DOUBLE: \
-			env->stackPush##T((t)obj.vDouble); break; \
+			KEnvironment::stackPush##T((t)obj.vDouble); break; \
 		case KT_STRING: \
-			/* InvalidCast exception */ env->throwException(); break; \
+			KniThrowException(KEnvironment::exceptions.invalidCast); break; \
 		default: \
 			if (obj.type == KEnvironment::nullType) \
-			{ env->stackPush##T((t)0); } \
+			{ KEnvironment::stackPush##T((t)0); } \
 			else \
-			{ /* InvalidCast exception */ env->throwException(); } \
+			{ KniThrowException(KEnvironment::exceptions.invalidCast); } \
 			break; \
 		} \
 	}
+
+#define CONV_S_BUFFER_SIZE	512
+
+static kchar_t conv_s_buffer[CONV_S_BUFFER_SIZE];
+
+#define CONV_S_ACTION(fmt, val) len = swprintf(conv_s_buffer, CONV_S_BUFFER_SIZE, fmt, val)
+
+#define	CONV_S	\
+	{ \
+		int len; \
+		if (srcType->dim == 0) \
+		{ \
+			switch (srcType->tag & KT_SCALAR_MASK) \
+			{ \
+			case KT_BOOL: \
+				len = swprintf(conv_s_buffer, CONV_S_BUFFER_SIZE, obj.vBool ? L"true" : L"false"); \
+				break; \
+			case KT_CHAR: \
+				CONV_S_ACTION(L"%c", obj.vChar); \
+				break; \
+			case KT_BYTE: \
+				CONV_S_ACTION(L"%u", obj.vByte); \
+				break; \
+			case KT_SBYTE: \
+				CONV_S_ACTION(L"%d", obj.vSByte); \
+				break; \
+			case KT_SHORT: \
+				CONV_S_ACTION(L"%u", obj.vShort); \
+				break; \
+			case KT_USHORT: \
+				CONV_S_ACTION(L"%u", obj.vUShort); \
+				break; \
+			case KT_INT: \
+				CONV_S_ACTION(L"%ld", obj.vInt); \
+				break; \
+			case KT_UINT: \
+				CONV_S_ACTION(L"%lu", obj.vUInt); \
+				break; \
+			case KT_LONG: \
+				CONV_S_ACTION(L"%lld", obj.vLong); \
+				break; \
+			case KT_ULONG: \
+				CONV_S_ACTION(L"%llu", obj.vULong); \
+				break; \
+			case KT_FLOAT: \
+				CONV_S_ACTION(L"%f", obj.vFloat); \
+				break; \
+			case KT_DOUBLE: \
+				CONV_S_ACTION(L"%f", obj.vDouble); \
+				break; \
+			case KT_STRING: \
+				break; \
+			default: \
+				KniThrowException(KEnvironment::exceptions.invalidCast); \
+				return; \
+			} \
+			kstring_t s = krt_strdup(conv_s_buffer, len); \
+			KEnvironment::stackPushStringMoved(s, len); \
+			return; \
+		} \
+		else \
+		{ \
+			KniThrowException(KEnvironment::exceptions.invalidCast); \
+			return; \
+	} \
+}
 
 //===================================================
 // Static fields
@@ -381,426 +450,461 @@ KEnvironment::EXECUTOR * KEnvironment::defaultExecutors[] =
 //===================================================
 // Opcode executors
 
-void KEnvironment::do_InvalidOpcode(KEnvironment *env)
+void KEnvironment::do_InvalidOpcode(void)
 {
-	//throw System.Exception.fromCode(System.Exception.InvalidOpCode);
-	env->throwException();
+	KniThrowException(KEnvironment::exceptions.invalidOpCode);
 }
 
-void KEnvironment::do_nop(KEnvironment *env)
+void KEnvironment::do_nop(void)
 {
 	(void)0;
 }
 
-void KEnvironment::do_ldtrue(KEnvironment *env)
+void KEnvironment::do_ldtrue(void)
 {
-	env->stackPushBool(true);
+	KEnvironment::stackPushBool(true);
 }
 
-void KEnvironment::do_ldfalse(KEnvironment *env)
+void KEnvironment::do_ldfalse(void)
 {
-	env->stackPushBool(false);
+	KEnvironment::stackPushBool(false);
 }
 
-void KEnvironment::do_ldc_ch(KEnvironment *env)
+void KEnvironment::do_ldc_ch(void)
 {
 	kchar_t v;
 	BCREAD(v, kchar_t);
-	env->stackPushChar(v);
+	KEnvironment::stackPushChar(v);
 }
 
-void KEnvironment::do_ldc_i1(KEnvironment *env)
+void KEnvironment::do_ldc_i1(void)
 {
 	ksbyte_t v;
 	BCREAD(v, ksbyte_t);
-	env->stackPushSByte(v);
+	KEnvironment::stackPushSByte(v);
 }
 
-void KEnvironment::do_ldc_u1(KEnvironment *env)
+void KEnvironment::do_ldc_u1(void)
 {
 	kbyte_t v;
 	BCREAD(v, kbyte_t);
-	env->stackPushByte(v);
+	KEnvironment::stackPushByte(v);
 }
 
-void KEnvironment::do_ldc_i2(KEnvironment *env)
+void KEnvironment::do_ldc_i2(void)
 {
 	kshort_t v;
 	BCREAD(v, kshort_t);
-	env->stackPushShort(v);
+	KEnvironment::stackPushShort(v);
 }
 
-void KEnvironment::do_ldc_u2(KEnvironment *env)
+void KEnvironment::do_ldc_u2(void)
 {
 	kushort_t v;
 	BCREAD(v, kushort_t);
-	env->stackPushUShort(v);
+	KEnvironment::stackPushUShort(v);
 }
 
-void KEnvironment::do_ldc_i4(KEnvironment *env)
+void KEnvironment::do_ldc_i4(void)
 {
 	kint_t v;
 	BCREAD(v, kint_t);
-	env->stackPushInt(v);
+	KEnvironment::stackPushInt(v);
 }
 
-void KEnvironment::do_ldc_u4(KEnvironment *env)
+void KEnvironment::do_ldc_u4(void)
 {
 	kuint_t v;
 	BCREAD(v, kuint_t);
-	env->stackPushUInt(v);
+	KEnvironment::stackPushUInt(v);
 }
 
-void KEnvironment::do_ldc_i8(KEnvironment *env)
+void KEnvironment::do_ldc_i8(void)
 {
 	klong_t v;
 	BCREAD(v, klong_t);
-	env->stackPushLong(v);
+	KEnvironment::stackPushLong(v);
 }
 
-void KEnvironment::do_ldc_u8(KEnvironment *env)
+void KEnvironment::do_ldc_u8(void)
 {
 	kulong_t v;
 	BCREAD(v, kulong_t);
-	env->stackPushULong(v);
+	KEnvironment::stackPushULong(v);
 }
 
-void KEnvironment::do_ldc_r4(KEnvironment *env)
+void KEnvironment::do_ldc_r4(void)
 {
 	kfloat_t v;
 	BCREAD(v, kfloat_t);
-	env->stackPushFloat(v);
+	KEnvironment::stackPushFloat(v);
 }
 
-void KEnvironment::do_ldc_r8(KEnvironment *env)
+void KEnvironment::do_ldc_r8(void)
 {
 	kdouble_t v;
 	BCREAD(v, kdouble_t);
-	env->stackPushDouble(v);
+	KEnvironment::stackPushDouble(v);
 }
 
-void KEnvironment::do_ldstr(KEnvironment *env)
+void KEnvironment::do_ldstr(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
-	env->stackPushString(env->strings[tok], env->stringLengths[tok]);
+	KEnvironment::stackPushString(KEnvironment::strings[tok], KEnvironment::stringLengths[tok]);
 }
 
 
-void KEnvironment::do_ldthis(KEnvironment *env)
+void KEnvironment::do_ldthis(void)
 {
-	env->stackPush(env->args[0]);
+	KEnvironment::stackPush(KEnvironment::args[0]);
 }
 
-void KEnvironment::do_ldnull(KEnvironment *env)
+void KEnvironment::do_ldnull(void)
 {
-	env->stackPushNull();
+	KEnvironment::stackPushNull();
 }
 
-void KEnvironment::do_ldtype(KEnvironment *env)
+void KEnvironment::do_ldtype(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 
-	env->stackPushRaw((void *) env->module->typeList[tok]);
+	KEnvironment::stackPushRaw((void *) KEnvironment::module->typeList[tok]);
 }
 
-void KEnvironment::do_ldmethod(KEnvironment *env)
+void KEnvironment::do_ldmethod(void)
 {
 	ktoken16_t clstok, mettok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(mettok, ktoken16_t);
 
-	env->stackPushRaw(env->module->classList[clstok]->methodList[mettok]);
+	KEnvironment::stackPushRaw((void *) KEnvironment::module->classList[clstok]->methodList[mettok]);
 }
 
-void KEnvironment::do_ldloc(KEnvironment *env)
+void KEnvironment::do_ldloc(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
-	env->stackPush(env->locals[idx]);
+	KEnvironment::stackPush(KEnvironment::locals[idx]);
 }
 
-void KEnvironment::do_ldloca(KEnvironment *env)
+void KEnvironment::do_ldloca(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
-	env->stackPushAddress(&env->locals[idx]);
+	KEnvironment::stackPushAddress(&KEnvironment::locals[idx]);
 }
 
-void KEnvironment::do_ldarg(KEnvironment *env)
+void KEnvironment::do_ldarg(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
-	env->stackPush(env->args[idx]);
+	KEnvironment::stackPush(KEnvironment::args[idx]);
 }
 
-void KEnvironment::do_ldarga(KEnvironment *env)
+void KEnvironment::do_ldarga(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
-	env->stackPushAddress(&env->args[idx]);
+	KEnvironment::stackPushAddress(&KEnvironment::args[idx]);
 }
 
-void KEnvironment::do_ldfld(KEnvironment *env)
+void KEnvironment::do_ldfld(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const KObject &obj = env->stackPop();
-	env->stackPush(obj.getField(tok));
+	const KObject &obj = KEnvironment::stackPop();
+	if (obj.type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
+
+	KEnvironment::stackPush(obj.getField(tok));
 }
 
-void KEnvironment::do_ldflda(KEnvironment *env)
+void KEnvironment::do_ldflda(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const KObject &obj = env->stackPop();
-	env->stackPushAddress(&obj.getField(tok));
+	const KObject &obj = KEnvironment::stackPop();
+	if (obj.type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
+
+	KEnvironment::stackPushAddress(&obj.getField(tok));
 }
 
-void KEnvironment::do_ldsfld(KEnvironment *env)
+void KEnvironment::do_ldsfld(void)
 {
 	ktoken16_t clstok, fldtok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(fldtok, ktoken16_t);
 
-	const ClassDef *cls = env->module->classList[clstok];
+	const ClassDef *cls = KEnvironment::module->classList[clstok];
 	
 	const KObject &obj = cls->module->staticData[clstok];
-	env->stackPush(obj.getField(fldtok));
+	KEnvironment::stackPush(obj.getField(fldtok));
 }
 
-void KEnvironment::do_ldsflda(KEnvironment *env)
+void KEnvironment::do_ldsflda(void)
 {
 	ktoken16_t clstok, fldtok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(fldtok, ktoken16_t);
 
-	const ClassDef *cls = env->module->classList[clstok];
+	const ClassDef *cls = KEnvironment::module->classList[clstok];
 
 	const KObject &obj = cls->module->staticData[clstok];
-	env->stackPushAddress(&obj.getField(fldtok));
+	KEnvironment::stackPushAddress(&obj.getField(fldtok));
 }
 
-void KEnvironment::do_ldelem(KEnvironment *env)
+void KEnvironment::do_ldelem(void)
 {
-	const KObject &objIdx = env->stackPop();
-	const KObject &objArr = env->stackPop();
+	const KObject &objIdx = KEnvironment::stackPop();
+	const KObject &objArr = KEnvironment::stackPop();
 
 	knint_t idx = objIdx.getNInt();
 	knuint_t len = objArr.length;
 
-	if (idx < 0 || idx + 1 > (knint_t)len)
+	if (objArr.type == KObject::nullType)
 	{
-		KniThrowException(env, env->exceptions.indexOutOfRange);
+		KniThrowException(KEnvironment::exceptions.nullReference);
 		return;
 	}
 
-	env->stackPush(objArr.getElement(idx));
+	if (idx < 0 || idx + 1 > (knint_t)len)
+	{
+		KniThrowException(KEnvironment::exceptions.indexOutOfRange);
+		return;
+	}
+
+	KEnvironment::stackPush(objArr.getElement(idx));
 }
 
-void KEnvironment::do_ldelema(KEnvironment *env)
+void KEnvironment::do_ldelema(void)
 {
-	const KObject &objIdx = env->stackPop();
-	const KObject &objArr = env->stackPop();
+	const KObject &objIdx = KEnvironment::stackPop();
+	const KObject &objArr = KEnvironment::stackPop();
 
 	knint_t idx = objIdx.getNInt();
 	knuint_t len = objArr.length;
-
-	if (idx < 0 || idx + 1 > (knint_t)len)
+	
+	if (objArr.type == KObject::nullType)
 	{
-		KniThrowException(env, env->exceptions.indexOutOfRange);
+		KniThrowException(KEnvironment::exceptions.nullReference);
 		return;
 	}
 
-	env->stackPushAddress(&objArr.getElement(idx));
+	if (idx < 0 || idx + 1 > (knint_t)len)
+	{
+		KniThrowException(KEnvironment::exceptions.indexOutOfRange);
+		return;
+	}
+
+	KEnvironment::stackPushAddress(&objArr.getElement(idx));
 }
 
-void KEnvironment::do_ldind(KEnvironment *env)
+void KEnvironment::do_ldind(void)
 {
-	const KObject &objAddr = env->stackPop();
-	env->stackPush(*objAddr.getRef());
+	const KObject &objAddr = KEnvironment::stackPop();
+	KEnvironment::stackPush(*objAddr.getRef());
 }
 
 
-void KEnvironment::do_stloc(KEnvironment *env)
-{
-	kushort_t idx;
-	BCREAD(idx, kushort_t);
-
-	const KObject &obj = env->stackPop();
-	env->locals[idx].accept(obj);
-}
-
-void KEnvironment::do_starg(KEnvironment *env)
+void KEnvironment::do_stloc(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
 
-	const KObject &obj = env->stackPop();
-	env->args[idx].accept(obj);
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::locals[idx].accept(obj);
 }
 
-void KEnvironment::do_stfld(KEnvironment *env)
+void KEnvironment::do_starg(void)
+{
+	kushort_t idx;
+	BCREAD(idx, kushort_t);
+
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::args[idx].accept(obj);
+}
+
+void KEnvironment::do_stfld(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const KObject &val = env->stackPop();
-	KObject &obj = env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
+	KObject &obj = KEnvironment::stackPop();
+	if (obj.type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
+
 	obj.setField(tok, val);
 }
 
-void KEnvironment::do_stsfld(KEnvironment *env)
+void KEnvironment::do_stsfld(void)
 {
 	ktoken16_t clstok, fldtok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(fldtok, ktoken16_t);
 
-	const ClassDef *cls = env->module->classList[clstok];
+	const ClassDef *cls = KEnvironment::module->classList[clstok];
 
-	const KObject &val = env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
 	KObject &obj = cls->module->staticData[clstok];
 	obj.setField(fldtok, val);
 }
 
-void KEnvironment::do_stelem(KEnvironment *env)
+void KEnvironment::do_stelem(void)
 {
-	const KObject &objVal = env->stackPop();
-	const KObject &objIdx = env->stackPop();
-	KObject &objArr = env->stackPop();
+	const KObject &objVal = KEnvironment::stackPop();
+	const KObject &objIdx = KEnvironment::stackPop();
+	KObject &objArr = KEnvironment::stackPop();
 
 	knint_t idx = objIdx.getNInt();
 	knuint_t len = objArr.length;
+	
+	if (objArr.type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
 
 	if (idx < 0 || idx + 1 > (knint_t)len)
 	{
-		KniThrowException(env, env->exceptions.indexOutOfRange);
+		KniThrowException(KEnvironment::exceptions.indexOutOfRange);
 		return;
 	}
 
 	objArr.setElement(idx, objVal);
 }
 
-void KEnvironment::do_stind(KEnvironment *env)
+void KEnvironment::do_stind(void)
 {
-	const KObject &val = env->stackPop();
-	const KObject &obj = env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->accept(val);
 }
 
 	
-void KEnvironment::do_pop(KEnvironment *env)
+void KEnvironment::do_pop(void)
 {
-	env->stackPop();
+	KEnvironment::stackPop();
 }
 
-void KEnvironment::do_dup(KEnvironment *env)
+void KEnvironment::do_dup(void)
 {
-	env->stackPush(env->stackPeek());
+	KEnvironment::stackPush(KEnvironment::stackPeek());
 }
 
 	
-void KEnvironment::do_jmp(KEnvironment *env)
+void KEnvironment::do_jmp(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	env->ip += offset;
+	KEnvironment::ip += offset;
 }
 
-void KEnvironment::do_je(KEnvironment *env)
+void KEnvironment::do_je(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	if (a.vRaw == b.vRaw)
-		env->ip += offset;
+		KEnvironment::ip += offset;
 }
 
-void KEnvironment::do_jne(KEnvironment *env)
+void KEnvironment::do_jne(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	if (a.vRaw != b.vRaw)
-		env->ip += offset;
+		KEnvironment::ip += offset;
 }
 
-void KEnvironment::do_jl(KEnvironment *env)
+void KEnvironment::do_jl(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COND_JUMP(<);
 }
 
-void KEnvironment::do_jle(KEnvironment *env)
+void KEnvironment::do_jle(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COND_JUMP(<=);
 }
 
-void KEnvironment::do_jg(KEnvironment *env)
+void KEnvironment::do_jg(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COND_JUMP(>);
 }
 
-void KEnvironment::do_jge(KEnvironment *env)
+void KEnvironment::do_jge(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COND_JUMP(>=);
 }
 
-void KEnvironment::do_jtrue(KEnvironment *env)
+void KEnvironment::do_jtrue(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	if (obj.vBool)
-		env->ip += offset;
+		KEnvironment::ip += offset;
 }
 
-void KEnvironment::do_jfalse(KEnvironment *env)
+void KEnvironment::do_jfalse(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
 
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	if (!obj.vBool)
-		env->ip += offset;
+		KEnvironment::ip += offset;
 }
 
 	
-void KEnvironment::do_enter(KEnvironment *env)
+void KEnvironment::do_enter(void)
 {
 	ktoken32_t tok;
 	kshort_t offset, offsetEnd;
@@ -808,594 +912,604 @@ void KEnvironment::do_enter(KEnvironment *env)
 	BCREAD(offset, kshort_t);
 	BCREAD(offsetEnd, kshort_t);
 
-	const TypeDef *excType = env->module->typeList[tok];
+	const TypeDef *excType = KEnvironment::module->typeList[tok];
 
 	KExceptionHandler handler = { };
 	handler.excType = excType;
-	handler.frame = env->frame;
-	handler.addr = env->ip + offset;
-	handler.addrEnd = env->ip + offsetEnd;
+	handler.frame = KEnvironment::frame;
+	handler.addr = KEnvironment::ip + offset;
+	handler.addrEnd = KEnvironment::ip + offsetEnd;
 
-	env->catchStack->push(handler);
+	KEnvironment::catchStack->push(handler);
 }
 
-void KEnvironment::do_leave(KEnvironment *env)
+void KEnvironment::do_leave(void)
 {
-	knuint_t addrEnd = env->catchStack->top().addrEnd;
-	env->catchStack->pop();
-	env->ip = addrEnd;
+	knuint_t addrEnd = KEnvironment::catchStack->top().addrEnd;
+	KEnvironment::catchStack->pop();
+	KEnvironment::ip = addrEnd;
 }
 
-void KEnvironment::do_throw(KEnvironment *env)
+void KEnvironment::do_throw(void)
 {
-	env->throwException();
+	KEnvironment::throwException();
 }
 
 	
-void KEnvironment::do_calli(KEnvironment *env)
+void KEnvironment::do_calli(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const KObject &obj = env->stackPeek();
+	const KObject &obj = KEnvironment::stackPeek();
 	const MethodDef *met = obj.type->cls->iMethodList[tok];
-	env->invokeLastThis(met);
+	KEnvironment::invokeLastThis(met);
 }
 
-void KEnvironment::do_calls(KEnvironment *env)
+void KEnvironment::do_calls(void)
 {
 	ktoken16_t clstok, mettok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(mettok, ktoken16_t);
 
-	const MethodDef *met = env->module->classList[clstok]->sMethodList[mettok];
-	env->invoke(met);
+	const MethodDef *met = KEnvironment::module->classList[clstok]->sMethodList[mettok];
+	KEnvironment::invoke(met);
 }
 
-void KEnvironment::do_callo(KEnvironment *env)
+void KEnvironment::do_callo(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 
 	const MethodDef *met = (MethodDef *)(obj.getField(1).getRaw());
 	if (met->attrs & KMA_STATIC)
 	{
-		env->invoke(met);
+		KEnvironment::invoke(met);
 	}
 	else
 	{
-		env->stackPush(obj.getField(0));
-		env->invokeLastThis(met);
+		KEnvironment::stackPush(obj.getField(0));
+		KEnvironment::invokeLastThis(met);
 	}
 }
 
-void KEnvironment::do_ret(KEnvironment *env)
+void KEnvironment::do_ret(void)
 {
 	(void)0;
 }
 
 	
-void KEnvironment::do_add(KEnvironment *env)
+void KEnvironment::do_add(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	ARITH_OP(+);
 }
 
-void KEnvironment::do_sub(KEnvironment *env)
+void KEnvironment::do_sub(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	ARITH_OP(-);
 }
 
-void KEnvironment::do_mul(KEnvironment *env)
+void KEnvironment::do_mul(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	ARITH_OP(*);
 }
 
-void KEnvironment::do_div(KEnvironment *env)
+void KEnvironment::do_div(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	ARITH_OP(/);
 }
 
-void KEnvironment::do_rem(KEnvironment *env)
+void KEnvironment::do_rem(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	switch (a.type->tag & KT_SCALAR_MASK)
 	{
 	case KT_CHAR:
-		env->stackPushChar(a.vChar % b.vChar);
+		KEnvironment::stackPushChar(a.vChar % b.vChar);
 		break;
 	case KT_BYTE:
-		env->stackPushByte(a.vByte % b.vByte);
+		KEnvironment::stackPushByte(a.vByte % b.vByte);
 		break;
 	case KT_SBYTE:
-		env->stackPushSByte(a.vSByte % b.vSByte);
+		KEnvironment::stackPushSByte(a.vSByte % b.vSByte);
 		break;
 	case KT_SHORT:
-		env->stackPushShort(a.vShort % b.vShort);
+		KEnvironment::stackPushShort(a.vShort % b.vShort);
 		break;
 	case KT_USHORT:
-		env->stackPushUShort(a.vUShort % b.vUShort);
+		KEnvironment::stackPushUShort(a.vUShort % b.vUShort);
 		break;
 	case KT_INT:
-		env->stackPushInt(a.vInt % b.vInt);
+		KEnvironment::stackPushInt(a.vInt % b.vInt);
 		break;
 	case KT_UINT:
-		env->stackPushUInt(a.vUInt % b.vUInt);
+		KEnvironment::stackPushUInt(a.vUInt % b.vUInt);
 		break;
 	case KT_ULONG:
-		env->stackPushULong(a.vULong % b.vULong);
+		KEnvironment::stackPushULong(a.vULong % b.vULong);
 		break;
 	case KT_LONG:
-		env->stackPushLong(a.vLong % b.vLong);
+		KEnvironment::stackPushLong(a.vLong % b.vLong);
 		break;
 	}
 }
 
-void KEnvironment::do_neg(KEnvironment *env)
+void KEnvironment::do_neg(void)
 {
-	const KObject &a = env->stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	switch (a.type->tag & KT_SCALAR_MASK)
 	{
 	case KT_CHAR:
-		env->stackPushInt(-a.vChar);
+		KEnvironment::stackPushInt(-a.vChar);
 		break;
 	case KT_BYTE:
-		env->stackPushInt(-a.vByte);
+		KEnvironment::stackPushInt(-a.vByte);
 		break;
 	case KT_SBYTE:
-		env->stackPushInt(-a.vSByte);
+		KEnvironment::stackPushInt(-a.vSByte);
 		break;
 	case KT_SHORT:
-		env->stackPushInt(-a.vShort);
+		KEnvironment::stackPushInt(-a.vShort);
 		break;
 	case KT_USHORT:
-		env->stackPushInt(-a.vUShort);
+		KEnvironment::stackPushInt(-a.vUShort);
 		break;
 	case KT_INT:
-		env->stackPushInt(-a.vInt);
+		KEnvironment::stackPushInt(-a.vInt);
 		break;
 	case KT_UINT:
-		env->stackPushLong(-(klong_t)a.vUInt);
+		KEnvironment::stackPushLong(-(klong_t)a.vUInt);
 		break;
 	case KT_LONG:
-		env->stackPushLong(-a.vLong);
+		KEnvironment::stackPushLong(-a.vLong);
 		break;
 	case KT_ULONG:
-		env->stackPush(a);
+		KEnvironment::stackPush(a);
 		break;
 	case KT_FLOAT:
-		env->stackPushFloat(-a.vFloat);
+		KEnvironment::stackPushFloat(-a.vFloat);
 		break;
 	case KT_DOUBLE:
-		env->stackPushDouble(-a.vDouble);
+		KEnvironment::stackPushDouble(-a.vDouble);
 		break;
 	}
 }
 
-void KEnvironment::do_equ(KEnvironment *env)
+void KEnvironment::do_equ(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
-	env->stackPushBool(a.vLong == b.vLong);
+	KEnvironment::stackPushBool(a.vLong == b.vLong);
 }
 
-void KEnvironment::do_neq(KEnvironment *env)
+void KEnvironment::do_neq(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
-	env->stackPushBool(a.vLong != b.vLong);
+	KEnvironment::stackPushBool(a.vLong != b.vLong);
 }
 
-void KEnvironment::do_les(KEnvironment *env)
+void KEnvironment::do_les(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COMP_OP(<);
 }
 
-void KEnvironment::do_leq(KEnvironment *env)
+void KEnvironment::do_leq(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COMP_OP(<=);
 }
 
-void KEnvironment::do_grt(KEnvironment *env)
+void KEnvironment::do_grt(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COMP_OP(>);
 }
 
-void KEnvironment::do_geq(KEnvironment *env)
+void KEnvironment::do_geq(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	COMP_OP(>=);
 }
 
-void KEnvironment::do_cat(KEnvironment *env)
+void KEnvironment::do_cat(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	kstring_t s = krt_strcat(a.vString, a.length, b.vString, b.length);
-	env->stackPushStringMoved(s, a.length + b.length);
+	KEnvironment::stackPushStringMoved(s, a.length + b.length);
 }
 
-void KEnvironment::do_and(KEnvironment *env)
+void KEnvironment::do_and(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	LOGIC_OP(&&, &);
 }
 
-void KEnvironment::do_or(KEnvironment *env)
+void KEnvironment::do_or(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	LOGIC_OP(||, |);
 }
 
-void KEnvironment::do_xor(KEnvironment *env)
+void KEnvironment::do_xor(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	LOGIC_OP(!=, ^);
 }
 
-void KEnvironment::do_not(KEnvironment *env)
+void KEnvironment::do_not(void)
 {
-	const KObject &a = env->stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	switch (a.type->tag & KT_SCALAR_MASK)
 	{
 	case KT_BOOL:
-		env->stackPushBool(!a.vBool);
+		KEnvironment::stackPushBool(!a.vBool);
 		break;
 	case KT_CHAR:
-		env->stackPushChar(~a.vChar);
+		KEnvironment::stackPushChar(~a.vChar);
 		break;
 	case KT_BYTE:
-		env->stackPushByte(~a.vByte);
+		KEnvironment::stackPushByte(~a.vByte);
 		break;
 	case KT_SBYTE:
-		env->stackPushSByte(~a.vSByte);
+		KEnvironment::stackPushSByte(~a.vSByte);
 		break;
 	case KT_SHORT:
-		env->stackPushShort(~a.vShort);
+		KEnvironment::stackPushShort(~a.vShort);
 		break;
 	case KT_USHORT:
-		env->stackPushUShort(~a.vUShort);
+		KEnvironment::stackPushUShort(~a.vUShort);
 		break;
 	case KT_INT:
-		env->stackPushInt(~a.vInt);
+		KEnvironment::stackPushInt(~a.vInt);
 		break;
 	case KT_UINT:
-		env->stackPushUInt(~a.vUInt);
+		KEnvironment::stackPushUInt(~a.vUInt);
 		break;
 	case KT_LONG:
-		env->stackPushLong(~a.vLong);
+		KEnvironment::stackPushLong(~a.vLong);
 		break;
 	case KT_ULONG:
-		env->stackPushULong(~a.vULong);
+		KEnvironment::stackPushULong(~a.vULong);
 		break;
 	}
 }
 
-void KEnvironment::do_shl(KEnvironment *env)
+void KEnvironment::do_shl(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	kuint_t n = b.vUInt;
 
 	switch (a.type->tag & KT_SCALAR_MASK)
 	{
 	case KT_CHAR:
-		env->stackPushChar(a.vChar << n);
+		KEnvironment::stackPushChar(a.vChar << n);
 		break;
 	case KT_BYTE:
-		env->stackPushByte(a.vByte << n);
+		KEnvironment::stackPushByte(a.vByte << n);
 		break;
 	case KT_SBYTE:
-		env->stackPushSByte(a.vSByte << n);
+		KEnvironment::stackPushSByte(a.vSByte << n);
 		break;
 	case KT_SHORT:
-		env->stackPushShort(a.vShort << n);
+		KEnvironment::stackPushShort(a.vShort << n);
 		break;
 	case KT_USHORT:
-		env->stackPushUShort(a.vUShort << n);
+		KEnvironment::stackPushUShort(a.vUShort << n);
 		break;
 	case KT_INT:
-		env->stackPushInt(a.vInt << n);
+		KEnvironment::stackPushInt(a.vInt << n);
 		break;
 	case KT_UINT:
-		env->stackPushUInt(a.vUInt << n);
+		KEnvironment::stackPushUInt(a.vUInt << n);
 		break;
 	case KT_LONG:
-		env->stackPushLong(a.vLong << n);
+		KEnvironment::stackPushLong(a.vLong << n);
 		break;
 	case KT_ULONG:
-		env->stackPushULong(a.vULong << n);
+		KEnvironment::stackPushULong(a.vULong << n);
 		break;
 	}
 }
 
-void KEnvironment::do_shr(KEnvironment *env)
+void KEnvironment::do_shr(void)
 {
-	const KObject &b = env->stackPop();
-	const KObject &a = env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 
 	kuint_t n = b.vUInt;
 
 	switch (a.type->tag & KT_SCALAR_MASK)
 	{
 	case KT_CHAR:
-		env->stackPushChar(a.vChar >> n);
+		KEnvironment::stackPushChar(a.vChar >> n);
 		break;
 	case KT_BYTE:
-		env->stackPushByte(a.vByte >> n);
+		KEnvironment::stackPushByte(a.vByte >> n);
 		break;
 	case KT_SBYTE:
-		env->stackPushSByte(a.vSByte >> n);
+		KEnvironment::stackPushSByte(a.vSByte >> n);
 		break;
 	case KT_SHORT:
-		env->stackPushShort(a.vShort >> n);
+		KEnvironment::stackPushShort(a.vShort >> n);
 		break;
 	case KT_USHORT:
-		env->stackPushUShort(a.vUShort >> n);
+		KEnvironment::stackPushUShort(a.vUShort >> n);
 		break;
 	case KT_INT:
-		env->stackPushInt(a.vInt >> n);
+		KEnvironment::stackPushInt(a.vInt >> n);
 		break;
 	case KT_UINT:
-		env->stackPushUInt(a.vUInt >> n);
+		KEnvironment::stackPushUInt(a.vUInt >> n);
 		break;
 	case KT_LONG:
-		env->stackPushLong(a.vLong >> n);
+		KEnvironment::stackPushLong(a.vLong >> n);
 		break;
 	case KT_ULONG:
-		env->stackPushULong(a.vULong >> n);
+		KEnvironment::stackPushULong(a.vULong >> n);
 		break;
 	}
 }
 
 
-void KEnvironment::do_istrue(KEnvironment *env)
+void KEnvironment::do_istrue(void)
 {
-	const KObject &obj = env->stackPop();
-	env->stackPushBool((kbool_t)obj.vULong);
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushBool((kbool_t)obj.vULong);
 }
 
-void KEnvironment::do_isnull(KEnvironment *env)
+void KEnvironment::do_isnull(void)
 {
-	const KObject &obj = env->stackPop();
-	env->stackPushBool(obj.vRaw == NULL);
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushBool(obj.vRaw == NULL);
 }
 
 	
-void KEnvironment::do_newobj(KEnvironment *env)
+void KEnvironment::do_newobj(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const ClassDef *cls = env->module->classList[tok];
+	const ClassDef *cls = KEnvironment::module->classList[tok];
 
 	KObject obj;
-	env->allocClassInstance(cls, obj);
-	env->stackPush(obj);
-	env->invokeLastThis(cls->ctor);
+	KEnvironment::allocClassInstance(cls, obj);
+	KEnvironment::stackPush(obj);
+	KEnvironment::invokeLastThis(cls->ctor);
 
-	env->stackPush(obj);
+	KEnvironment::stackPush(obj);
 }
 
-void KEnvironment::do_newdel(KEnvironment *env)
+void KEnvironment::do_newdel(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
 
-	const DelegateDef *del = env->module->delegateList[tok];
+	const DelegateDef *del = KEnvironment::module->delegateList[tok];
 
-	const KObject &objMet = env->stackPop();
+	const KObject &objMet = KEnvironment::stackPop();
 	const MethodDef *met = (MethodDef *)objMet.getRaw();
 
 	KObject obj;
 	if (met->addr & KMA_STATIC)
-		env->allocDelegateInstance(del, NULL, met, obj);
+		KEnvironment::allocDelegateInstance(del, NULL, met, obj);
 	else
-		env->allocDelegateInstance(del, &env->stackPop(), met, obj);
+		KEnvironment::allocDelegateInstance(del, &KEnvironment::stackPop(), met, obj);
 
-	env->stackPush(obj);
+	KEnvironment::stackPush(obj);
 }
 
-void KEnvironment::do_newarr(KEnvironment *env)
+void KEnvironment::do_newarr(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 
-	const TypeDef *type = env->module->typeList[tok];
+	const TypeDef *type = KEnvironment::module->typeList[tok];
 
-	const KObject &objLength = env->stackPop();
+	const KObject &objLength = KEnvironment::stackPop();
 	kuint_t length = objLength.vUInt;
 
 	KObject obj;
-	env->allocArray(type, length, obj);
-	env->stackPush(obj);
+	KEnvironment::allocArray(type, length, obj);
+	KEnvironment::stackPush(obj);
 }
 
-void KEnvironment::do_makearr(KEnvironment *env)
+void KEnvironment::do_makearr(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 
-	const TypeDef *type = env->module->typeList[tok];
+	const TypeDef *type = KEnvironment::module->typeList[tok];
 
-	const KObject &objLength = env->stackPop();
+	const KObject &objLength = KEnvironment::stackPop();
 	kuint_t length = objLength.vUInt;
 
 	KObject obj;
-	env->allocArrayBaking(type, length, obj);
-	env->stackPush(obj);
+	KEnvironment::allocArrayBaking(type, length, obj);
+	KEnvironment::stackPush(obj);
 }
 
 	
-void KEnvironment::do_conv_ch(KEnvironment *env)
+void KEnvironment::do_conv_ch(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kchar_t, Char);
 }
 
-void KEnvironment::do_conv_i1(KEnvironment *env)
+void KEnvironment::do_conv_i1(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(ksbyte_t, SByte);
 }
 
-void KEnvironment::do_conv_u1(KEnvironment *env)
+void KEnvironment::do_conv_u1(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kbyte_t, Byte);
 }
 
-void KEnvironment::do_conv_i2(KEnvironment *env)
+void KEnvironment::do_conv_i2(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kshort_t, Short);
 }
 
-void KEnvironment::do_conv_u2(KEnvironment *env)
+void KEnvironment::do_conv_u2(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kushort_t, UShort);
 }
 
-void KEnvironment::do_conv_i4(KEnvironment *env)
+void KEnvironment::do_conv_i4(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kint_t, Int);
 }
 
-void KEnvironment::do_conv_u4(KEnvironment *env)
+void KEnvironment::do_conv_u4(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kuint_t, UInt);
 }
 
-void KEnvironment::do_conv_i8(KEnvironment *env)
+void KEnvironment::do_conv_i8(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(klong_t, Long);
 }
 
-void KEnvironment::do_conv_u8(KEnvironment *env)
+void KEnvironment::do_conv_u8(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kulong_t, ULong);
 }
 
-void KEnvironment::do_conv_r4(KEnvironment *env)
+void KEnvironment::do_conv_r4(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kfloat_t, Float);
 }
 
-void KEnvironment::do_conv_r8(KEnvironment *env)
+void KEnvironment::do_conv_r8(void)
 {
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kdouble_t, Double);
 }
 
-void KEnvironment::do_conv_s(KEnvironment *env)
+void KEnvironment::do_conv_s(void)
 {
-	const KObject &obj = env->stackPop();
-	// TODO: conv.s
+	const KObject &obj = KEnvironment::stackPop();
+
+	if (obj.type == GET_PRIMITIVE_TYPE(KT_STRING)
+		|| obj.type == KObject::nullType)
+	{
+		KEnvironment::stackPush(obj);
+		return;
+	}
+
+	const TypeDef *srcType = obj.type;
+	CONV_S;
 }
 
 	
-void KEnvironment::do_cast(KEnvironment *env)
+void KEnvironment::do_cast(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 
 
-	const KObject &obj = env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	const TypeDef *srcType = obj.type;
-	const TypeDef *destType = env->module->typeList[tok];
+	const TypeDef *destType = KEnvironment::module->typeList[tok];
 
 	if (srcType == destType)
 	{
 		// identical type
-		env->stackPush(obj);
+		KEnvironment::stackPush(obj);
 	}
 	else if (srcType == KEnvironment::nullType)
 	{
 		// null object
+
 		if (destType->dim
 				|| destType->cls
 				|| (destType->tag & KT_REF_MASK))
 		{
 			// null -> reference type: ok
-			env->stackPush(obj);
+			KEnvironment::stackPush(obj);
 		}
 		else
 		{
 			switch (destType->tag & KT_SCALAR_MASK)
 			{
 			case KT_BOOL:
-				env->stackPushBool(false);
+				KEnvironment::stackPushBool(false);
 				break;
 			case KT_CHAR:
-				env->stackPushChar((kchar_t)0);
+				KEnvironment::stackPushChar((kchar_t)0);
 				break;
 			case KT_BYTE:
-				env->stackPushByte((kbyte_t)0);
+				KEnvironment::stackPushByte((kbyte_t)0);
 				break;
 			case KT_SBYTE:
-				env->stackPushSByte((ksbyte_t)0);
+				KEnvironment::stackPushSByte((ksbyte_t)0);
 				break;
 			case KT_SHORT:
-				env->stackPushShort((kshort_t)0);
+				KEnvironment::stackPushShort((kshort_t)0);
 				break;
 			case KT_USHORT:
-				env->stackPushUShort((kushort_t)0);
+				KEnvironment::stackPushUShort((kushort_t)0);
 				break;
 			case KT_INT:
-				env->stackPushInt((kint_t)0);
+				KEnvironment::stackPushInt((kint_t)0);
 				break;
 			case KT_UINT:
-				env->stackPushUInt((kuint_t)0);
+				KEnvironment::stackPushUInt((kuint_t)0);
 				break;
 			case KT_LONG:
-				env->stackPushLong((klong_t)0);
+				KEnvironment::stackPushLong((klong_t)0);
 				break;
 			case KT_ULONG:
-				env->stackPushULong((kulong_t)0);
+				KEnvironment::stackPushULong((kulong_t)0);
 				break;
 			case KT_STRING:
-				env->stackPushString(NULL, 0);
+				KEnvironment::stackPushString(NULL, 0);
 				break;
 			}
 		}
@@ -1411,7 +1525,7 @@ void KEnvironment::do_cast(KEnvironment *env)
 			switch (destType->tag & KT_SCALAR_MASK)
 			{
 			case KT_BOOL:
-				env->stackPushBool(obj.vLong != 0);
+				KEnvironment::stackPushBool(obj.vLong != 0);
 				break;
 			case KT_CHAR:
 				CAST_OP(kchar_t, Char);
@@ -1447,7 +1561,7 @@ void KEnvironment::do_cast(KEnvironment *env)
 				CAST_OP(kdouble_t, Double);
 				break;
 			case KT_STRING:
-				// TODO: conv.s
+				CONV_S;
 				break;
 			}
 		}
@@ -1456,43 +1570,51 @@ void KEnvironment::do_cast(KEnvironment *env)
 			// -> reference type
 
 			if (destType == KEnvironment::objectType
-				|| destType == KEnvironment::arrayType
 				|| destType == KEnvironment::rawType)
 			{
-				env->stackPush(obj);
+				// -> object || raw
+				KEnvironment::stackPush(obj);
+			}
+			else if (destType == KEnvironment::arrayType)
+			{
+				// -> array
+				if (srcType->dim || (srcType->tag & KT_ARRAY))
+					// src is array
+					KEnvironment::stackPush(obj);
+				else
+					KniThrowException(KEnvironment::exceptions.invalidCast);
 			}
 			else
 			{
-				//TODO: InvalidCast exception
-				env->throwException();
+				KniThrowException(KEnvironment::exceptions.invalidCast);
 			}
 		}
 	}
 }
 
-void KEnvironment::do_isinst(KEnvironment *env)
+void KEnvironment::do_isinst(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 
-	const TypeDef *type = env->module->typeList[tok];
+	const TypeDef *type = KEnvironment::module->typeList[tok];
 
-	const KObject &obj = env->stackPop();
-	env->stackPushBool(obj.type == type);
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushBool(obj.type == type || obj.type == KObject::nullType);
 }
 
 
-void KEnvironment::do_hlt(KEnvironment *env)
+void KEnvironment::do_hlt(void)
 {
-	env->running = false;
+	KEnvironment::running = false;
 }
 
-void KEnvironment::do_brk(KEnvironment *env)
+void KEnvironment::do_brk(void)
 {
-	env->running = false;
+	KEnvironment::running = false;
 }
 
-void KEnvironment::do_trace(KEnvironment *env)
+void KEnvironment::do_trace(void)
 {
 	kuint_t line;
 	BCREAD(line, kuint_t);

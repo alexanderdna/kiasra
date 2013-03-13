@@ -8,7 +8,6 @@
 #define IS_STRING(type) (type && ((type->tag & KT_SCALAR_MASK) == KT_STRING && !type->dim))
 #define IS_REF(type)    (type && (type->dim || (type->cls)))
 
-KEnvironment *KObject::env;
 KGC          *KObject::gc;
 
 const TypeDef *KObject::objectType;

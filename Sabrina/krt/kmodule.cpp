@@ -63,7 +63,7 @@ const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 
 //=============================================================
 
-KModuleLoader::KModuleLoader(KEnvironment *env, kstring_t importerPath, kstring_t path, uint32_t hash)
+KModuleLoader::KModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash)
 	: moduleLoaders(NULL), err(ModuleLoadError::OK),
 	importerPath(importerPath), path(path), hash(hash), libHandle(NULL),
 	stream(NULL), pos(0), isCleaned(true),
@@ -80,8 +80,6 @@ KModuleLoader::KModuleLoader(KEnvironment *env, kstring_t importerPath, kstring_
 	this->dparamTable.rows = NULL;
 	this->localTable.rows = NULL;
 	this->code = NULL;
-
-	this->env = env;
 }
 
 KModuleLoader::~KModuleLoader()
@@ -112,52 +110,68 @@ bool KModuleLoader::open(void)
 	if (this->loadPhase >= ModuleLoadPhase::Opened)
 		return true;
 
-	switch (this->path[0])
-	{
-	case 'd':
-		this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_USER);
-		break;
-	case 'D':
-		this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_SYSTEM);
-		break;
-	case 'k':
-		this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_USER);
-		break;
-	case 'K':
-		this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_SYSTEM);
-		break;
-	default:
-		this->err = ModuleLoadError::InvalidPath;
-		return false;
-	}
+	char *pathA;
 
-	kstring_t absolutePath;
-
-	if (this->attrs & KMODA_USER)
+	if (this->importerPath)
 	{
-		const kchar_t * lastSlash;
+		switch (this->path[0])
+		{
+		case 'd':
+			this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_USER);
+			break;
+		case 'D':
+			this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_SYSTEM);
+			break;
+		case 'k':
+			this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_USER);
+			break;
+		case 'K':
+			this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_SYSTEM);
+			break;
+		default:
+			this->err = ModuleLoadError::InvalidPath;
+			return false;
+		}
+
+		kstring_t absolutePath;
+
+		if (this->attrs & KMODA_USER)
+		{
+			const kchar_t * lastSlash;
 #ifdef ISWIN
-		lastSlash = wcsrchr(this->importerPath, '\\');
+			lastSlash = wcsrchr(this->importerPath, '\\');
 #else
-		lastSlash = wcsrchr(this->importerPath, '/');
+			lastSlash = wcsrchr(this->importerPath, '/');
 #endif
 
-		knuint_t len = lastSlash - this->importerPath + 1;
+			knuint_t len = lastSlash - this->importerPath + 1;
 
-		absolutePath = krt_strcat(this->importerPath, len, this->path + 1, wcslen(this->path) - 1);
+			absolutePath = krt_strcat(this->importerPath, len, this->path + 1, wcslen(this->path) - 1);
+		}
+		else
+		{
+			absolutePath = krt_strcat(KEnvironment::getSystemLibPath(), this->path + 1);
+		}
+
+		knuint_t len = wcslen(absolutePath);
+		pathA = new char[len + 1];
+		for (knuint_t i = 0; i < len; ++i)
+			pathA[i] = (char)absolutePath[i];
+		pathA[len] = 0;
+
+		delete []absolutePath;
 	}
 	else
 	{
-		absolutePath = krt_strcat(this->env->getSystemLibPath(), this->path + 1);
+		// importerPath does not exist
+		// => we have absolute path already
+
+		knuint_t len = wcslen(this->path);
+		pathA = new char[len + 1];
+		for (knuint_t i = 0; i < len; ++i)
+			pathA[i] = (char)this->path[i];
+		pathA[len] = 0;
 	}
-
-	knuint_t len = wcslen(absolutePath);
-	char *pathA = new char[len + 1];
-	for (knuint_t i = 0; i < len; ++i)
-		pathA[i] = (char)absolutePath[i];
-	pathA[len] = 0;
-
-	delete []absolutePath;
 
 	FILE *fp;
 
@@ -298,8 +312,6 @@ bool KModuleLoader::bake(void)
 	if (this->loadPhase >= ModuleLoadPhase::Baked)
 		return true;
 
-	KEnvironment *env = this->env;
-
 	ModuleDef *module = new ModuleDef;
 	this->module = module;
 
@@ -341,7 +353,7 @@ bool KModuleLoader::bake(void)
 
 	for (kuint_t i = 0; i < moduleCount; ++i)
 	{
-		KModuleLoader *moduleLoader = env->createModuleLoader(this->path,
+		KModuleLoader *moduleLoader = KEnvironment::createModuleLoader(this->path,
 			strings[metaModuleRows[i].path], metaModuleRows[i].hash);
 
 		if (moduleLoader->loadPhase < ModuleLoadPhase::Baked)
@@ -717,11 +729,11 @@ bool KModuleLoader::bake(void)
 		const MetaTypeDef &typeRow = typeRows[i];
 		
 		if ((typeRow.tag & KT_SCALAR_MASK) == KT_CLASS)
-			allTypeList[i] = env->createType((ktypetag_t)typeRow.tag, typeRow.dim, allClassList[typeRow.tok]);
+			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim, allClassList[typeRow.tok]);
 		else if ((typeRow.tag & KT_SCALAR_MASK) == KT_DELEGATE)
-			allTypeList[i] = env->createType((ktypetag_t)typeRow.tag, typeRow.dim, allDelegateList[typeRow.tok]);
+			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim, allDelegateList[typeRow.tok]);
 		else
-			allTypeList[i] = env->createType((ktypetag_t)typeRow.tag, typeRow.dim);
+			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim);
 	}
 
 	// local table

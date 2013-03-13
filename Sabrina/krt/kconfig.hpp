@@ -11,9 +11,23 @@
 #endif
 
 #ifdef IS64BIT
-	#define INIT_DEFAULT_VALUE(obj, t) { obj.type = (t); obj.vRaw = NULL; obj.length = 0; }
+	#define INIT_DEFAULT_VALUE(obj, t) \
+		{ \
+			if (t->tag & KT_REF_MASK) \
+				obj.type = KEnvironment::nullType; \
+			else \
+				obj.type = (t); \
+			obj.vRaw = 0; obj.length = 0; \
+		}
 #else
-	#define INIT_DEFAULT_VALUE(obj, t) { obj.type = (t); obj.vULong = 0; obj.length = 0; }
+	#define INIT_DEFAULT_VALUE(obj, t) \
+		{ \
+			if (t->tag & KT_REF_MASK) \
+				obj.type = KEnvironment::nullType; \
+			else \
+				obj.type = (t); \
+			obj.vULong = 0; obj.length = 0; \
+		}
 #endif
 
 #if defined(_WIN32) || defined(_MSC_VER)

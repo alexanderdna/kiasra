@@ -74,8 +74,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="kcodegen.hpp" />
+    <ClInclude Include="kcompile.hpp" />
     <ClInclude Include="kconfig.hpp" />
-    <ClInclude Include="kopcodes.hpp" />
+    <ClInclude Include="kcs.h" />
+    <ClInclude Include="kopcodes.h" />
     <ClInclude Include="kenv.hpp" />
     <ClInclude Include="kframe.hpp" />
     <ClInclude Include="kgc.hpp" />
@@ -98,6 +101,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="kcs.cpp" />
     <ClCompile Include="kenv.cpp" />
     <ClCompile Include="kenv_stack.cpp" />
     <ClCompile Include="kgc.cpp" />

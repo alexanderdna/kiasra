@@ -51,40 +51,6 @@ struct MetaParamDef;
 
 //===================================================
 
-enum ModuleAttributes : uint16_t
-{
-	KMODA_SYSTEM = 0,
-	KMODA_USER   = 1,
-	KMODA_KIASRA = 2,
-	KMODA_NATIVE = 4,
-};
-
-enum ClassAttributes : uint16_t
-{
-	KCA_PUBLIC  = 0,
-	KCA_PRIVATE = 1,
-	KCA_STATIC  = 2,
-};
-
-enum FieldAttributes : uint16_t
-{
-	KFA_PUBLIC  = 0,
-	KFA_PRIVATE = 1,
-	KFA_STATIC  = 2,
-	KFA_FINAL   = 4,
-};
-
-enum MethodAttributes : uint16_t
-{
-	KMA_PUBLIC  = 0,
-	KMA_PRIVATE = 1,
-	KMA_STATIC  = 2,
-	KMA_CTOR    = 4,
-	KMA_NATIVE  = 8
-};
-
-//===================================================
-
 struct TypeDef
 {
 	size_t size;
@@ -107,7 +73,7 @@ struct MetaTypeDef
 
 struct ModuleDef
 {
-	ModuleAttributes attrs;
+	uint16_t         attrs;
 	kstring_t        path;
 
 	kuint_t          stringCount;
@@ -155,7 +121,7 @@ struct ModuleDef
 
 struct MetaModuleDef
 {
-	ModuleAttributes attrs;
+	uint16_t         attrs;
 	ktoken32_t       path;
 	uint32_t         hash;
 };
@@ -164,7 +130,7 @@ struct ClassDef
 {
 	size_t size;
 
-	ClassAttributes attrs;
+	uint16_t        attrs;
 	kstring_t       name;
 	
 	kushort_t       fieldCount;
@@ -195,7 +161,7 @@ struct ClassDef
 
 struct MetaClassDef
 {
-	ClassAttributes attrs;
+	uint16_t        attrs;
 	ktoken32_t      name;
 	ktoken16_t      farIndex;
 	ktoken16_t      moduleIndex;
@@ -207,7 +173,7 @@ struct DelegateDef
 {
 	size_t size;
 
-	ClassAttributes attrs;
+	uint16_t        attrs;
 	kstring_t       name;
 
 	const TypeDef  *returnType;
@@ -222,7 +188,7 @@ struct DelegateDef
 
 struct MetaDelegateDef
 {
-	ClassAttributes attrs;
+	uint16_t        attrs;
 	ktoken32_t      name;
 	ktoken16_t      farIndex;
 	ktoken16_t      moduleIndex;
@@ -234,7 +200,7 @@ struct FieldDef
 {
 	size_t size;
 
-	FieldAttributes attrs;
+	uint16_t        attrs;
 	kstring_t       name;
 	const TypeDef  *declType;
 
@@ -244,7 +210,7 @@ struct FieldDef
 
 struct MetaFieldDef
 {
-	FieldAttributes attrs;
+	uint16_t        attrs;
 	ktoken32_t      name;
 	ktoken32_t      declType;
 };
@@ -253,7 +219,7 @@ struct MethodDef
 {
 	size_t size;
 
-	MethodAttributes attrs;
+	uint16_t         attrs;
 	kstring_t        name;
 
 	const TypeDef   *returnType;
@@ -276,7 +242,7 @@ struct MethodDef
 
 struct MetaMethodDef
 {
-	MethodAttributes attrs;
+	uint16_t         attrs;
 	ktoken32_t       name;
 	ktoken32_t       returnType;
 	ktoken16_t       paramList;
