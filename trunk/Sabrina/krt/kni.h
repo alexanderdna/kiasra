@@ -76,8 +76,8 @@ typedef NINVOKE_RESULT (*NFUNC)(HKENV hKEnv);
 
 typedef unsigned char  kbool_t;
 typedef wchar_t        kchar_t;
-typedef int8_t         kbyte_t;
-typedef uint8_t        ksbyte_t;
+typedef uint8_t        kbyte_t;
+typedef int8_t         ksbyte_t;
 typedef int16_t        kshort_t;
 typedef uint16_t       kushort_t;
 typedef int32_t        kint_t;
