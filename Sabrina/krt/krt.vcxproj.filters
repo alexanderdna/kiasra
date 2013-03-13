@@ -13,15 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\api">
+      <UniqueIdentifier>{0052a1fa-cad9-4695-88e2-b7702b704f15}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="krt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="kni.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kmeta.hpp">
@@ -56,6 +53,12 @@
     </ClInclude>
     <ClInclude Include="kconfig.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kni.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="krt.h">
+      <Filter>Header Files\api</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

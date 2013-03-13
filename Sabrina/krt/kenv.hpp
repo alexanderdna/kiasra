@@ -164,7 +164,7 @@ protected:
 	void stackPushDouble(kdouble_t val);
 	void stackPushString(kstring_t val, knuint_t length);
 	void stackPushStringMoved(kstring_t val, knuint_t len);
-	void stackPushRaw(void *p);
+	void stackPushRaw(kref_t val);
 	KObject & stackPeek(void);
 	KObject & stackPeek(knuint_t offset);
 	KObject & stackPop(void);
@@ -298,7 +298,7 @@ protected:
 
 	//===================================================
 	// KNI API functions
-
+	
 	friend kbool_t KniGetLocalBool(HKENV hKEnv, kushort_t index);
 	friend kchar_t KniGetLocalChar(HKENV hKEnv, kushort_t index);
 	friend kbyte_t KniGetLocalByte(HKENV hKEnv, kushort_t index);
@@ -312,6 +312,7 @@ protected:
 	friend kfloat_t KniGetLocalFloat(HKENV hKEnv, kushort_t index);
 	friend kdouble_t KniGetLocalDouble(HKENV hKEnv, kushort_t index);
 	friend kstring_t KniGetLocalString(HKENV hKEnv, kushort_t index);
+	friend kref_t KniGetLocalRaw(HKENV hKEnv, kushort_t index);
 	friend knuint_t KniGetLocalLength(HKENV hKEnv, kushort_t index);
 
 	friend kbool_t KniGetArgBool(HKENV hKEnv, kushort_t index);
@@ -327,6 +328,7 @@ protected:
 	friend kfloat_t KniGetArgFloat(HKENV hKEnv, kushort_t index);
 	friend kdouble_t KniGetArgDouble(HKENV hKEnv, kushort_t index);
 	friend kstring_t KniGetArgString(HKENV hKEnv, kushort_t index);
+	friend kref_t KniGetArgRaw(HKENV hKEnv, kushort_t index);
 	friend knuint_t KniGetArgLength(HKENV hKEnv, kushort_t index);
 
 	friend kbool_t KniGetFieldBool(HKENV hKEnv, HKFIELD hKField);
@@ -342,6 +344,7 @@ protected:
 	friend kfloat_t KniGetFieldFloat(HKENV hKEnv, HKFIELD hKField);
 	friend kdouble_t KniGetFieldDouble(HKENV hKEnv, HKFIELD hKField);
 	friend kstring_t KniGetFieldString(HKENV hKEnv, HKFIELD hKField);
+	friend kref_t KniGetFieldRaw(HKENV hKEnv, HKFIELD hKField);
 	friend knuint_t KniGetFieldLength(HKENV hKEnv, HKFIELD hKField);
 
 	friend kbool_t KniGetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
@@ -357,6 +360,7 @@ protected:
 	friend kfloat_t KniGetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 	friend kdouble_t KniGetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 	friend kstring_t KniGetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+	friend kref_t KniGetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 	friend knuint_t KniGetStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 
 	friend kbool_t KniGetElementBool(HKENV hKEnv, knuint_t index);
@@ -372,6 +376,7 @@ protected:
 	friend kfloat_t KniGetElementFloat(HKENV hKEnv, knuint_t index);
 	friend kdouble_t KniGetElementDouble(HKENV hKEnv, knuint_t index);
 	friend kstring_t KniGetElementString(HKENV hKEnv, knuint_t index);
+	friend kref_t KniGetElementRaw(HKENV hKEnv, knuint_t index);
 	friend knuint_t KniGetElementLength(HKENV hKEnv, knuint_t index);
 
 	friend kbool_t KniGetIndirectBool(HKENV hKEnv);
@@ -387,6 +392,7 @@ protected:
 	friend kfloat_t KniGetIndirectFloat(HKENV hKEnv);
 	friend kdouble_t KniGetIndirectDouble(HKENV hKEnv);
 	friend kstring_t KniGetIndirectString(HKENV hKEnv);
+	friend kref_t KniGetElementRaw(HKENV hKEnv);
 	friend knuint_t KniGetIndirectLength(HKENV hKEnv);
 
 	friend void KniSetLocalBool(HKENV hKEnv, kushort_t index, kbool_t val);
@@ -402,6 +408,7 @@ protected:
 	friend void KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 	friend void KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 	friend void KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
+	friend void KniSetLocalRaw(HKENV hKEnv, kushort_t index, kref_t val);
 
 	friend void KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val);
 	friend void KniSetArgChar(HKENV hKEnv, kushort_t index, kchar_t val);
@@ -416,6 +423,7 @@ protected:
 	friend void KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 	friend void KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 	friend void KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
+	friend void KniSetArgRaw(HKENV hKEnv, kushort_t index, kref_t val);
 
 	friend void KniSetFieldBool(HKENV hKEnv, HKFIELD hKField, kbool_t val);
 	friend void KniSetFieldChar(HKENV hKEnv, HKFIELD hKField, kchar_t val);
@@ -430,6 +438,7 @@ protected:
 	friend void KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val);
 	friend void KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val);
 	friend void KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val, knuint_t length);
+	friend void KniSetFieldRaw(HKENV hKEnv, HKFIELD hKField, kref_t val);
 
 	friend void KniSetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbool_t val);
 	friend void KniSetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kchar_t val);
@@ -444,6 +453,7 @@ protected:
 	friend void KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kfloat_t val);
 	friend void KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
 	friend void KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
+	friend void KniSetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kref_t val);
 
 	friend void KniSetElementBool(HKENV hKEnv, knuint_t index, kbool_t val);
 	friend void KniSetElementChar(HKENV hKEnv, knuint_t index, kchar_t val);
@@ -458,6 +468,7 @@ protected:
 	friend void KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val);
 	friend void KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val);
 	friend void KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val, knuint_t length);
+	friend void KniSetElementRaw(HKENV hKEnv, knuint_t index, kref_t val);
 
 	friend void KniSetIndirectBool(HKENV hKEnv, kbool_t val);
 	friend void KniSetIndirectChar(HKENV hKEnv, kchar_t val);
@@ -472,6 +483,7 @@ protected:
 	friend void KniSetIndirectFloat(HKENV hKEnv, kfloat_t val);
 	friend void KniSetIndirectDouble(HKENV hKEnv, kdouble_t val);
 	friend void KniSetIndirectString(HKENV hKEnv, kstring_t val, knuint_t length);
+	friend void KniSetIndirectRaw(HKENV hKEnv, kref_t val);
 
 	friend void KniLoadBool(HKENV hKEnv, kbool_t val);
 	friend void KniLoadChar(HKENV hKEnv, kchar_t val);
@@ -486,6 +498,7 @@ protected:
 	friend void KniLoadFloat(HKENV hKEnv, kfloat_t val);
 	friend void KniLoadDouble(HKENV hKEnv, kdouble_t val);
 	friend void KniLoadString(HKENV hKEnv, kstring_t val, knuint_t length);
+	friend void KniLoadRaw(HKENV hKEnv, kref_t val);
 
 	friend void KniLoadLocal(HKENV hKEnv, kushort_t index);
 	friend void KniLoadArg(HKENV hKEnv, kushort_t index);
@@ -520,8 +533,7 @@ protected:
 	friend void KniLoadNull(HKENV hKEnv);
 
 	friend void KniLoadNewObject(HKENV hKEnv, HKCLASS hKClass);
-	friend void KniLoadNewDelegate(HKENV HKEnv, HKDELEGATE hKDelegate, HKMETHOD hKMethod);
-	friend void KniLoadNewDelegateNative(HKENV HKEnv, HKDELEGATE hKDelegate, NFUNC pNFunc, kbool_t isStatic);
+	friend void KniLoadNewDelegate(HKENV hKEnv, HKDELEGATE hKDelegate, HKMETHOD hKMethod);
 	friend void KniLoadNewArray(HKENV hKEnv, HKTYPE hKType, knuint_t length);
 	friend void KniLoadNewArrayBaking(HKENV hKEnv, HKTYPE hKType, knuint_t length);
 
@@ -531,7 +543,7 @@ protected:
 	friend void KniStoreField(HKENV hKEnv, HKFIELD hKField);
 	friend void KniStoreStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 	friend void KniStoreElement(HKENV hKEnv, knuint_t index);
-	friend void KniStoreIndirect(HKENV HKENV);
+	friend void KniStoreIndirect(HKENV hKEnv);
 
 	friend kbool_t KniIsNull(HKENV hKEnv);
 	friend kbool_t KniIsNullLocal(HKENV hKEnv, kushort_t index);
@@ -552,7 +564,6 @@ protected:
 	friend kbool_t KniIsInstanceOfDelegate(HKENV hKEnv, HKDELEGATE hKDelegate);
 
 	friend KRESULT KniInvoke(HKENV hKEnv, HKMETHOD hKMethod);
-	friend KRESULT KniInvokeStatic(HKENV hKEnv, HKCLASS hKClass, HKMETHOD hKMethod);
 	friend KRESULT KniInvokeObject(HKENV hKEnv);
 
 	friend kbool_t KniHasException(HKENV hKEnv);
@@ -575,7 +586,7 @@ protected:
 
 	friend HKCLASS KniGetClass(HKENV hKEnv, kstring_t ksName);
 	friend HKDELEGATE KniGetDelegate(HKENV hKEnv, kstring_t ksName);
-	friend HKFIELD KniGetField(HKENV HKEnv, HKCLASS hKClass, kstring_t ksName);
+	friend HKFIELD KniGetField(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName);
 	friend HKMETHOD KniGetMethod(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName);
 
 	friend HKTYPE KniGetPrimitiveType(HKENV hKEnv, ktypetag_t tag);

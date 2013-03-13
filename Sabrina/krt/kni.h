@@ -151,6 +151,8 @@ kfloat_t KNI_API KniGetLocalFloat(HKENV hKEnv, kushort_t index);
 kdouble_t KNI_API KniGetLocalDouble(HKENV hKEnv, kushort_t index);
 /* Gets local variable as string value */
 kstring_t KNI_API KniGetLocalString(HKENV hKEnv, kushort_t index);
+/* Gets local variable as raw value */
+kref_t KNI_API KniGetLocalRaw(HKENV hKEnv, kushort_t index);
 /* Gets length of string or array local variable */
 knuint_t KNI_API KniGetLocalLength(HKENV hKEnv, kushort_t index);
 
@@ -181,6 +183,8 @@ kfloat_t KNI_API KniGetArgFloat(HKENV hKEnv, kushort_t index);
 kdouble_t KNI_API KniGetArgDouble(HKENV hKEnv, kushort_t index);
 /* Gets argument as string value */
 kstring_t KNI_API KniGetArgString(HKENV hKEnv, kushort_t index);
+/* Gets argument as raw value */
+kref_t KNI_API KniGetArgRaw(HKENV hKEnv, kushort_t index);
 /* Gets length of string or array argument */
 knuint_t KNI_API KniGetArgLength(HKENV hKEnv, kushort_t index);
 
@@ -211,6 +215,8 @@ kfloat_t KNI_API KniGetFieldFloat(HKENV hKEnv, HKFIELD hKField);
 kdouble_t KNI_API KniGetFieldDouble(HKENV hKEnv, HKFIELD hKField);
 /* Gets instance field as string value */
 kstring_t KNI_API KniGetFieldString(HKENV hKEnv, HKFIELD hKField);
+/* Gets instance field as raw value */
+kref_t KNI_API KniGetFieldRaw(HKENV hKEnv, HKFIELD hKField);
 /* Gets length of string or array instance field */
 knuint_t KNI_API KniGetFieldLength(HKENV hKEnv, HKFIELD hKField);
 
@@ -240,6 +246,8 @@ kfloat_t KNI_API KniGetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hK
 kdouble_t KNI_API KniGetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 /* Gets static field as string value */
 kstring_t KNI_API KniGetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
+/* Gets static field as raw value */
+kref_t KNI_API KniGetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 /* Gets length of string or array static field */
 knuint_t KNI_API KniGetStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField);
 
@@ -270,6 +278,8 @@ kfloat_t KNI_API KniGetElementFloat(HKENV hKEnv, knuint_t index);
 kdouble_t KNI_API KniGetElementDouble(HKENV hKEnv, knuint_t index);
 /* Gets element as string value */
 kstring_t KNI_API KniGetElementString(HKENV hKEnv, knuint_t index);
+/* Gets element as raw value */
+kref_t KNI_API KniGetElementRaw(HKENV hKEnv, knuint_t index);
 /* Gets length of string or array typed element */
 knuint_t KNI_API KniGetElementLength(HKENV hKEnv, knuint_t index);
 
@@ -300,6 +310,8 @@ kfloat_t KNI_API KniGetIndirectFloat(HKENV hKEnv);
 kdouble_t KNI_API KniGetIndirectDouble(HKENV hKEnv);
 /* Gets indirect object as string value */
 kstring_t KNI_API KniGetIndirectString(HKENV hKEnv);
+/* Gets indirect object as raw value */
+kref_t KNI_API KniGetElementRaw(HKENV hKEnv);
 /* Gets length of string or array indirect object */
 knuint_t KNI_API KniGetIndirectLength(HKENV hKEnv);
 
@@ -333,6 +345,8 @@ void KNI_API KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 void KNI_API KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 /* Sets string value to local variable */
 void KNI_API KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
+/* Sets raw value to local variable */
+void KNI_API KniSetLocalRaw(HKENV hKEnv, kushort_t index, kref_t val);
 
 /* Sets bool value to argument */
 void KNI_API KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val);
@@ -360,6 +374,8 @@ void KNI_API KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 void KNI_API KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 /* Sets string value to argument */
 void KNI_API KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
+/* Sets raw value to argument */
+void KNI_API KniSetArgRaw(HKENV hKEnv, kushort_t index, kref_t val);
 
 
 /* Sets bool value to instance field */
@@ -388,6 +404,8 @@ void KNI_API KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val);
 void KNI_API KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val);
 /* Sets string value to instance field */
 void KNI_API KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val, knuint_t length);
+/* Sets raw value to instannce field */
+void KNI_API KniSetFieldRaw(HKENV hKEnv, HKFIELD hKField, kref_t val);
 
 
 /* Sets bool value to static field */
@@ -416,6 +434,8 @@ void KNI_API KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKFiel
 void KNI_API KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
 /* Sets string value to static field */
 void KNI_API KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
+/* Sets raw value to static field */
+void KNI_API KniSetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kref_t val);
 
 
 /* Sets bool value to array element */
@@ -444,6 +464,8 @@ void KNI_API KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val);
 void KNI_API KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val);
 /* Sets string value to array element */
 void KNI_API KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val, knuint_t length);
+/* Sets raw value to array element */
+void KNI_API KniSetElementRaw(HKENV hKEnv, knuint_t index, kref_t val);
 
 
 /* Sets bool value to indirect object */
@@ -472,6 +494,8 @@ void KNI_API KniSetIndirectFloat(HKENV hKEnv, kfloat_t val);
 void KNI_API KniSetIndirectDouble(HKENV hKEnv, kdouble_t val);
 /* Sets string value to indirect object */
 void KNI_API KniSetIndirectString(HKENV hKEnv, kstring_t val, knuint_t length);
+/* Sets raw value to indirect object */
+void KNI_API KniSetIndirectRaw(HKENV hKEnv, kref_t val);
 
 /*===================================================*/
 
@@ -503,6 +527,8 @@ void KNI_API KniLoadFloat(HKENV hKEnv, kfloat_t val);
 void KNI_API KniLoadDouble(HKENV hKEnv, kdouble_t val);
 /* Loads string value onto stack */
 void KNI_API KniLoadString(HKENV hKEnv, kstring_t val, knuint_t length);
+/* Loads raw value onto stack */
+void KNI_API KniLoadRaw(HKENV hKEnv, kref_t val);
 
 /* Loads local variable onto stack */
 void KNI_API KniLoadLocal(HKENV hKEnv, kushort_t index);
