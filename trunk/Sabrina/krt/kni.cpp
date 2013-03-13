@@ -21,463 +21,522 @@
 
 // Gets primitive values
 
-kbool_t KNI_API KniGetLocalBool(HKENV hKEnv, kushort_t index)
+kbool_t KNI_API KniGetLocalBool(kushort_t index)
 {
-	return Env->locals[index].getBool();
+	return KEnvironment::locals[index].getBool();
 }
 
-kchar_t KNI_API KniGetLocalChar(HKENV hKEnv, kushort_t index)
+kchar_t KNI_API KniGetLocalChar(kushort_t index)
 {
-	return Env->locals[index].getChar();
+	return KEnvironment::locals[index].getChar();
 }
 
-kbyte_t KNI_API KniGetLocalByte(HKENV hKEnv, kushort_t index)
+kbyte_t KNI_API KniGetLocalByte(kushort_t index)
 {
-	return Env->locals[index].getByte();
+	return KEnvironment::locals[index].getByte();
 }
 
-ksbyte_t KNI_API KniGetLocalSByte(HKENV hKEnv, kushort_t index)
+ksbyte_t KNI_API KniGetLocalSByte(kushort_t index)
 {
-	return Env->locals[index].getSByte();
+	return KEnvironment::locals[index].getSByte();
 }
 
-kshort_t KNI_API KniGetLocalShort(HKENV hKEnv, kushort_t index)
+kshort_t KNI_API KniGetLocalShort(kushort_t index)
 {
-	return Env->locals[index].getShort();
+	return KEnvironment::locals[index].getShort();
 }
 
-kushort_t KNI_API KniGetLocalUShort(HKENV hKEnv, kushort_t index)
+kushort_t KNI_API KniGetLocalUShort(kushort_t index)
 {
-	return Env->locals[index].getShort();
+	return KEnvironment::locals[index].getShort();
 }
 
-kint_t KNI_API KniGetLocalInt(HKENV hKEnv, kushort_t index)
+kint_t KNI_API KniGetLocalInt(kushort_t index)
 {
-	return Env->locals[index].getInt();
+	return KEnvironment::locals[index].getInt();
 }
 
-kuint_t KNI_API KniGetLocalUInt(HKENV hKEnv, kushort_t index)
+kuint_t KNI_API KniGetLocalUInt(kushort_t index)
 {
-	return Env->locals[index].getUInt();
+	return KEnvironment::locals[index].getUInt();
 }
 
-klong_t KNI_API KniGetLocalLong(HKENV hKEnv, kushort_t index)
+klong_t KNI_API KniGetLocalLong(kushort_t index)
 {
-	return Env->locals[index].getUInt();
+	return KEnvironment::locals[index].getUInt();
 }
 
-kulong_t KNI_API KniGetLocalULong(HKENV hKEnv, kushort_t index)
+kulong_t KNI_API KniGetLocalULong(kushort_t index)
 {
-	return Env->locals[index].getLong();
+	return KEnvironment::locals[index].getLong();
 }
 
-kfloat_t KNI_API KniGetLocalFloat(HKENV hKEnv, kushort_t index)
+kfloat_t KNI_API KniGetLocalFloat(kushort_t index)
 {
-	return Env->locals[index].getFloat();
+	return KEnvironment::locals[index].getFloat();
 }
 
-kdouble_t KNI_API KniGetLocalDouble(HKENV hKEnv, kushort_t index)
+kdouble_t KNI_API KniGetLocalDouble(kushort_t index)
 {
-	return Env->locals[index].getDouble();
+	return KEnvironment::locals[index].getDouble();
 }
 
-kstring_t KNI_API KniGetLocalString(HKENV hKEnv, kushort_t index)
+kstring_t KNI_API KniGetLocalString(kushort_t index)
 {
-	return Env->locals[index].getString();
+	return KEnvironment::locals[index].getString();
 }
 
-kref_t KNI_API KniGetLocalRaw(HKENV hKEnv, kushort_t index)
+kref_t KNI_API KniGetLocalRaw(kushort_t index)
 {
-	return Env->locals[index].getRaw();
+	return KEnvironment::locals[index].getRaw();
 }
 
-knuint_t KNI_API KniGetLocalLength(HKENV hKEnv, kushort_t index)
+knuint_t KNI_API KniGetLocalLength(kushort_t index)
 {
-	return Env->locals[index].getLength();
-}
-
-//===================================================
-
-kbool_t KNI_API KniGetArgBool(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getBool();
-}
-
-kchar_t KNI_API KniGetArgChar(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getChar();
-}
-
-kbyte_t KNI_API KniGetArgByte(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getByte();
-}
-
-ksbyte_t KNI_API KniGetArgSByte(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getSByte();
-}
-
-kshort_t KNI_API KniGetArgShort(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getShort();
-}
-
-kushort_t KNI_API KniGetArgUShort(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getUShort();
-}
-
-kint_t KNI_API KniGetArgInt(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getInt();
-}
-
-kuint_t KNI_API KniGetArgUInt(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getUInt();
-}
-
-klong_t KNI_API KniGetArgLong(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getLong();
-}
-
-kulong_t KNI_API KniGetArgULong(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getULong();
-}
-
-kfloat_t KNI_API KniGetArgFloat(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getFloat();
-}
-
-kdouble_t KNI_API KniGetArgDouble(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getDouble();
-}
-
-kstring_t KNI_API KniGetArgString(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getString();
-}
-
-kref_t KNI_API KniGetArgRaw(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getRaw();
-}
-
-knuint_t KNI_API KniGetArgLength(HKENV hKEnv, kushort_t index)
-{
-	return Env->args[index].getLength();
+	return KEnvironment::locals[index].getLength();
 }
 
 //===================================================
 
-kbool_t KNI_API KniGetFieldBool(HKENV hKEnv, HKFIELD hKField)
+kbool_t KNI_API KniGetArgBool(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getBool();
+	return KEnvironment::args[index].getBool();
 }
 
-kchar_t KNI_API KniGetFieldChar(HKENV hKEnv, HKFIELD hKField)
+kchar_t KNI_API KniGetArgChar(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getChar();
+	return KEnvironment::args[index].getChar();
 }
 
-kbyte_t KNI_API KniGetFieldByte(HKENV hKEnv, HKFIELD hKField)
+kbyte_t KNI_API KniGetArgByte(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getByte();
+	return KEnvironment::args[index].getByte();
 }
 
-ksbyte_t KNI_API KniGetFieldSByte(HKENV hKEnv, HKFIELD hKField)
+ksbyte_t KNI_API KniGetArgSByte(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getSByte();
+	return KEnvironment::args[index].getSByte();
 }
 
-kshort_t KNI_API KniGetFieldShort(HKENV hKEnv, HKFIELD hKField)
+kshort_t KNI_API KniGetArgShort(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getShort();
+	return KEnvironment::args[index].getShort();
 }
 
-kushort_t KNI_API KniGetFieldUShort(HKENV hKEnv, HKFIELD hKField)
+kushort_t KNI_API KniGetArgUShort(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getUShort();
+	return KEnvironment::args[index].getUShort();
 }
 
-kint_t KNI_API KniGetFieldInt(HKENV hKEnv, HKFIELD hKField)
+kint_t KNI_API KniGetArgInt(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getInt();
+	return KEnvironment::args[index].getInt();
 }
 
-kuint_t KNI_API KniGetFieldUInt(HKENV hKEnv, HKFIELD hKField)
+kuint_t KNI_API KniGetArgUInt(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getUInt();
+	return KEnvironment::args[index].getUInt();
 }
 
-klong_t KNI_API KniGetFieldLong(HKENV hKEnv, HKFIELD hKField)
+klong_t KNI_API KniGetArgLong(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getLong();
+	return KEnvironment::args[index].getLong();
 }
 
-kulong_t KNI_API KniGetFieldULong(HKENV hKEnv, HKFIELD hKField)
+kulong_t KNI_API KniGetArgULong(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getULong();
+	return KEnvironment::args[index].getULong();
 }
 
-kfloat_t KNI_API KniGetFieldFloat(HKENV hKEnv, HKFIELD hKField)
+kfloat_t KNI_API KniGetArgFloat(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getFloat();
+	return KEnvironment::args[index].getFloat();
 }
 
-kdouble_t KNI_API KniGetFieldDouble(HKENV hKEnv, HKFIELD hKField)
+kdouble_t KNI_API KniGetArgDouble(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getDouble();
+	return KEnvironment::args[index].getDouble();
 }
 
-kstring_t KNI_API KniGetFieldString(HKENV hKEnv, HKFIELD hKField)
+kstring_t KNI_API KniGetArgString(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getString();
+	return KEnvironment::args[index].getString();
 }
 
-kref_t KNI_API KniGetFieldRaw(HKENV hKEnv, HKFIELD hKField)
+kref_t KNI_API KniGetArgRaw(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getRaw();
+	return KEnvironment::args[index].getRaw();
 }
 
-knuint_t KNI_API KniGetFieldLength(HKENV hKEnv, HKFIELD hKField)
+knuint_t KNI_API KniGetArgLength(kushort_t index)
 {
-	const KObject &obj = Env->stackPop();
-	return obj.getField(Fld->localIndex).getLength();
+	return KEnvironment::args[index].getLength();
 }
 
 //===================================================
 
-kbool_t KNI_API KniGetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getBool();
-}
-
-kchar_t KNI_API KniGetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getChar();
-}
-
-kbyte_t KNI_API KniGetStaticFieldByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getByte();
-}
-
-ksbyte_t KNI_API KniGetStaticFieldSByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getSByte();
-}
-
-kshort_t KNI_API KniGetStaticFieldShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getShort();
-}
-
-kushort_t KNI_API KniGetStaticFieldUShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getUShort();
-}
-
-kint_t KNI_API KniGetStaticFieldInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getInt();
-}
-
-kuint_t KNI_API KniGetStaticFieldUInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getUInt();
-}
-
-klong_t KNI_API KniGetStaticFieldLong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getLong();
-}
-
-kulong_t KNI_API KniGetStaticFieldULong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getULong();
-}
-
-kfloat_t KNI_API KniGetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getFloat();
-}
-
-kdouble_t KNI_API KniGetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getDouble();
-}
-
-kstring_t KNI_API KniGetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getString();
-}
-
-kref_t KNI_API KniGetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getRaw();
-}
-
-knuint_t KNI_API KniGetStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	return obj.getField(Fld->localIndex).getLength();
-}
-
-//===================================================
-
-#define CHECK_GET_INDEX(val) if (index > obj.getLength() - 1) \
+#define CHECK_GET_FIELD(val) if (obj.getType() == KObject::nullType) \
 	{ \
-		KniThrowException(hKEnv, Env->exceptions.indexOutOfRange); \
+		KniThrowException(KEnvironment::exceptions.nullReference); \
 		return val; \
 	}
 
-kbool_t KNI_API KniGetElementBool(HKENV hKEnv, knuint_t index)
+kbool_t KNI_API KniGetFieldBool(HKFIELD hKField)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(false);
+
+	return obj.getField(Fld->localIndex).getBool();
+}
+
+kchar_t KNI_API KniGetFieldChar(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getChar();
+}
+
+kbyte_t KNI_API KniGetFieldByte(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getByte();
+}
+
+ksbyte_t KNI_API KniGetFieldSByte(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getSByte();
+}
+
+kshort_t KNI_API KniGetFieldShort(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getShort();
+}
+
+kushort_t KNI_API KniGetFieldUShort(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getUShort();
+}
+
+kint_t KNI_API KniGetFieldInt(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getInt();
+}
+
+kuint_t KNI_API KniGetFieldUInt(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getUInt();
+}
+
+klong_t KNI_API KniGetFieldLong(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getLong();
+}
+
+kulong_t KNI_API KniGetFieldULong(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getULong();
+}
+
+kfloat_t KNI_API KniGetFieldFloat(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getFloat();
+}
+
+kdouble_t KNI_API KniGetFieldDouble(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(NULL);
+
+	return obj.getField(Fld->localIndex).getDouble();
+}
+
+kstring_t KNI_API KniGetFieldString(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(NULL);
+
+	return obj.getField(Fld->localIndex).getString();
+}
+
+kref_t KNI_API KniGetFieldRaw(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(NULL);
+
+	return obj.getField(Fld->localIndex).getRaw();
+}
+
+knuint_t KNI_API KniGetFieldLength(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_FIELD(0);
+
+	return obj.getField(Fld->localIndex).getLength();
+}
+
+//===================================================
+
+kbool_t KNI_API KniGetStaticFieldBool(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getBool();
+}
+
+kchar_t KNI_API KniGetStaticFieldChar(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getChar();
+}
+
+kbyte_t KNI_API KniGetStaticFieldByte(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getByte();
+}
+
+ksbyte_t KNI_API KniGetStaticFieldSByte(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getSByte();
+}
+
+kshort_t KNI_API KniGetStaticFieldShort(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getShort();
+}
+
+kushort_t KNI_API KniGetStaticFieldUShort(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getUShort();
+}
+
+kint_t KNI_API KniGetStaticFieldInt(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getInt();
+}
+
+kuint_t KNI_API KniGetStaticFieldUInt(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getUInt();
+}
+
+klong_t KNI_API KniGetStaticFieldLong(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getLong();
+}
+
+kulong_t KNI_API KniGetStaticFieldULong(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getULong();
+}
+
+kfloat_t KNI_API KniGetStaticFieldFloat(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getFloat();
+}
+
+kdouble_t KNI_API KniGetStaticFieldDouble(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getDouble();
+}
+
+kstring_t KNI_API KniGetStaticFieldString(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getString();
+}
+
+kref_t KNI_API KniGetStaticFieldRaw(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getRaw();
+}
+
+knuint_t KNI_API KniGetStaticFieldLength(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	return obj.getField(Fld->localIndex).getLength();
+}
+
+//===================================================
+
+#define CHECK_GET_ELEMENT(val) if (obj.getType() == KObject::nullType) \
+	{ \
+		KniThrowException(KEnvironment::exceptions.nullReference); \
+		return val; \
+	}
+
+#define CHECK_GET_INDEX(val) if (index > obj.getLength() - 1) \
+	{ \
+		KniThrowException(KEnvironment::exceptions.indexOutOfRange); \
+		return val; \
+	}
+
+kbool_t KNI_API KniGetElementBool(knuint_t index)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(false);
 	CHECK_GET_INDEX(false);
 
 	return obj.getElement(index).getBool();
 }
 
-kchar_t KNI_API KniGetElementChar(HKENV hKEnv, knuint_t index)
+kchar_t KNI_API KniGetElementChar(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getChar();
 }
 
-kbyte_t KNI_API KniGetElementByte(HKENV hKEnv, knuint_t index)
+kbyte_t KNI_API KniGetElementByte(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getByte();
 }
 
-ksbyte_t KNI_API KniGetElementSByte(HKENV hKEnv, knuint_t index)
+ksbyte_t KNI_API KniGetElementSByte(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getSByte();
 }
 
-kshort_t KNI_API KniGetElementShort(HKENV hKEnv, knuint_t index)
+kshort_t KNI_API KniGetElementShort(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getShort();
 }
 
-kushort_t KNI_API KniGetElementUShort(HKENV hKEnv, knuint_t index)
+kushort_t KNI_API KniGetElementUShort(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getUShort();
 }
 
-kint_t KNI_API KniGetElementInt(HKENV hKEnv, knuint_t index)
+kint_t KNI_API KniGetElementInt(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getInt();
 }
 
-kuint_t KNI_API KniGetElementUInt(HKENV hKEnv, knuint_t index)
+kuint_t KNI_API KniGetElementUInt(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getUInt();
 }
 
-klong_t KNI_API KniGetElementLong(HKENV hKEnv, knuint_t index)
+klong_t KNI_API KniGetElementLong(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getLong();
 }
 
-kulong_t KNI_API KniGetElementULong(HKENV hKEnv, knuint_t index)
+kulong_t KNI_API KniGetElementULong(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
+	CHECK_GET_INDEX(0);
+
 	return obj.getElement(index).getULong();
 }
 
-kfloat_t KNI_API KniGetElementFloat(HKENV hKEnv, knuint_t index)
+kfloat_t KNI_API KniGetElementFloat(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT((kfloat_t)0);
 	CHECK_GET_INDEX((kfloat_t)0);
 
 	return obj.getElement(index).getFloat();
 }
 
-kdouble_t KNI_API KniGetElementDouble(HKENV hKEnv, knuint_t index)
+kdouble_t KNI_API KniGetElementDouble(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT((kdouble_t)0);
 	CHECK_GET_INDEX((kdouble_t)0);
 
 	return obj.getElement(index).getDouble();
 }
 
-kstring_t KNI_API KniGetElementString(HKENV hKEnv, knuint_t index)
+kstring_t KNI_API KniGetElementString(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(NULL);
 	CHECK_GET_INDEX(NULL);
 
 	return obj.getElement(index).getString();
 }
 
-kref_t KNI_API KniGetElementRaw(HKENV hKEnv, knuint_t index)
+kref_t KNI_API KniGetElementRaw(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(NULL);
 	CHECK_GET_INDEX(NULL);
 
 	return obj.getElement(index).getRaw();
 }
 
-knuint_t KNI_API KniGetElementLength(HKENV hKEnv, knuint_t index)
+knuint_t KNI_API KniGetElementLength(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_GET_ELEMENT(0);
 	CHECK_GET_INDEX(0);
 
 	return obj.getElement(index).getLength();
@@ -485,93 +544,93 @@ knuint_t KNI_API KniGetElementLength(HKENV hKEnv, knuint_t index)
 
 //===================================================
 
-kbool_t KNI_API KniGetIndirectBool(HKENV hKEnv)
+kbool_t KNI_API KniGetIndirectBool(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getBool();
 }
 
-kchar_t KNI_API KniGetIndirectChar(HKENV hKEnv)
+kchar_t KNI_API KniGetIndirectChar(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getChar();
 }
 
-kbyte_t KNI_API KniGetIndirectByte(HKENV hKEnv)
+kbyte_t KNI_API KniGetIndirectByte(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getByte();
 }
 
-ksbyte_t KNI_API KniGetIndirectSByte(HKENV hKEnv)
+ksbyte_t KNI_API KniGetIndirectSByte(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getSByte();
 }
 
-kshort_t KNI_API KniGetIndirectShort(HKENV hKEnv)
+kshort_t KNI_API KniGetIndirectShort(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getShort();
 }
 
-kushort_t KNI_API KniGetIndirectUShort(HKENV hKEnv)
+kushort_t KNI_API KniGetIndirectUShort(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getUShort();
 }
 
-kint_t KNI_API KniGetIndirectInt(HKENV hKEnv)
+kint_t KNI_API KniGetIndirectInt(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getInt();
 }
 
-kuint_t KNI_API KniGetIndirectUInt(HKENV hKEnv)
+kuint_t KNI_API KniGetIndirectUInt(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getUInt();
 }
 
-klong_t KNI_API KniGetIndirectLong(HKENV hKEnv)
+klong_t KNI_API KniGetIndirectLong(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getLong();
 }
 
-kulong_t KNI_API KniGetIndirectULong(HKENV hKEnv)
+kulong_t KNI_API KniGetIndirectULong(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getULong();
 }
 
-kfloat_t KNI_API KniGetIndirectFloat(HKENV hKEnv)
+kfloat_t KNI_API KniGetIndirectFloat(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getFloat();
 }
 
-kdouble_t KNI_API KniGetIndirectDouble(HKENV hKEnv)
+kdouble_t KNI_API KniGetIndirectDouble(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getDouble();
 }
 
-kstring_t KNI_API KniGetIndirectString(HKENV hKEnv)
+kstring_t KNI_API KniGetIndirectString(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getString();
 }
 
-kref_t KNI_API KniGetElementRaw(HKENV hKEnv)
+kref_t KNI_API KniGetIndirectRaw(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getRaw();
 }
 
-knuint_t KNI_API KniGetIndirectLength(HKENV hKEnv)
+knuint_t KNI_API KniGetIndirectLength(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getLength();
 }
 
@@ -580,524 +639,617 @@ knuint_t KNI_API KniGetIndirectLength(HKENV hKEnv)
 
 // Sets primitive values
 
-void KNI_API KniSetLocalBool(HKENV hKEnv, kushort_t index, kbool_t val)
+void KNI_API KniSetLocalBool(kushort_t index, kbool_t val)
 {
-	Env->locals[index].setBool(val);
+	KEnvironment::locals[index].setBool(val);
 }
 
-void KNI_API KniSetLocalChar(HKENV hKEnv, kushort_t index, kchar_t val)
+void KNI_API KniSetLocalChar(kushort_t index, kchar_t val)
 {
-	Env->locals[index].setChar(val);
+	KEnvironment::locals[index].setChar(val);
 }
 
-void KNI_API KniSetLocalByte(HKENV hKEnv, kushort_t index, kbyte_t val)
+void KNI_API KniSetLocalByte(kushort_t index, kbyte_t val)
 {
-	Env->locals[index].setByte(val);
+	KEnvironment::locals[index].setByte(val);
 }
 
-void KNI_API KniSetLocalSByte(HKENV hKEnv, kushort_t index, ksbyte_t val)
+void KNI_API KniSetLocalSByte(kushort_t index, ksbyte_t val)
 {
-	Env->locals[index].setSByte(val);
+	KEnvironment::locals[index].setSByte(val);
 }
 
-void KNI_API KniSetLocalShort(HKENV hKEnv, kushort_t index, kshort_t val)
+void KNI_API KniSetLocalShort(kushort_t index, kshort_t val)
 {
-	Env->locals[index].setShort(val);
+	KEnvironment::locals[index].setShort(val);
 }
 
-void KNI_API KniSetLocalUShort(HKENV hKEnv, kushort_t index, kushort_t val)
+void KNI_API KniSetLocalUShort(kushort_t index, kushort_t val)
 {
-	Env->locals[index].setUShort(val);
+	KEnvironment::locals[index].setUShort(val);
 }
 
-void KNI_API KniSetLocalInt(HKENV hKEnv, kushort_t index, kint_t val)
+void KNI_API KniSetLocalInt(kushort_t index, kint_t val)
 {
-	Env->locals[index].setInt(val);
+	KEnvironment::locals[index].setInt(val);
 }
 
-void KNI_API KniSetLocalUInt(HKENV hKEnv, kushort_t index, kuint_t val)
+void KNI_API KniSetLocalUInt(kushort_t index, kuint_t val)
 {
-	Env->locals[index].setUInt(val);
+	KEnvironment::locals[index].setUInt(val);
 }
 
-void KNI_API KniSetLocalLong(HKENV hKEnv, kushort_t index, klong_t val)
+void KNI_API KniSetLocalLong(kushort_t index, klong_t val)
 {
-	Env->locals[index].setLong(val);
+	KEnvironment::locals[index].setLong(val);
 }
 
-void KNI_API KniSetLocalULong(HKENV hKEnv, kushort_t index, kulong_t val)
+void KNI_API KniSetLocalULong(kushort_t index, kulong_t val)
 {
-	Env->locals[index].setULong(val);
+	KEnvironment::locals[index].setULong(val);
 }
 
-void KNI_API KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val)
+void KNI_API KniSetLocalFloat(kushort_t index, kfloat_t val)
 {
-	Env->locals[index].setFloat(val);
+	KEnvironment::locals[index].setFloat(val);
 }
 
-void KNI_API KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val)
+void KNI_API KniSetLocalDouble(kushort_t index, kdouble_t val)
 {
-	Env->locals[index].setDouble(val);
+	KEnvironment::locals[index].setDouble(val);
 }
 
-void KNI_API KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length)
+void KNI_API KniSetLocalString(kushort_t index, kstring_t val, knuint_t length)
 {
-	Env->locals[index].setString(val, length);
+	KEnvironment::locals[index].setString(val, length);
 }
 
-void KNI_API KniSetLocalRaw(HKENV hKEnv, kushort_t index, kref_t val)
+void KNI_API KniSetLocalRaw(kushort_t index, kref_t val)
 {
-	Env->locals[index].setRaw(val);
+	KEnvironment::locals[index].setRaw(val);
 }
 
-//===================================================
-
-void KNI_API KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val)
+void KNI_API KniSetLocalNull(kushort_t index)
 {
-	Env->args[index].setBool(val);
-}
-
-void KNI_API KniSetArgChar(HKENV hKEnv, kushort_t index, kchar_t val)
-{
-	Env->args[index].setChar(val);
-}
-
-void KNI_API KniSetArgByte(HKENV hKEnv, kushort_t index, kbyte_t val)
-{
-	Env->args[index].setByte(val);
-}
-
-void KNI_API KniSetArgSByte(HKENV hKEnv, kushort_t index, ksbyte_t val)
-{
-	Env->args[index].setSByte(val);
-}
-
-void KNI_API KniSetArgShort(HKENV hKEnv, kushort_t index, kshort_t val)
-{
-	Env->args[index].setShort(val);
-}
-
-void KNI_API KniSetArgUShort(HKENV hKEnv, kushort_t index, kushort_t val)
-{
-	Env->args[index].setUShort(val);
-}
-
-void KNI_API KniSetArgInt(HKENV hKEnv, kushort_t index, kint_t val)
-{
-	Env->args[index].setInt(val);
-}
-
-void KNI_API KniSetArgUInt(HKENV hKEnv, kushort_t index, kuint_t val)
-{
-	Env->args[index].setUInt(val);
-}
-
-void KNI_API KniSetArgLong(HKENV hKEnv, kushort_t index, klong_t val)
-{
-	Env->args[index].setLong(val);
-}
-
-void KNI_API KniSetArgULong(HKENV hKEnv, kushort_t index, kulong_t val)
-{
-	Env->args[index].setULong(val);
-}
-
-void KNI_API KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val)
-{
-	Env->args[index].setFloat(val);
-}
-
-void KNI_API KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val)
-{
-	Env->args[index].setDouble(val);
-}
-
-void KNI_API KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length)
-{
-	Env->args[index].setString(val, length);
-}
-
-void KNI_API KniSetArgRaw(HKENV hKEnv, kushort_t index, kref_t val)
-{
-	Env->args[index].setRaw(val);
+	KEnvironment::locals[index] = KObject::nullObject;
 }
 
 //===================================================
 
-void KNI_API KniSetFieldBool(HKENV hKEnv, HKFIELD hKField, kbool_t val)
+void KNI_API KniSetArgBool(kushort_t index, kbool_t val)
 {
-	const KObject &obj = Env->stackPop();
+	KEnvironment::args[index].setBool(val);
+}
+
+void KNI_API KniSetArgChar(kushort_t index, kchar_t val)
+{
+	KEnvironment::args[index].setChar(val);
+}
+
+void KNI_API KniSetArgByte(kushort_t index, kbyte_t val)
+{
+	KEnvironment::args[index].setByte(val);
+}
+
+void KNI_API KniSetArgSByte(kushort_t index, ksbyte_t val)
+{
+	KEnvironment::args[index].setSByte(val);
+}
+
+void KNI_API KniSetArgShort(kushort_t index, kshort_t val)
+{
+	KEnvironment::args[index].setShort(val);
+}
+
+void KNI_API KniSetArgUShort(kushort_t index, kushort_t val)
+{
+	KEnvironment::args[index].setUShort(val);
+}
+
+void KNI_API KniSetArgInt(kushort_t index, kint_t val)
+{
+	KEnvironment::args[index].setInt(val);
+}
+
+void KNI_API KniSetArgUInt(kushort_t index, kuint_t val)
+{
+	KEnvironment::args[index].setUInt(val);
+}
+
+void KNI_API KniSetArgLong(kushort_t index, klong_t val)
+{
+	KEnvironment::args[index].setLong(val);
+}
+
+void KNI_API KniSetArgULong(kushort_t index, kulong_t val)
+{
+	KEnvironment::args[index].setULong(val);
+}
+
+void KNI_API KniSetArgFloat(kushort_t index, kfloat_t val)
+{
+	KEnvironment::args[index].setFloat(val);
+}
+
+void KNI_API KniSetArgDouble(kushort_t index, kdouble_t val)
+{
+	KEnvironment::args[index].setDouble(val);
+}
+
+void KNI_API KniSetArgString(kushort_t index, kstring_t val, knuint_t length)
+{
+	KEnvironment::args[index].setString(val, length);
+}
+
+void KNI_API KniSetArgRaw(kushort_t index, kref_t val)
+{
+	KEnvironment::args[index].setRaw(val);
+}
+
+void KNI_API KniSetArgNull(kushort_t index)
+{
+	KEnvironment::args[index] = KObject::nullObject;
+}
+
+//===================================================
+
+#define CHECK_SET_FIELD if (obj.getType() == KObject::nullType) \
+	{ \
+		KniThrowException(KEnvironment::exceptions.nullReference); \
+		return; \
+	}
+
+void KNI_API KniSetFieldBool(HKFIELD hKField, kbool_t val)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setBool(val);
 }
 
-void KNI_API KniSetFieldChar(HKENV hKEnv, HKFIELD hKField, kchar_t val)
+void KNI_API KniSetFieldChar(HKFIELD hKField, kchar_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setChar(val);
 }
 
-void KNI_API KniSetFieldByte(HKENV hKEnv, HKFIELD hKField, kbyte_t val)
+void KNI_API KniSetFieldByte(HKFIELD hKField, kbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setByte(val);
 }
 
-void KNI_API KniSetFieldSByte(HKENV hKEnv, HKFIELD hKField, ksbyte_t val)
+void KNI_API KniSetFieldSByte(HKFIELD hKField, ksbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setSByte(val);
 }
 
-void KNI_API KniSetFieldShort(HKENV hKEnv, HKFIELD hKField, kshort_t val)
+void KNI_API KniSetFieldShort(HKFIELD hKField, kshort_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setShort(val);
 }
 
-void KNI_API KniSetFieldUShort(HKENV hKEnv, HKFIELD hKField, kushort_t val)
+void KNI_API KniSetFieldUShort(HKFIELD hKField, kushort_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setUShort(val);
 }
 
-void KNI_API KniSetFieldInt(HKENV hKEnv, HKFIELD hKField, kint_t val)
+void KNI_API KniSetFieldInt(HKFIELD hKField, kint_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setUShort(val);
 }
 
-void KNI_API KniSetFieldUInt(HKENV hKEnv, HKFIELD hKField, kuint_t val)
+void KNI_API KniSetFieldUInt(HKFIELD hKField, kuint_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setUInt(val);
 }
 
-void KNI_API KniSetFieldLong(HKENV hKEnv, HKFIELD hKField, klong_t val)
+void KNI_API KniSetFieldLong(HKFIELD hKField, klong_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setLong(val);
 }
 
-void KNI_API KniSetFieldULong(HKENV hKEnv, HKFIELD hKField, kulong_t val)
+void KNI_API KniSetFieldULong(HKFIELD hKField, kulong_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setULong(val);
 }
 
-void KNI_API KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val)
+void KNI_API KniSetFieldFloat(HKFIELD hKField, kfloat_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setFloat(val);
 }
 
-void KNI_API KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val)
+void KNI_API KniSetFieldDouble(HKFIELD hKField, kdouble_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setDouble(val);
 }
 
-void KNI_API KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val, knuint_t length)
+void KNI_API KniSetFieldString(HKFIELD hKField, kstring_t val, knuint_t length)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setString(val, length);
 }
 
-void KNI_API KniSetFieldRaw(HKENV hKEnv, HKFIELD hKField, kref_t val)
+void KNI_API KniSetFieldRaw(HKFIELD hKField, kref_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
 	obj.getField(Fld->localIndex).setRaw(val);
+}
+
+void KNI_API KniSetFieldNull(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_FIELD;
+
+	obj.getField(Fld->localIndex) = KObject::nullObject;
 }
 
 //===================================================
 
-void KNI_API KniSetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbool_t val)
+void KNI_API KniSetStaticFieldBool(HKCLASS hKClass, HKFIELD hKField, kbool_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setBool(val);
 }
 
-void KNI_API KniSetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kchar_t val)
+void KNI_API KniSetStaticFieldChar(HKCLASS hKClass, HKFIELD hKField, kchar_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setChar(val);
 }
 
-void KNI_API KniSetStaticFieldByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbyte_t val)
+void KNI_API KniSetStaticFieldByte(HKCLASS hKClass, HKFIELD hKField, kbyte_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setByte(val);
 }
 
-void KNI_API KniSetStaticFieldSByte(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, ksbyte_t val)
+void KNI_API KniSetStaticFieldSByte(HKCLASS hKClass, HKFIELD hKField, ksbyte_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setSByte(val);
 }
 
-void KNI_API KniSetStaticFieldShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kshort_t val)
+void KNI_API KniSetStaticFieldShort(HKCLASS hKClass, HKFIELD hKField, kshort_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setShort(val);
 }
 
-void KNI_API KniSetStaticFieldUShort(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kushort_t val)
+void KNI_API KniSetStaticFieldUShort(HKCLASS hKClass, HKFIELD hKField, kushort_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setUShort(val);
 }
 
-void KNI_API KniSetStaticFieldInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kint_t val)
+void KNI_API KniSetStaticFieldInt(HKCLASS hKClass, HKFIELD hKField, kint_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setInt(val);
 }
 
-void KNI_API KniSetStaticFieldUInt(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kuint_t val)
+void KNI_API KniSetStaticFieldUInt(HKCLASS hKClass, HKFIELD hKField, kuint_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setUInt(val);
 }
 
-void KNI_API KniSetStaticFieldLong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, klong_t val)
+void KNI_API KniSetStaticFieldLong(HKCLASS hKClass, HKFIELD hKField, klong_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setLong(val);
 }
 
-void KNI_API KniSetStaticFieldULong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kulong_t val)
+void KNI_API KniSetStaticFieldULong(HKCLASS hKClass, HKFIELD hKField, kulong_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setULong(val);
 }
 
-void KNI_API KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kfloat_t val)
+void KNI_API KniSetStaticFieldFloat(HKCLASS hKClass, HKFIELD hKField, kfloat_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setFloat(val);
 }
 
-void KNI_API KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val)
+void KNI_API KniSetStaticFieldDouble(HKCLASS hKClass, HKFIELD hKField, kdouble_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setDouble(val);
 }
 
-void KNI_API KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length)
+void KNI_API KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setString(val, length);
 }
 
-void KNI_API KniSetStaticFieldRaw(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kref_t val)
+void KNI_API KniSetStaticFieldRaw(HKCLASS hKClass, HKFIELD hKField, kref_t val)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setRaw(val);
 }
 
+void KNI_API KniSetStaticFieldNull(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	obj.getField(Fld->localIndex) = KObject::nullObject;
+}
+
 //===================================================
 
-#define CHECK_SET_INDEX() if (index > obj.getLength() - 1) \
+#define CHECK_SET_ELEMENT if (obj.getType() == KObject::nullType) \
 	{ \
-		KniThrowException(hKEnv, Env->exceptions.indexOutOfRange); \
+		KniThrowException(KEnvironment::exceptions.nullReference); \
 		return; \
 	}
 
-void KNI_API KniSetElementBool(HKENV hKEnv, knuint_t index, kbool_t val)
+#define CHECK_SET_INDEX if (index > obj.getLength() - 1) \
+	{ \
+		KniThrowException(KEnvironment::exceptions.indexOutOfRange); \
+		return; \
+	}
+
+void KNI_API KniSetElementBool(knuint_t index, kbool_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setBool(val);
 }
 
-void KNI_API KniSetElementChar(HKENV hKEnv, knuint_t index, kchar_t val)
+void KNI_API KniSetElementChar(knuint_t index, kchar_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setChar(val);
 }
 
-void KNI_API KniSetElementByte(HKENV hKEnv, knuint_t index, kbyte_t val)
+void KNI_API KniSetElementByte(knuint_t index, kbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setByte(val);
 }
 
-void KNI_API KniSetElementSByte(HKENV hKEnv, knuint_t index, ksbyte_t val)
+void KNI_API KniSetElementSByte(knuint_t index, ksbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setSByte(val);
 }
 
-void KNI_API KniSetElementShort(HKENV hKEnv, knuint_t index, kshort_t val)
+void KNI_API KniSetElementShort(knuint_t index, kshort_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setShort(val);
 }
 
-void KNI_API KniSetElementUShort(HKENV hKEnv, knuint_t index, kushort_t val)
+void KNI_API KniSetElementUShort(knuint_t index, kushort_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setUShort(val);
 }
 
-void KNI_API KniSetElementInt(HKENV hKEnv, knuint_t index, kint_t val)
+void KNI_API KniSetElementInt(knuint_t index, kint_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setInt(val);
 }
 
-void KNI_API KniSetElementUInt(HKENV hKEnv, knuint_t index, kuint_t val)
+void KNI_API KniSetElementUInt(knuint_t index, kuint_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setUInt(val);
 }
 
-void KNI_API KniSetElementLong(HKENV hKEnv, knuint_t index, klong_t val)
+void KNI_API KniSetElementLong(knuint_t index, klong_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setLong(val);
 }
 
-void KNI_API KniSetElementULong(HKENV hKEnv, knuint_t index, kulong_t val)
+void KNI_API KniSetElementULong(knuint_t index, kulong_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setULong(val);
 }
 
-void KNI_API KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val)
+void KNI_API KniSetElementFloat(knuint_t index, kfloat_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setFloat(val);
 }
 
-void KNI_API KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val)
+void KNI_API KniSetElementDouble(knuint_t index, kdouble_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setDouble(val);
 }
 
-void KNI_API KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val, knuint_t length)
+void KNI_API KniSetElementString(knuint_t index, kstring_t val, knuint_t length)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setString(val, length);
 }
 
-void KNI_API KniSetElementRaw(HKENV hKEnv, knuint_t index, kref_t val)
+void KNI_API KniSetElementRaw(knuint_t index, kref_t val)
 {
-	const KObject &obj = Env->stackPop();
-	CHECK_SET_INDEX();
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
 
 	obj.getElement(index).setRaw(val);
 }
 
+void KNI_API KniSetElementNull(knuint_t index)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	CHECK_SET_ELEMENT;
+	CHECK_SET_INDEX;
+
+	obj.getElement(index) = KObject::nullObject;
+}
+
 //===================================================
 
-void KNI_API KniSetIndirectBool(HKENV hKEnv, kbool_t val)
+void KNI_API KniSetIndirectBool(kbool_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setBool(val);
 }
 
-void KNI_API KniSetIndirectChar(HKENV hKEnv, kchar_t val)
+void KNI_API KniSetIndirectChar(kchar_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setChar(val);
 }
 
-void KNI_API KniSetIndirectByte(HKENV hKEnv, kbyte_t val)
+void KNI_API KniSetIndirectByte(kbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setByte(val);
 }
 
-void KNI_API KniSetIndirectSByte(HKENV hKEnv, ksbyte_t val)
+void KNI_API KniSetIndirectSByte(ksbyte_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setSByte(val);
 }
 
-void KNI_API KniSetIndirectShort(HKENV hKEnv, kshort_t val)
+void KNI_API KniSetIndirectShort(kshort_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setShort(val);
 }
 
-void KNI_API KniSetIndirectUShort(HKENV hKEnv, kushort_t val)
+void KNI_API KniSetIndirectUShort(kushort_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setUShort(val);
 }
 
-void KNI_API KniSetIndirectInt(HKENV hKEnv, kint_t val)
+void KNI_API KniSetIndirectInt(kint_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setInt(val);
 }
 
-void KNI_API KniSetIndirectUInt(HKENV hKEnv, kuint_t val)
+void KNI_API KniSetIndirectUInt(kuint_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setUInt(val);
 }
 
-void KNI_API KniSetIndirectLong(HKENV hKEnv, klong_t val)
+void KNI_API KniSetIndirectLong(klong_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setLong(val);
 }
 
-void KNI_API KniSetIndirectULong(HKENV hKEnv, kulong_t val)
+void KNI_API KniSetIndirectULong(kulong_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setULong(val);
 }
 
-void KNI_API KniSetIndirectFloat(HKENV hKEnv, kfloat_t val)
+void KNI_API KniSetIndirectFloat(kfloat_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setFloat(val);
 }
 
-void KNI_API KniSetIndirectDouble(HKENV hKEnv, kdouble_t val)
+void KNI_API KniSetIndirectDouble(kdouble_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setDouble(val);
 }
 
-void KNI_API KniSetIndirectString(HKENV hKEnv, kstring_t val, knuint_t length)
+void KNI_API KniSetIndirectString(kstring_t val, knuint_t length)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setString(val, length);
 }
 
-void KNI_API KniSetIndirectRaw(HKENV hKEnv, kref_t val)
+void KNI_API KniSetIndirectRaw(kref_t val)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setRaw(val);
+}
+
+void KNI_API KniSetIndirectNull(void)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	obj.getRef()->operator=(KObject::nullObject);
 }
 
 
@@ -1105,314 +1257,314 @@ void KNI_API KniSetIndirectRaw(HKENV hKEnv, kref_t val)
 
 // Loads values onto stack
 
-void KNI_API KniLoadBool(HKENV hKEnv, kbool_t val)
+void KNI_API KniLoadBool(kbool_t val)
 {
-	Env->stackPushBool(val);
+	KEnvironment::stackPushBool(val);
 }
 
-void KNI_API KniLoadChar(HKENV hKEnv, kchar_t val)
+void KNI_API KniLoadChar(kchar_t val)
 {
-	Env->stackPushChar(val);
+	KEnvironment::stackPushChar(val);
 }
 
-void KNI_API KniLoadByte(HKENV hKEnv, kbyte_t val)
+void KNI_API KniLoadByte(kbyte_t val)
 {
-	Env->stackPushByte(val);
+	KEnvironment::stackPushByte(val);
 }
 
-void KNI_API KniLoadSByte(HKENV hKEnv, ksbyte_t val)
+void KNI_API KniLoadSByte(ksbyte_t val)
 {
-	Env->stackPushSByte(val);
+	KEnvironment::stackPushSByte(val);
 }
 
-void KNI_API KniLoadShort(HKENV hKEnv, kshort_t val)
+void KNI_API KniLoadShort(kshort_t val)
 {
-	Env->stackPushShort(val);
+	KEnvironment::stackPushShort(val);
 }
 
-void KNI_API KniLoadUShort(HKENV hKEnv, kushort_t val)
+void KNI_API KniLoadUShort(kushort_t val)
 {
-	Env->stackPushUShort(val);
+	KEnvironment::stackPushUShort(val);
 }
 
-void KNI_API KniLoadInt(HKENV hKEnv, kint_t val)
+void KNI_API KniLoadInt(kint_t val)
 {
-	Env->stackPushInt(val);
+	KEnvironment::stackPushInt(val);
 }
 
-void KNI_API KniLoadUInt(HKENV hKEnv, kuint_t val)
+void KNI_API KniLoadUInt(kuint_t val)
 {
-	Env->stackPushUInt(val);
+	KEnvironment::stackPushUInt(val);
 }
 
-void KNI_API KniLoadLong(HKENV hKEnv, klong_t val)
+void KNI_API KniLoadLong(klong_t val)
 {
-	Env->stackPushLong(val);
+	KEnvironment::stackPushLong(val);
 }
 
-void KNI_API KniLoadULong(HKENV hKEnv, kulong_t val)
+void KNI_API KniLoadULong(kulong_t val)
 {
-	Env->stackPushULong(val);
+	KEnvironment::stackPushULong(val);
 }
 
-void KNI_API KniLoadFloat(HKENV hKEnv, kfloat_t val)
+void KNI_API KniLoadFloat(kfloat_t val)
 {
-	Env->stackPushFloat(val);
+	KEnvironment::stackPushFloat(val);
 }
 
-void KNI_API KniLoadDouble(HKENV hKEnv, kdouble_t val)
+void KNI_API KniLoadDouble(kdouble_t val)
 {
-	Env->stackPushDouble(val);
+	KEnvironment::stackPushDouble(val);
 }
 
-void KNI_API KniLoadString(HKENV hKEnv, kstring_t val, knuint_t length)
+void KNI_API KniLoadString(kstring_t val, knuint_t length)
 {
-	Env->stackPushString(val, length);
+	KEnvironment::stackPushString(val, length);
 }
 
-void KNI_API KniLoadRaw(HKENV hKEnv, kref_t val)
+void KNI_API KniLoadRaw(kref_t val)
 {
-	Env->stackPushRaw(val);
-}
-
-//===================================================
-
-void KNI_API KniLoadLocal(HKENV hKEnv, kushort_t index)
-{
-	Env->stackPush(Env->locals[index]);
-}
-
-void KNI_API KniLoadArg(HKENV hKEnv, kushort_t index)
-{
-	Env->stackPush(Env->args[index]);
-}
-
-void KNI_API KniLoadArgByRef(HKENV hKEnv, kushort_t index)
-{
-	Env->stackPush(*Env->args[index].getRef());
-}
-
-void KNI_API KniLoadField(HKENV hKEnv, HKFIELD hKField)
-{
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(obj.getField(Fld->localIndex));
-}
-
-void KNI_API KniLoadStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
-{
-	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	Env->stackPush(obj.getField(Fld->localIndex));
-}
-
-void KNI_API KniLoadElement(HKENV hKEnv, knuint_t index)
-{
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(obj.getElement(index));
-}
-
-void KNI_API KniLoadIndirect(HKENV hKEnv)
-{
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(*obj.getRef());
+	KEnvironment::stackPushRaw(val);
 }
 
 //===================================================
 
-void KNI_API KniLoadLocalLength(HKENV hKEnv, kushort_t index)
+void KNI_API KniLoadLocal(kushort_t index)
 {
-	Env->stackPushUInt(Env->locals[index].getLength());
+	KEnvironment::stackPush(KEnvironment::locals[index]);
 }
 
-void KNI_API KniLoadArgLength(HKENV hKEnv, kushort_t index)
+void KNI_API KniLoadArg(kushort_t index)
 {
-	Env->stackPushUInt(Env->args[index].getLength());
+	KEnvironment::stackPush(KEnvironment::args[index]);
 }
 
-void KNI_API KniLoadArgLengthByRef(HKENV hKEnv, kushort_t index)
+void KNI_API KniLoadArgByRef(kushort_t index)
 {
-	Env->stackPushUInt(Env->args[index].getRef()->getLength());
+	KEnvironment::stackPush(*KEnvironment::args[index].getRef());
 }
 
-void KNI_API KniLoadFieldLength(HKENV hKEnv, HKFIELD hKField)
+void KNI_API KniLoadField(HKFIELD hKField)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPushUInt(obj.getField(Fld->localIndex).getLength());
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(obj.getField(Fld->localIndex));
 }
 
-void KNI_API KniLoadStaticFieldLength(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
+void KNI_API KniLoadStaticField(HKCLASS hKClass, HKFIELD hKField)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	Env->stackPushUInt(obj.getField(Fld->localIndex).getLength());
+	KEnvironment::stackPush(obj.getField(Fld->localIndex));
 }
 
-void KNI_API KniLoadElementLength(HKENV hKEnv, knuint_t index)
+void KNI_API KniLoadElement(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPushUInt(obj.getElement(index).getLength());
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(obj.getElement(index));
 }
 
-void KNI_API KniLoadIndirectLength(HKENV hKEnv)
+void KNI_API KniLoadIndirect(void)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPushUInt(obj.getRef()->getLength());
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(*obj.getRef());
 }
 
 //===================================================
 
-void KNI_API KniLoadLocalElement(HKENV hKEnv, kushort_t index, knuint_t elemIndex)
+void KNI_API KniLoadLocalLength(kushort_t index)
 {
-	Env->stackPush(Env->locals[index].getElement(elemIndex));
+	KEnvironment::stackPushUInt(KEnvironment::locals[index].getLength());
 }
 
-void KNI_API KniLoadArgElement(HKENV hKEnv, kushort_t index, knuint_t elemIndex)
+void KNI_API KniLoadArgLength(kushort_t index)
 {
-	Env->stackPush(Env->args[index].getElement(elemIndex));
+	KEnvironment::stackPushUInt(KEnvironment::args[index].getLength());
 }
 
-void KNI_API KniLoadArgElementByRef(HKENV hKEnv, kushort_t index, knuint_t elemIndex)
+void KNI_API KniLoadArgLengthByRef(kushort_t index)
 {
-	Env->stackPush(Env->args[index].getRef()->getElement(elemIndex));
+	KEnvironment::stackPushUInt(KEnvironment::args[index].getRef()->getLength());
 }
 
-void KNI_API KniLoadFieldElement(HKENV hKEnv, HKFIELD hKField, knuint_t elemIndex)
+void KNI_API KniLoadFieldLength(HKFIELD hKField)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(obj.getField(Fld->localIndex).getElement(elemIndex));
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushUInt(obj.getField(Fld->localIndex).getLength());
 }
 
-void KNI_API KniLoadStaticFieldElement(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, knuint_t elemIndex)
+void KNI_API KniLoadStaticFieldLength(HKCLASS hKClass, HKFIELD hKField)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	Env->stackPush(obj.getField(Fld->localIndex).getElement(elemIndex));
+	KEnvironment::stackPushUInt(obj.getField(Fld->localIndex).getLength());
 }
 
-void KNI_API KniLoadElementElement(HKENV hKEnv, knuint_t index, knuint_t elemIndex)
+void KNI_API KniLoadElementLength(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(obj.getElement(index).getElement(elemIndex));
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushUInt(obj.getElement(index).getLength());
 }
 
-void KNI_API KniLoadIndirectElement(HKENV hKEnv, knuint_t elemIndex)
+void KNI_API KniLoadIndirectLength(void)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPush(obj.getRef()->getElement(elemIndex));
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushUInt(obj.getRef()->getLength());
 }
 
 //===================================================
 
-void KNI_API KniLoadLocalAddress(HKENV hKEnv, kushort_t index)
+void KNI_API KniLoadLocalElement(kushort_t index, knuint_t elemIndex)
 {
-	Env->stackPushAddress(&Env->locals[index]);
+	KEnvironment::stackPush(KEnvironment::locals[index].getElement(elemIndex));
 }
 
-void KNI_API KniLoadArgAddress(HKENV hKEnv, kushort_t index)
+void KNI_API KniLoadArgElement(kushort_t index, knuint_t elemIndex)
 {
-	Env->stackPushAddress(&Env->args[index]);
+	KEnvironment::stackPush(KEnvironment::args[index].getElement(elemIndex));
 }
 
-void KNI_API KniLoadFieldAddress(HKENV hKEnv, HKFIELD hKField)
+void KNI_API KniLoadArgElementByRef(kushort_t index, knuint_t elemIndex)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPushAddress(&obj.getField(Fld->localIndex));
+	KEnvironment::stackPush(KEnvironment::args[index].getRef()->getElement(elemIndex));
 }
 
-void KNI_API KniLoadStaticFieldAddress(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
+void KNI_API KniLoadFieldElement(HKFIELD hKField, knuint_t elemIndex)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(obj.getField(Fld->localIndex).getElement(elemIndex));
+}
+
+void KNI_API KniLoadStaticFieldElement(HKCLASS hKClass, HKFIELD hKField, knuint_t elemIndex)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
-	Env->stackPushAddress(&obj.getField(Fld->localIndex));
+	KEnvironment::stackPush(obj.getField(Fld->localIndex).getElement(elemIndex));
 }
 
-void KNI_API KniLoadElementAddress(HKENV hKEnv, knuint_t index)
+void KNI_API KniLoadElementElement(knuint_t index, knuint_t elemIndex)
 {
-	const KObject &obj = Env->stackPop();
-	Env->stackPushAddress(&obj.getElement(index));
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(obj.getElement(index).getElement(elemIndex));
 }
 
-void KNI_API KniLoadNull(HKENV hKEnv)
+void KNI_API KniLoadIndirectElement(knuint_t elemIndex)
 {
-	Env->stackPushNull();
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPush(obj.getRef()->getElement(elemIndex));
 }
 
-void KNI_API KniLoadNewObject(HKENV hKEnv, HKCLASS hKClass)
+//===================================================
+
+void KNI_API KniLoadLocalAddress(kushort_t index)
+{
+	KEnvironment::stackPushAddress(&KEnvironment::locals[index]);
+}
+
+void KNI_API KniLoadArgAddress(kushort_t index)
+{
+	KEnvironment::stackPushAddress(&KEnvironment::args[index]);
+}
+
+void KNI_API KniLoadFieldAddress(HKFIELD hKField)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushAddress(&obj.getField(Fld->localIndex));
+}
+
+void KNI_API KniLoadStaticFieldAddress(HKCLASS hKClass, HKFIELD hKField)
+{
+	const KObject &obj = Cls->module->staticData[Cls->localIndex];
+	KEnvironment::stackPushAddress(&obj.getField(Fld->localIndex));
+}
+
+void KNI_API KniLoadElementAddress(knuint_t index)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushAddress(&obj.getElement(index));
+}
+
+void KNI_API KniLoadNull(void)
+{
+	KEnvironment::stackPushNull();
+}
+
+void KNI_API KniLoadNewObject(HKCLASS hKClass)
 {
 	KObject obj;
-	Env->allocClassInstance(Cls, obj);
-	Env->stackPush(obj);
-	Env->invokeLastThis(Cls->ctor);
+	KEnvironment::allocClassInstance(Cls, obj);
+	KEnvironment::stackPush(obj);
+	KEnvironment::invokeLastThis(Cls->ctor);
 }
 
-void KNI_API KniLoadNewDelegate(HKENV hKEnv, HKDELEGATE hKDelegate, HKMETHOD hKMethod)
+void KNI_API KniLoadNewDelegate(HKDELEGATE hKDelegate, HKMETHOD hKMethod)
 {
 	KObject obj;
 	if (Met->addr & KMA_STATIC)
-		Env->allocDelegateInstance(Del, NULL, Met, obj);
+		KEnvironment::allocDelegateInstance(Del, NULL, Met, obj);
 	else
-		Env->allocDelegateInstance(Del, &Env->stackPop(), Met, obj);
+		KEnvironment::allocDelegateInstance(Del, &KEnvironment::stackPop(), Met, obj);
 
-	Env->stackPush(obj);
+	KEnvironment::stackPush(obj);
 }
 
-void KNI_API KniLoadNewArray(HKENV hKEnv, HKTYPE hKType, knuint_t length)
+void KNI_API KniLoadNewArray(HKTYPE hKType, knuint_t length)
 {
 	KObject obj;
-	Env->allocArray(Typ, length, obj);
-	Env->stackPush(obj);
+	KEnvironment::allocArray(Typ, length, obj);
+	KEnvironment::stackPush(obj);
 }
 
-void KNI_API KniLoadNewArrayBaking(HKENV hKEnv, HKTYPE hKType, knuint_t length)
+void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, knuint_t length)
 {
 	KObject obj;
-	Env->allocArrayBaking(Typ, length, obj);
-	Env->stackPush(obj);
+	KEnvironment::allocArrayBaking(Typ, length, obj);
+	KEnvironment::stackPush(obj);
 }
 
 //===================================================
 
 // Stores values
 
-void KNI_API KniStoreLocal(HKENV hKEnv, kushort_t index)
+void KNI_API KniStoreLocal(kushort_t index)
 {
-	const KObject &val = Env->stackPop();
-	Env->locals[index].accept(val);
+	const KObject &val = KEnvironment::stackPop();
+	KEnvironment::locals[index].accept(val);
 }
 
-void KNI_API KniStoreArg(HKENV hKEnv, kushort_t index)
+void KNI_API KniStoreArg(kushort_t index)
 {
-	const KObject &val = Env->stackPop();
-	Env->args[index].accept(val);
+	const KObject &val = KEnvironment::stackPop();
+	KEnvironment::args[index].accept(val);
 }
 
-void KNI_API KniStoreArgByRef(HKENV hKEnv, kushort_t index)
+void KNI_API KniStoreArgByRef(kushort_t index)
 {
-	const KObject &val = Env->stackPop();
-	Env->args[index].getRef()->accept(val);
+	const KObject &val = KEnvironment::stackPop();
+	KEnvironment::args[index].getRef()->accept(val);
 }
 
-void KNI_API KniStoreField(HKENV hKEnv, HKFIELD hKField)
+void KNI_API KniStoreField(HKFIELD hKField)
 {
-	const KObject &val = Env->stackPop();
-	const KObject &obj = Env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getField(Fld->localIndex).accept(val);
 }
 
-void KNI_API KniStoreStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
+void KNI_API KniStoreStaticField(HKCLASS hKClass, HKFIELD hKField)
 {
-	const KObject &val = Env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).accept(val);
 }
 
-void KNI_API KniStoreElement(HKENV hKEnv, knuint_t index)
+void KNI_API KniStoreElement(knuint_t index)
 {
-	const KObject &val = Env->stackPop();
-	const KObject &obj = Env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getElement(index).accept(val);
 }
 
-void KNI_API KniStoreIndirect(HKENV hKEnv)
+void KNI_API KniStoreIndirect(void)
 {
-	const KObject &val = Env->stackPop();
-	const KObject &obj = Env->stackPop();
+	const KObject &val = KEnvironment::stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->accept(val);
 }
 
@@ -1420,86 +1572,86 @@ void KNI_API KniStoreIndirect(HKENV hKEnv)
 
 // Tests values
 
-kbool_t KNI_API KniIsNull(HKENV hKEnv)
+kbool_t KNI_API KniIsNull(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullLocal(HKENV hKEnv, kushort_t index)
+kbool_t KNI_API KniIsNullLocal(kushort_t index)
 {
-	return Env->locals[index].getRef() == NULL;
+	return KEnvironment::locals[index].getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullArg(HKENV hKEnv, kushort_t index)
+kbool_t KNI_API KniIsNullArg(kushort_t index)
 {
-	return Env->args[index].getRef() == NULL;
+	return KEnvironment::args[index].getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullArgByRef(HKENV hKEnv, kushort_t index)
+kbool_t KNI_API KniIsNullArgByRef(kushort_t index)
 {
-	return Env->args[index].getRef()->getRef() == NULL;
+	return KEnvironment::args[index].getRef()->getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullField(HKENV hKEnv, HKFIELD hKField)
+kbool_t KNI_API KniIsNullField(HKFIELD hKField)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getField(Fld->localIndex).getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
+kbool_t KNI_API KniIsNullStaticField(HKCLASS hKClass, HKFIELD hKField)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	return obj.getField(Fld->localIndex).getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullElement(HKENV hKEnv, knuint_t index)
+kbool_t KNI_API KniIsNullElement(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getElement(index).getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsNullIndirect(HKENV hKEnv)
+kbool_t KNI_API KniIsNullIndirect(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getRef() == NULL;
 }
 
-kbool_t KNI_API KniIsReferenceEqual(HKENV hKEnv)
+kbool_t KNI_API KniIsReferenceEqual(void)
 {
-	const KObject &b = Env->stackPop();
-	const KObject &a = Env->stackPop();
+	const KObject &b = KEnvironment::stackPop();
+	const KObject &a = KEnvironment::stackPop();
 	return a.getRef() == b.getRef();
 }
 
-kbool_t KNI_API KniIsClass(HKENV hKEnv)
+kbool_t KNI_API KniIsClass(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return (obj.getType()->tag & KT_SCALAR_MASK) == KT_CLASS;
 }
 
-kbool_t KNI_API KniIsDelegate(HKENV hKEnv)
+kbool_t KNI_API KniIsDelegate(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return (obj.getType()->tag & KT_SCALAR_MASK) == KT_DELEGATE;
 }
 
-kbool_t KNI_API KniIsArray(HKENV hKEnv)
+kbool_t KNI_API KniIsArray(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getType()->dim != 0;
 }
 
 
-kbool_t KNI_API KniIsInstanceOfClass(HKENV hKEnv, HKCLASS hKClass)
+kbool_t KNI_API KniIsInstanceOfClass(HKCLASS hKClass)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getType()->cls == Cls && obj.getType()->dim == 0;
 }
 
-kbool_t KNI_API KniIsInstanceOfDelegate(HKENV hKEnv, HKDELEGATE hKDelegate)
+kbool_t KNI_API KniIsInstanceOfDelegate(HKDELEGATE hKDelegate)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getType()->del == Del && obj.getType()->dim == 0;
 }
 
@@ -1507,179 +1659,176 @@ kbool_t KNI_API KniIsInstanceOfDelegate(HKENV hKEnv, HKDELEGATE hKDelegate)
 
 // Invokes
 
-KRESULT KNI_API KniInvoke(HKENV hKEnv, HKMETHOD hKMethod)
+KRESULT KNI_API KniInvoke(HKMETHOD hKMethod)
 {
-	Env->invoke(Met);
+	KEnvironment::invoke(Met);
 
-	if (Env->exc->getRef() == NULL)
+	if (KEnvironment::exc->getRef() == NULL)
 		return KRESULT_OK;
 	else
 		return KRESULT_ERR;
 }
 
-KRESULT KNI_API KniInvokeObject(HKENV hKEnv)
+KRESULT KNI_API KniInvokeObject(void)
 {
 	//ASSUMED: delegate instance is in the form { [0] = thisObj, [1] = methodDef }.
 
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	const MethodDef *met = (MethodDef *) (obj.getRef() + 1)->getRaw();
 	if (met->attrs & KMA_STATIC)
 	{
-		Env->invoke(met);
+		KEnvironment::invoke(met);
 	}
 	else
 	{
-		Env->stackPush(*obj.getRef());
-		Env->invokeLastThis(met);
+		KEnvironment::stackPush(*obj.getRef());
+		KEnvironment::invokeLastThis(met);
 	}
 
-	if (Env->exc->getRef() == NULL)
+	if (KEnvironment::exc->getRef() == NULL)
 		return KRESULT_OK;
 	else
 		return KRESULT_ERR;
 }
 
-kbool_t KNI_API KniHasException(HKENV hKEnv)
+kbool_t KNI_API KniHasException(void)
 {
-	return Env->hasException;
+	return KEnvironment::hasException;
 }
 
-void KNI_API KniPrintExceptionDescription(HKENV hKEnv)
+void KNI_API KniPrintExceptionDescription(void)
 {
-	Env->printException();
+	KEnvironment::printException();
 }
 
-void KNI_API KniClearException(HKENV hKEnv)
+void KNI_API KniClearException(void)
 {
-	Env->hasException = false;
-	Env->exc->accept(KObject::nullObject);
+	KEnvironment::hasException = false;
+	KEnvironment::exc->accept(KObject::nullObject);
 }
 
-void KNI_API KniThrowException(HKENV hKEnv, HKFIELD hKFCode)
+void KNI_API KniThrowException(HKFIELD hKFCode)
 {
-	const ClassDef *cls = Env->exceptions.klass;
+	const ClassDef *cls = KEnvironment::exceptions.klass;
 	
-	Env->stackPush(cls->module->staticData[cls->localIndex].getField(((FieldDef *)hKFCode)->localIndex));
-	Env->invoke(Env->exceptions.fromCode);
+	KEnvironment::stackPush(cls->module->staticData[cls->localIndex].getField(((FieldDef *)hKFCode)->localIndex));
+	KEnvironment::invoke(KEnvironment::exceptions.fromCode);
 	
-	Env->throwException();
+	KEnvironment::throwException();
 }
 
-void KNI_API KniThrowExceptionEx(HKENV hKEnv, kstring_t message, knuint_t length)
+void KNI_API KniThrowExceptionEx(kstring_t message, knuint_t length)
 {
-	const ClassDef *cls = Env->exceptions.klass;
+	const ClassDef *cls = KEnvironment::exceptions.klass;
 	
-	Env->stackPushString(message, length);
-	Env->invoke(Env->exceptions.fromMessage);
+	KEnvironment::stackPushString(message, length);
+	KEnvironment::invoke(KEnvironment::exceptions.fromMessage);
 
-	Env->throwException();
+	KEnvironment::throwException();
 }
 
-void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKType, kushort_t count)
+void KNI_API KniInitLocals(HKTYPE *pHKType, kushort_t count)
 {
-	Env->initLocals((const TypeDef **)pHKType, count);
+	KEnvironment::initLocals((const TypeDef **)pHKType, count);
 }
 
 //===================================================
 
 // Metadata and types
 
-HKTYPE KNI_API KniGetType(HKENV hKEnv)
+HKTYPE KNI_API KniGetType(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getType();
 }
 
-HKTYPE KNI_API KniGetTypeLocal(HKENV hKEnv, kushort_t index)
+HKTYPE KNI_API KniGetTypeLocal(kushort_t index)
 {
-	return Env->locals[index].getType();
+	return KEnvironment::locals[index].getType();
 }
 
-HKTYPE KNI_API KniGetTypeArg(HKENV hKEnv, kushort_t index)
+HKTYPE KNI_API KniGetTypeArg(kushort_t index)
 {
-	return Env->args[index].getType();
+	return KEnvironment::args[index].getType();
 }
 
-HKTYPE KNI_API KniGetTypeArgByRef(HKENV hKEnv, kushort_t index)
+HKTYPE KNI_API KniGetTypeArgByRef(kushort_t index)
 {
-	return Env->args[index].getRef()->getType();
+	return KEnvironment::args[index].getRef()->getType();
 }
 
-HKTYPE KNI_API KniGetTypeField(HKENV hKEnv, HKFIELD hKField)
+HKTYPE KNI_API KniGetTypeField(HKFIELD hKField)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getField(Fld->localIndex).getType();
 }
 
-HKTYPE KNI_API KniGetTypeStaticField(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField)
+HKTYPE KNI_API KniGetTypeStaticField(HKCLASS hKClass, HKFIELD hKField)
 {
 	const KObject &obj = Cls->module->staticData[Fld->localIndex];
 	return obj.getField(Fld->localIndex).getType();
 }
 
-HKTYPE KNI_API KniGetTypeElement(HKENV hKEnv, knuint_t index)
+HKTYPE KNI_API KniGetTypeElement(knuint_t index)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getElement(index).getType();
 }
 
-HKTYPE KNI_API KniGetTypeIndirect(HKENV hKEnv)
+HKTYPE KNI_API KniGetTypeIndirect(void)
 {
-	const KObject &obj = Env->stackPop();
+	const KObject &obj = KEnvironment::stackPop();
 	return obj.getRef()->getType();
 }
 
 
-HKCLASS KNI_API KniGetClass(HKENV hKEnv, kstring_t ksName)
+HKCLASS KNI_API KniGetClass(kstring_t ksName)
 {
-	return KEnvironment::findClass(ksName, Env->rootModule->getModule());
+	return KEnvironment::findClass(ksName, KEnvironment::rootModule->getModule());
 }
 
-HKDELEGATE KNI_API KniGetDelegate(HKENV hKEnv, kstring_t ksName)
+HKDELEGATE KNI_API KniGetDelegate(kstring_t ksName)
 {
-	return KEnvironment::findDelegate(ksName, Env->rootModule->getModule());
+	return KEnvironment::findDelegate(ksName, KEnvironment::rootModule->getModule());
 }
 
-HKFIELD KNI_API KniGetField(HKENV HKEnv, HKCLASS hKClass, kstring_t ksName)
+HKFIELD KNI_API KniGetField(HKCLASS hKClass, kstring_t ksName)
 {
 	return KEnvironment::findField(Cls, ksName);
 }
 
-HKMETHOD KNI_API KniGetMethod(HKENV hKEnv, HKCLASS hKClass, kstring_t ksName)
+HKMETHOD KNI_API KniGetMethod(HKCLASS hKClass, kstring_t ksName)
 {
 	return KEnvironment::findMethod(Cls, ksName);
 }
 
 
-HKTYPE KNI_API KniGetPrimitiveType(HKENV hKEnv, ktypetag_t tag)
+HKTYPE KNI_API KniGetPrimitiveType(ktypetag_t tag)
 {
 	return &KEnvironment::primitiveTypes[tag];
 }
 
-HKTYPE KNI_API KniCreateType(HKENV hKEnv, ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate)
+HKTYPE KNI_API KniCreateType(ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate)
 {
 	if ((tag & KT_SCALAR_MASK) == KT_CLASS)
-		return Env->createType(tag, dim, (ClassDef *)hKClassOrDelegate);
+		return KEnvironment::createType(tag, dim, (ClassDef *)hKClassOrDelegate);
 	else if ((tag & KT_SCALAR_MASK) == KT_DELEGATE)
-		return Env->createType(tag, dim, (DelegateDef *)hKClassOrDelegate);
+		return KEnvironment::createType(tag, dim, (DelegateDef *)hKClassOrDelegate);
 	else
-		return Env->createType(tag, dim);
+		return KEnvironment::createType(tag, dim);
 }
 
-kbool_t KNI_API KniIsClassType(HKENV hKEnv, HKTYPE hKType)
+kbool_t KNI_API KniIsClassType(HKTYPE hKType)
 {
-	(void)hKEnv;
 	return (Typ->tag & KT_SCALAR_MASK) == KT_CLASS && !Typ->dim;
 }
 
-kbool_t KNI_API KniIsDelegateType(HKENV hKEnv, HKTYPE hKType)
+kbool_t KNI_API KniIsDelegateType(HKTYPE hKType)
 {
-	(void)hKEnv;
 	return (Typ->tag & KT_SCALAR_MASK) == KT_DELEGATE && !Typ->dim;
 }
 
-kbool_t KNI_API KniIsArrayType(HKENV hKEnv, HKTYPE hKType)
+kbool_t KNI_API KniIsArrayType(HKTYPE hKType)
 {
-	(void)hKEnv;
 	return Typ->dim != 0;
 }

@@ -14,7 +14,6 @@ class KObject
 	friend class KGC;
 
 public:
-	static KEnvironment *env;
 	static KGC *gc;
 	static const TypeDef *objectType;
 	static const TypeDef *nullType;

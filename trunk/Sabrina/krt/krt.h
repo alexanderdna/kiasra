@@ -27,37 +27,53 @@ typedef void * HKMODULE;
 /* Handle of exception */
 typedef void * HKEXCEPTION;
 
+//===================================================
+
+enum ModuleAttributes
+{
+	KMODA_SYSTEM = 0,
+	KMODA_USER   = 1,
+	KMODA_KIASRA = 2,
+	KMODA_NATIVE = 4,
+};
+
+enum ClassAttributes
+{
+	KCA_PUBLIC  = 0,
+	KCA_PRIVATE = 1,
+	KCA_STATIC  = 2,
+};
+
+enum FieldAttributes
+{
+	KFA_PUBLIC  = 0,
+	KFA_PRIVATE = 1,
+	KFA_STATIC  = 2,
+	KFA_FINAL   = 4,
+};
+
+enum MethodAttributes
+{
+	KMA_PUBLIC  = 0,
+	KMA_PRIVATE = 1,
+	KMA_STATIC  = 2,
+	KMA_CTOR    = 4,
+	KMA_NATIVE  = 8
+};
+
 /*===================================================*/
 
 /* Creates a new execution environment */
-KRESULT KRT_API KrtCreateEnvironment(HKENV *pHKEnv);
+KRESULT KRT_API KrtCreateEnvironment(void);
 
 /* Destroys an execution environment and all its resources */
-void KRT_API KrtDestroyEnvironment(HKENV *pHKEnv);
+void KRT_API KrtDestroyEnvironment(void);
 
 /* Loads a module from the specified path */
-KRESULT KRT_API KrtLoadModule(HKENV hKEnv, kstring_t ksPath, HKMODULE *pHKModule);
+KRESULT KRT_API KrtLoadModule(kstring_t ksPath, HKMODULE *pHKModule);
 
 /* Runs a loaded module */
-KRESULT KRT_API KrtRunModule(HKENV hKEnv, HKMODULE hKModule);
-
-/* Releases the module and all its resources */
-void KRT_API KrtFreeModule(HKMODULE *pHKModule);
-
-/* Gets the message describing why the last task failed */
-kstring_t KRT_API KrtGetFailReason(void);
-
-/* Gets the last exception if any */
-HKEXCEPTION KRT_API KrtGetException(HKENV hKEnv);
-
-/* Gets the message in the specified exception */
-kstring_t KRT_API KrtGetExceptionMessage(HKENV hKEnv, HKEXCEPTION hKException);
-
-/* Gets the stack trace from the specified exception */
-kstring_t KRT_API KrtGetExceptionTrace(HKENV hKEnv, HKEXCEPTION hKException);
-
-/* Releases a string retrieved from a KRT API function */
-void KRT_API KrtFreeString(kstring_t *pKString);
+KRESULT KRT_API KrtRunModule(HKMODULE hKModule);
 
 /*===================================================*/
 

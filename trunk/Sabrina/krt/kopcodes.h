@@ -1,4 +1,13 @@
-#pragma once
+#ifndef _KOPCODES_H
+#define _KOPCODES_H
+
+/*===================================================*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*===================================================*/
 
 enum OpCodes
 {
@@ -114,3 +123,11 @@ enum OpCodes
 
 	OP_OPCODE_COUNT
 };
+
+/*===================================================*/
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif/*_KOPCODES_H*/

@@ -48,9 +48,6 @@
     <ClInclude Include="kexchandler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="kopcodes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="kconfig.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -59,6 +56,18 @@
     </ClInclude>
     <ClInclude Include="krt.h">
       <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="kcs.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="kopcodes.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="kcompile.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcodegen.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -93,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kenv_stack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kcs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
