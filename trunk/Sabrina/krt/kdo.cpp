@@ -594,8 +594,7 @@ void KEnvironment::do_ldelem(KEnvironment *env)
 
 	if (idx < 0 || idx + 1 > (knint_t)len)
 	{
-		//TODO: throw System.Exception.fromCode(System.Exception.IndexOutOfRange);
-		env->throwException();
+		KniThrowException(env, env->exceptions.indexOutOfRange);
 		return;
 	}
 
@@ -612,8 +611,7 @@ void KEnvironment::do_ldelema(KEnvironment *env)
 
 	if (idx < 0 || idx + 1 > (knint_t)len)
 	{
-		//TODO: throw System.Exception.fromCode(System.Exception.IndexOutOfRange);
-		env->throwException();
+		KniThrowException(env, env->exceptions.indexOutOfRange);
 		return;
 	}
 
@@ -679,8 +677,7 @@ void KEnvironment::do_stelem(KEnvironment *env)
 
 	if (idx < 0 || idx + 1 > (knint_t)len)
 	{
-		//TODO: throw System.Exception.fromCode(System.Exception.IndexOutOfRange);
-		env->throwException();
+		KniThrowException(env, env->exceptions.indexOutOfRange);
 		return;
 	}
 

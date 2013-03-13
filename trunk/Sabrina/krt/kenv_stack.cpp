@@ -195,14 +195,14 @@ void KEnvironment::stackPushStringMoved(kstring_t val, knuint_t len)
 }
 
 //protected
-void KEnvironment::stackPushRaw(void *p)
+void KEnvironment::stackPushRaw(kref_t val)
 {
 	if (this->stackPointer >= this->stackSize)
 		this->stackExpand();
 	
 	KObject &obj = this->stack[++this->stackPointer];
 	obj.clean();
-	obj.vRaw = p;
+	obj.vRaw = val;
 	obj.length = 0;
 	obj.type = this->rawType;
 }
