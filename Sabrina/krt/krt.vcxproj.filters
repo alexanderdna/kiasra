@@ -89,6 +89,9 @@
     <ClCompile Include="kdo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="kenv_stack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="krt.rc">

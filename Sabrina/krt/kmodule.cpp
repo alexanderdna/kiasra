@@ -315,13 +315,19 @@ bool KModuleLoader::bake(void)
 
 	kuint_t stringCount = this->stringTable.rowCount;
 	kstring_t *stringRows = this->stringTable.rows;
+	kuint_t *lengthRows = this->stringTable.lengths;
 
 	kstring_t *strings = new kstring_t[stringCount];
+	kuint_t *stringLengths = new kuint_t[stringCount];
 	module->stringCount = stringCount;
 	module->strings = strings;
+	module->stringLengths = stringLengths;
 
 	for (kuint_t i = 0; i < stringCount; ++i)
+	{
 		strings[i] = stringRows[i];
+		stringLengths[i] = lengthRows[i];
+	}
 
 	// module table
 
@@ -364,6 +370,7 @@ bool KModuleLoader::bake(void)
 	{
 		FieldDef &fld = allFieldList[i + 1];
 
+		fld.size = sizeof(FieldDef);
 		fld.attrs = fieldRows[i].attrs;
 		fld.name = strings[fieldRows[i].name];
 	}
@@ -381,6 +388,7 @@ bool KModuleLoader::bake(void)
 	{
 		ParamDef &param = allParamList[i + 1];
 
+		param.size = sizeof(ParamDef);
 		param.byRef = paramRows[i].byRef != 0;
 		param.name = strings[paramRows[i].name];
 	}
@@ -400,6 +408,7 @@ bool KModuleLoader::bake(void)
 
 		MethodDef &met = allMethodList[i + 1];
 
+		met.size = sizeof(MethodDef);
 		met.attrs = methodRow.attrs;
 		met.name = strings[methodRow.name];
 		
@@ -463,6 +472,8 @@ bool KModuleLoader::bake(void)
 		else
 		{
 			cls = new ClassDef;
+
+			cls->size = sizeof(ClassDef);
 			cls->attrs = classRow.attrs;
 			cls->name = strings[classRow.name];
 			cls->module = module;
@@ -635,6 +646,7 @@ bool KModuleLoader::bake(void)
 	{
 		ParamDef &dparam = allDParamList[i + 1];
 
+		dparam.size = sizeof(ParamDef);
 		dparam.byRef = dparamRows[i].byRef != 0;
 		dparam.name = strings[dparamRows[i].name];
 	}
@@ -656,6 +668,7 @@ bool KModuleLoader::bake(void)
 		DelegateDef *del = new DelegateDef;
 		allDelegateList[i + 1] = del;
 
+		del->size = sizeof(DelegateDef);
 		del->attrs = delegateRow.attrs;
 		del->name = strings[delegateRow.name];
 
@@ -970,20 +983,26 @@ void KModuleLoader::loadStringTable()
 	pos += sizeof(uint32_t);
 
 	kstring_t *rows = new kstring_t[rowCount];
+	kuint_t *lengths = new kuint_t[rowCount];
 
 	for (unsigned int i = 0; i < rowCount; ++i)
 	{
 		_VREAD(length, uint32_t);
 
-		unsigned char *row = new unsigned char[length];
-		for (uint32_t j = 0; j < length; ++j, ++pos)
-			row[j] = stream[pos];
+		// sizeof(kchar_t)==sizeof(wchar_t) can be 2 (Windows) or 4 (*nix),
+		// but for KLI, a character should always be uint16_t.
 
-		rows[i] = (kstring_t)row;
+		kchar_t *row = new kchar_t[length];
+		for (uint32_t j = 0; j < length; ++j, pos += sizeof(uint16_t))
+			row[j] = (kchar_t)(*(uint16_t *)(stream + pos));
+
+		rows[i] = row;
+		lengths[i] = length;
 	}
 
 	this->stringTable.rowCount = (uint32_t)rowCount;
 	this->stringTable.rows = rows;
+	this->stringTable.lengths = lengths;
 	this->pos = pos;
 }
 

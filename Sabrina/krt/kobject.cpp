@@ -14,6 +14,8 @@ KGC          *KObject::gc;
 const TypeDef *KObject::objectType;
 const TypeDef *KObject::nullType;
 
+KObject KObject::nullObject;
+
 //public
 KObject::KObject(void)
 	: type(NULL), vLong(0), length(0)
@@ -293,11 +295,11 @@ void KObject::setDouble(kdouble_t val)
 }
 
 //public
-void KObject::setString(kstring_t val)
+void KObject::setString(kstring_t val, knuint_t length)
 {
 	this->clean();
 
-	this->length = KObject::strlen(val);
+	this->length = length;
 	this->vString = KObject::strdup(val, this->length);
 }
 

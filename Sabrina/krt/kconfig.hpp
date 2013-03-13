@@ -17,5 +17,8 @@
 #endif
 
 #if defined(_WIN32) || defined(_MSC_VER)
-#define ISWIN
+	#define ISWIN
+	#define KCORLIB_NAME	L"kcorlib.dll"
+#else
+	#define KCORLIB_NAME	L"libkcore.so"
 #endif

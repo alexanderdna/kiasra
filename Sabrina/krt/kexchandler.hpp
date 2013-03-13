@@ -8,15 +8,10 @@ struct KFrame;
 
 struct KExceptionHandler
 {
-	bool           native;
 	const TypeDef *excType;
 	KFrame        *frame;
+	knuint_t       addr;
 	knuint_t       addrEnd;
-	union
-	{
-		knuint_t   addr;
-		KEXCFUNC  *func;
-	};
 };
 
 typedef std::stack<KExceptionHandler> kcatchstack_t;

@@ -19,6 +19,8 @@ public:
 	static const TypeDef *objectType;
 	static const TypeDef *nullType;
 
+	static KObject nullObject;
+
 protected:
 	const TypeDef *type;
 
@@ -95,7 +97,7 @@ public:
 	void setULong(kulong_t val);
 	void setFloat(kfloat_t val);
 	void setDouble(kdouble_t val);
-	void setString(kstring_t val);
+	void setString(kstring_t val, knuint_t length);
 
 	void setRef(KObject *ref, knuint_t len);
 	void setRaw(kref_t raw);

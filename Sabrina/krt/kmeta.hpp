@@ -11,6 +11,19 @@
 #include <dlfcn.h>
 #endif
 
+//===================================================
+
+// Tests to differentiate baked info from builder
+
+#define IS_TYPEDEF(p)		(p->size == sizeof(TypeDef))
+#define IS_CLASSDEF(p)		(p->size == sizeof(ClassDef))
+#define IS_DELEGATEDEF(p)	(p->size == sizeof(DelegateDef))
+#define IS_FIELDDEF(p)		(p->size == sizeof(FieldDef))
+#define IS_METHODDEF(p)		(p->size == sizeof(MethodDef))
+#define IS_PARAMDEF(p)		(p->size == sizeof(ParamDef))
+
+//===================================================
+
 class KObject;
 
 //===================================================
@@ -40,10 +53,10 @@ struct MetaParamDef;
 
 enum ModuleAttributes : uint16_t
 {
-	KMODA_SYSTEM,
-	KMODA_USER,
-	KMODA_KIASRA,
-	KMODA_NATIVE,
+	KMODA_SYSTEM = 0,
+	KMODA_USER   = 1,
+	KMODA_KIASRA = 2,
+	KMODA_NATIVE = 4,
 };
 
 enum ClassAttributes : uint16_t
@@ -74,6 +87,8 @@ enum MethodAttributes : uint16_t
 
 struct TypeDef
 {
+	size_t size;
+
 	uint16_t tag;
 	kushort_t  dim;
 	union
@@ -97,6 +112,7 @@ struct ModuleDef
 
 	kuint_t          stringCount;
 	kstring_t       *strings;
+	kuint_t         *stringLengths;
 
 	kushort_t        moduleCount;
 	ModuleDef      **moduleList;	// array of imported modules
@@ -146,6 +162,8 @@ struct MetaModuleDef
 
 struct ClassDef
 {
+	size_t size;
+
 	ClassAttributes attrs;
 	kstring_t       name;
 	
@@ -187,6 +205,8 @@ struct MetaClassDef
 
 struct DelegateDef
 {
+	size_t size;
+
 	ClassAttributes attrs;
 	kstring_t       name;
 
@@ -212,6 +232,8 @@ struct MetaDelegateDef
 
 struct FieldDef
 {
+	size_t size;
+
 	FieldAttributes attrs;
 	kstring_t       name;
 	const TypeDef  *declType;
@@ -229,6 +251,8 @@ struct MetaFieldDef
 
 struct MethodDef
 {
+	size_t size;
+
 	MethodAttributes attrs;
 	kstring_t        name;
 
@@ -262,6 +286,8 @@ struct MetaMethodDef
 
 struct ParamDef
 {
+	size_t size;
+
 	kstring_t       name;
 	const TypeDef  *declType;
 	bool            byRef;
