@@ -14,13 +14,12 @@
 #include <set>
 #include <cstdlib>
 #include <cstdio>
+#include <cwchar>
 
 //===================================================
 // Defines
 
 #define INIT_STACK_SIZE 100
-
-#define GET_PRIMITIVE_TYPE(tag) (KEnvironment::primitiveTypes[(unsigned)tag])
 
 #define GC_ALLOC(len)		(this->gc->alloc(len))
 #define GC_REGISTER(p)		this->gc->addRoot(p)
@@ -81,12 +80,10 @@ KEnvironment::KEnvironment(void)
 	KEnvironment::nullType = new TypeDef; // nothing special, just a unique reference
 
 	//===================================
-	// prepare kcorlib
+	// prepare module loaders
 
 	std::set<KModuleLoader *> *loadedModules = new std::set<KModuleLoader *>;
 	this->loadedModules = loadedModules;
-
-	this->initCorLib();
 
 	//===================================
 	// prepare GC
@@ -111,6 +108,8 @@ KEnvironment::KEnvironment(void)
 	KObject::objectType = KEnvironment::objectType;
 	KObject::nullType = KEnvironment::nullType;
 
+	KObject::nullObject.type = KObject::nullType;
+	KObject::nullObject.setRef(NULL, 0);
 }
 
 //public
@@ -230,18 +229,43 @@ void KEnvironment::initSystemLibPath(void)
 //protected
 void KEnvironment::initCorLib(void)
 {
-	KModuleLoader *moduleLoader = this->createModuleLoader(KEnvironment::systemLibPath, L"Dkcorlib.dll", 0);
-	if (!moduleLoader->load())
+	KModuleLoader *corlibLoader = this->createModuleLoader(NULL, KCORLIB_NAME, 0);
+	if (!corlibLoader->load())
 	{
-		fprintf(stderr, "Cannot load Core Library. Installation may have been corrupt.\n");
+		// corlib not found => panic exit
+		fwprintf(stderr, L"Cannot load %s. Installation might be corrupted.\n", KCORLIB_NAME);
 		exit(1);
 	}
+
+	this->corlibModule = corlibLoader;
 }
+
+//protected
+void KEnvironment::initExceptions(void)
+{
+	KExceptions &exc = this->exceptions;
+
+	const ClassDef *excClass = this->findClass(L"System.Exception", this->corlibModule->getModule());
+	exc.klass = excClass;
+
+	exc.ctor = (MethodDef *) findMethod(excClass, L".ctor");
+	exc.fromCode = (MethodDef *) findMethod(excClass, L"fromCode");
+	exc.fromMessage = (MethodDef *) findMethod(excClass, L"fromMessage");
+
+	exc.custom = (FieldDef *) findField(excClass, L"Custom");
+	exc.invalidCast = (FieldDef *) findField(excClass, L"InvalidCast");
+	exc.invalidOperation = (FieldDef *) findField(excClass, L"InvalidOperation");
+	exc.invalidArgument = (FieldDef *) findField(excClass, L"InvalidArgument");
+	exc.nullArgument = (FieldDef *) findField(excClass, L"NullArgument");
+	exc.indexOutOfRange = (FieldDef *) findField(excClass, L"IndexOutOfRange");
+	exc.divisionByZero = (FieldDef *) findField(excClass, L"DivisionByZero");
+}
+
+//===================================================
 
 //protected
 KRESULT KEnvironment::execute(void)
 {
-start:
 	while (this->running)
 	{
 		unsigned char opcode = this->code[this->ip++];
@@ -249,43 +273,25 @@ start:
 			return KRESULT_OK;
 		else
 			KEnvironment::executors[opcode](this);
-	}
 
-	if (this->hasException)
-	{
-		this->traceDeque->clear();
-
-		while (!this->catchStack->empty())
+		if (this->hasException)
 		{
-			KExceptionHandler &handler = this->catchStack->top();
-			KFrame *frame = handler.frame;
+			this->traceDeque->clear();
 
-			for (; this->frame != frame; )
+			while (!this->catchStack->empty())
 			{
-				// push current method for tracing
-				this->traceDeque->push_back(this->method);
-				// then leave
-				this->leaveMethod();
-			}
+				KExceptionHandler &handler = this->catchStack->top();
+				KFrame *frame = handler.frame;
 
-			if (handler.excType == this->exc->type)
-			{
-				// found an appropriate handler
-				if (handler.native)
+				for (; this->frame != frame; )
 				{
-					KEXCFUNC *func = handler.func;
-					this->catchStack->pop();
-
-					this->running = true;
-					this->hasException = false;
-
-					this->stackPush(*this->exc);
-					(*func)(this);
-
+					// push current method for tracing
+					this->traceDeque->push_back(this->method);
+					// then leave
 					this->leaveMethod();
-					return KRESULT_OK;
 				}
-				else
+
+				if (handler.excType == this->exc->type)
 				{
 					knuint_t addr = handler.addr;
 					this->catchStack->pop();
@@ -295,17 +301,18 @@ start:
 
 					this->stackPush(*this->exc);
 					this->ip = handler.addr;
-					
-					goto start;
+
+					break;
 				}
+
+				// handler not found YET
+				this->catchStack->pop();
 			}
 
-			// handler not found YET
-			this->catchStack->pop();
+			if (this->hasException)
+				// exception not handled
+				return KRESULT_ERR;
 		}
-
-		// exception not handled
-		return KRESULT_ERR;
 	}
 
 	return KRESULT_OK;
@@ -325,6 +332,7 @@ KModuleLoader * KEnvironment::createModuleLoader(kstring_t importerPath, kstring
 
 	KModuleLoader *moduleLoader = new KModuleLoader(const_cast<KEnvironment *>(this), importerPath, path, hash);
 	this->loadedModules->insert(moduleLoader);
+
 	return moduleLoader;
 }
 
@@ -385,6 +393,30 @@ const DelegateDef * KEnvironment::findDelegate(kstring_t name, const ModuleDef *
 			if (!metaDelegateList[i].farIndex && krt_strequ(delegateList[i]->name, name))
 				return delegateList[i];
 	}
+
+	return NULL;
+}
+
+//public static
+const FieldDef * KEnvironment::findField(const ClassDef *cls, kstring_t name)
+{
+	knint_t fieldCount = cls->fieldCount;
+	FieldDef **fieldList = cls->fieldList;
+	for (knint_t i = fieldCount - 1; i >= 0; --i)
+		if (krt_strequ(fieldList[i]->name, name))
+			return fieldList[i];
+
+	return NULL;
+}
+
+//public static
+const MethodDef * KEnvironment::findMethod(const ClassDef *cls, kstring_t name)
+{
+	knint_t methodCount = cls->methodCount;
+	MethodDef **methodList = cls->methodList;
+	for (knint_t i = methodCount - 1; i >= 0; --i)
+		if (krt_strequ(methodList[i]->name, name))
+			return methodList[i];
 
 	return NULL;
 }
@@ -605,13 +637,19 @@ void KEnvironment::enterMethod(const MethodDef *method, KObject *args)
 		frame.locals = NULL;
 	}
 
-	this->module = frame.module;
 	this->method = method;
 	this->locals = frame.locals;
 	this->args   = frame.args;
 	this->ip     = frame.ip;
-	this->code   = frame.module->code;
-	this->strings= frame.module->strings;
+
+	// only update when module change
+	if (this->module != frame.module)
+	{
+		this->module = frame.module;
+		this->code = frame.module->code;
+		this->strings = frame.module->strings;
+		this->stringLengths = frame.module->stringLengths;
+	}
 
 	this->callStack->push(frame);
 	this->frame = &this->callStack->top();
@@ -629,13 +667,18 @@ void KEnvironment::leaveMethod()
 	frame = &this->callStack->top();
 
 	this->frame = frame;
-	this->module = frame->module;
 	this->method = frame->method;
 	this->locals = frame->locals;
 	this->args   = frame->args;
 	this->ip     = frame->ip;
-	this->code   = frame->module->code;
-	this->strings= frame->module->strings;
+
+	if (this->module != frame->module)
+	{
+		this->module = frame->module;
+		this->code   = frame->module->code;
+		this->strings= frame->module->strings;
+		this->stringLengths = frame->module->stringLengths;
+	}
 }
 
 //protected
@@ -646,232 +689,8 @@ void KEnvironment::throwException(void)
 	this->hasException = true;
 }
 
-//===================================================
-// Stack manipulation
-
 //protected
-inline void KEnvironment::stackExpand(void)
+void KEnvironment::printException(void)
 {
-	knuint_t newSize = this->stackSize * 2;
-	KObject *newStack = this->gc->allocForStack(newSize);
-
-	memcpy(newStack, this->stack, this->stackSize);
-
-	this->gc->removeRoot(this->stack);
-	this->gc->addRoot(newStack);
-	
-	this->stack = newStack;
-	this->stackSize = newSize;
-}
-
-//protected
-void KEnvironment::stackPush(const KObject &obj)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-
-	this->stack[++this->stackPointer] = obj;
-}
-
-//protected
-void KEnvironment::stackPushNull(void)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setRaw(NULL);
-	obj.type = this->nullType;
-}
-
-//protected
-void KEnvironment::stackPushAddress(KObject *p)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setRef(p, p->length);
-	obj.type = this->makeByRefType(p->type);
-}
-
-//protected
-void KEnvironment::stackPushBool(kbool_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setBool(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_BOOL);
-}
-
-//protected
-void KEnvironment::stackPushChar(kchar_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setChar(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_CHAR);
-}
-
-//protected
-void KEnvironment::stackPushByte(kbyte_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setByte(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_BYTE);
-}
-
-//protected
-void KEnvironment::stackPushSByte(ksbyte_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setSByte(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_SBYTE);
-}
-
-//protected
-void KEnvironment::stackPushShort(kshort_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setShort(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_SHORT);
-}
-
-//protected
-void KEnvironment::stackPushUShort(kushort_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setUShort(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_USHORT);
-}
-
-//protected
-void KEnvironment::stackPushInt(kint_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setInt(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_INT);
-}
-
-//protected
-void KEnvironment::stackPushUInt(kuint_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setUInt(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_UINT);
-}
-
-//protected
-void KEnvironment::stackPushLong(klong_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setLong(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_LONG);
-}
-
-//protected
-void KEnvironment::stackPushULong(kulong_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setULong(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_ULONG);
-}
-
-//protected
-void KEnvironment::stackPushFloat(kfloat_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setFloat(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_FLOAT);
-}
-
-//protected
-void KEnvironment::stackPushDouble(kdouble_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setDouble(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_DOUBLE);
-}
-
-//protected
-void KEnvironment::stackPushString(kstring_t val)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.setString(val);
-	obj.type = GET_PRIMITIVE_TYPE(KT_STRING);
-}
-
-//protected
-void KEnvironment::stackPushStringMoved(kstring_t val, knuint_t len)
-{
-	if (this->stackPointer >= this->stackSize)
-		this->stackExpand();
-	
-	KObject &obj = this->stack[++this->stackPointer];
-	obj.clean();
-	obj.vString = val;
-	obj.length = len;
-	obj.type = GET_PRIMITIVE_TYPE(KT_STRING);
-}
-
-//protected
-KObject & KEnvironment::stackPeek(void)
-{
-	return this->stack[this->stackPointer];
-}
-
-//protected
-KObject & KEnvironment::stackPeek(knuint_t offset)
-{
-	return this->stack[this->stackPointer - offset + 1];
-}
-
-//protected
-KObject & KEnvironment::stackPop(void)
-{
-	KObject &obj = this->stack[this->stackPointer];
-	--this->stackPointer;
-	return obj;
-}
-
-inline void KEnvironment::stackClear(knuint_t count)
-{
-	this->stackPointer -= count;
+	// TODO: dump stack trace
 }

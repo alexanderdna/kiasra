@@ -8,6 +8,8 @@
 #include <set>
 #include <deque>
 
+#define GET_PRIMITIVE_TYPE(tag) (KEnvironment::primitiveTypes[(unsigned)tag])
+
 class KGC;
 class KObject;
 struct ModuleDef;
@@ -18,6 +20,24 @@ class KModuleLoader;
 class KEnvironment
 {
 	friend class KGC;
+
+public:
+	struct KExceptions
+	{
+		const ClassDef *klass;
+
+		const MethodDef *ctor;
+		const MethodDef *fromCode;
+		const MethodDef *fromMessage;
+
+		const FieldDef *custom;
+		const FieldDef *invalidCast;
+		const FieldDef *invalidOperation;
+		const FieldDef *invalidArgument;
+		const FieldDef *nullArgument;
+		const FieldDef *indexOutOfRange;
+		const FieldDef *divisionByZero;
+	};
 
 public:
 	static KEnvironment *instance;
@@ -47,6 +67,7 @@ protected:
 
 	KModuleLoader             *rootModule;
 	std::set<KModuleLoader *> *loadedModules;
+	KModuleLoader             *corlibModule;
 
 	KObject *stack;
 	knuint_t stackSize;
@@ -59,6 +80,7 @@ protected:
 	KObject         *locals;	// current local variables
 	KObject         *args;		// current arguments
 	kstring_t       *strings;	// current string table
+	kuint_t         *stringLengths;
 
 	const unsigned char *code;	// code to execute
 	knuint_t             ip;	// pointer to next instruction
@@ -69,6 +91,8 @@ protected:
 	KObject       *exc;			// latest unhandled exception
 	kcatchstack_t *catchStack;	// stack of exception handlers
 	ktracedeque_t *traceDeque;	// deque of methods traced from exception
+
+	KExceptions    exceptions;	// bundle of common exceptions
 
 public:
 	KEnvironment(void);
@@ -81,6 +105,9 @@ public:
 
 	static const ClassDef * findClass(kstring_t name, const ModuleDef *module);
 	static const DelegateDef * findDelegate(kstring_t name, const ModuleDef *module);
+
+	static const FieldDef * findField(const ClassDef *cls, kstring_t name);
+	static const MethodDef * findMethod(const ClassDef *cls, kstring_t name);
 	
 	const TypeDef * createType(ktypetag_t tag, kushort_t dim);
 	const TypeDef * createType(ktypetag_t tag, kushort_t dim, ClassDef *cls);
@@ -92,7 +119,9 @@ public:
 
 protected:
 	static void initSystemLibPath(void);
+
 	void initCorLib(void);
+	void initExceptions(void);
 
 	KRESULT execute(void);
 
@@ -114,10 +143,10 @@ protected:
 	void leaveMethod(void);
 
 	void throwException(void);
+	void printException(void);
 
 	// Stack manipulation
 
-	inline void stackExpand(void);
 	void stackPush(const KObject &obj);
 	void stackPushNull(void);
 	void stackPushAddress(KObject *p);
@@ -133,12 +162,23 @@ protected:
 	void stackPushULong(kulong_t val);
 	void stackPushFloat(kfloat_t val);
 	void stackPushDouble(kdouble_t val);
-	void stackPushString(kstring_t val);
+	void stackPushString(kstring_t val, knuint_t length);
 	void stackPushStringMoved(kstring_t val, knuint_t len);
+	void stackPushRaw(void *p);
 	KObject & stackPeek(void);
 	KObject & stackPeek(knuint_t offset);
 	KObject & stackPop(void);
-	inline void stackClear(knuint_t count);
+	
+	// definition in kenv_stack.cpp and
+	// used by only the functions there
+	inline void stackExpand(void);
+
+	// definition put right here for uses in many other places
+	inline void stackClear(knuint_t count)
+	{
+		this->stackPointer -= count;
+	}
+
 
 	//===================================================
 	// Opcode executors
@@ -164,6 +204,8 @@ protected:
 
 	static void do_ldthis(KEnvironment *env);
 	static void do_ldnull(KEnvironment *env);
+	static void do_ldtype(KEnvironment *env);
+	static void do_ldmethod(KEnvironment *env);
 
 	static void do_ldloc(KEnvironment *env);
 	static void do_ldloca(KEnvironment *env);
@@ -359,7 +401,7 @@ protected:
 	friend void KniSetLocalULong(HKENV hKEnv, kushort_t index, kulong_t val);
 	friend void KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 	friend void KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
-	friend void KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val);
+	friend void KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
 
 	friend void KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val);
 	friend void KniSetArgChar(HKENV hKEnv, kushort_t index, kchar_t val);
@@ -373,7 +415,7 @@ protected:
 	friend void KniSetArgULong(HKENV hKEnv, kushort_t index, kulong_t val);
 	friend void KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 	friend void KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
-	friend void KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val);
+	friend void KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
 
 	friend void KniSetFieldBool(HKENV hKEnv, HKFIELD hKField, kbool_t val);
 	friend void KniSetFieldChar(HKENV hKEnv, HKFIELD hKField, kchar_t val);
@@ -387,7 +429,7 @@ protected:
 	friend void KniSetFieldULong(HKENV hKEnv, HKFIELD hKField, kulong_t val);
 	friend void KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val);
 	friend void KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val);
-	friend void KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val);
+	friend void KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val, knuint_t length);
 
 	friend void KniSetStaticFieldBool(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kbool_t val);
 	friend void KniSetStaticFieldChar(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kchar_t val);
@@ -401,7 +443,7 @@ protected:
 	friend void KniSetStaticFieldULong(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kulong_t val);
 	friend void KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kfloat_t val);
 	friend void KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
-	friend void KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val);
+	friend void KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
 
 	friend void KniSetElementBool(HKENV hKEnv, knuint_t index, kbool_t val);
 	friend void KniSetElementChar(HKENV hKEnv, knuint_t index, kchar_t val);
@@ -415,7 +457,7 @@ protected:
 	friend void KniSetElementULong(HKENV hKEnv, knuint_t index, kulong_t val);
 	friend void KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val);
 	friend void KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val);
-	friend void KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val);
+	friend void KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val, knuint_t length);
 
 	friend void KniSetIndirectBool(HKENV hKEnv, kbool_t val);
 	friend void KniSetIndirectChar(HKENV hKEnv, kchar_t val);
@@ -429,7 +471,7 @@ protected:
 	friend void KniSetIndirectULong(HKENV hKEnv, kulong_t val);
 	friend void KniSetIndirectFloat(HKENV hKEnv, kfloat_t val);
 	friend void KniSetIndirectDouble(HKENV hKEnv, kdouble_t val);
-	friend void KniSetIndirectString(HKENV hKEnv, kstring_t val);
+	friend void KniSetIndirectString(HKENV hKEnv, kstring_t val, knuint_t length);
 
 	friend void KniLoadBool(HKENV hKEnv, kbool_t val);
 	friend void KniLoadChar(HKENV hKEnv, kchar_t val);
@@ -443,7 +485,7 @@ protected:
 	friend void KniLoadULong(HKENV hKEnv, kulong_t val);
 	friend void KniLoadFloat(HKENV hKEnv, kfloat_t val);
 	friend void KniLoadDouble(HKENV hKEnv, kdouble_t val);
-	friend void KniLoadString(HKENV hKEnv, kstring_t val);
+	friend void KniLoadString(HKENV hKEnv, kstring_t val, knuint_t length);
 
 	friend void KniLoadLocal(HKENV hKEnv, kushort_t index);
 	friend void KniLoadArg(HKENV hKEnv, kushort_t index);
@@ -513,9 +555,11 @@ protected:
 	friend KRESULT KniInvokeStatic(HKENV hKEnv, HKCLASS hKClass, HKMETHOD hKMethod);
 	friend KRESULT KniInvokeObject(HKENV hKEnv);
 
-	friend void KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC *pKExcFunc);
-	friend void KniLeaveProtectedRegion(HKENV hKEnv);
-	friend void KniThrowException(HKENV hKEnv);
+	friend kbool_t KniHasException(HKENV hKEnv);
+	friend void KniPrintExceptionDescription(HKENV hKEnv);
+	friend void KniClearException(HKENV hKEnv);
+	friend void KniThrowException(HKENV hKEnv, HKFIELD hKFCode);
+	friend void KniThrowExceptionEx(HKENV hKEnv, kstring_t message, knuint_t length);
 
 	friend void KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes, kushort_t count);
 

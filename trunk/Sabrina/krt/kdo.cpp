@@ -16,8 +16,6 @@
 //===================================================
 // Defines
 
-#define GET_PRIMITIVE_TYPE(tag) (env->primitiveTypes[(unsigned)tag])
-
 #define GC_ALLOC(len)		(env->gc->alloc(len))
 #define GC_REGISTER(p)		env->gc->addRoot(p)
 #define GC_UNREGISTER(p)	env->gc->removeRoot(p)
@@ -287,6 +285,8 @@ KEnvironment::EXECUTOR * KEnvironment::defaultExecutors[] =
 
 	KEnvironment::do_ldthis,
 	KEnvironment::do_ldnull,
+	KEnvironment::do_ldtype,
+	KEnvironment::do_ldmethod,
 
 	KEnvironment::do_ldloc,
 	KEnvironment::do_ldloca,
@@ -483,7 +483,7 @@ void KEnvironment::do_ldstr(KEnvironment *env)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
-	env->stackPushString(env->strings[tok]);
+	env->stackPushString(env->strings[tok], env->stringLengths[tok]);
 }
 
 
@@ -497,6 +497,22 @@ void KEnvironment::do_ldnull(KEnvironment *env)
 	env->stackPushNull();
 }
 
+void KEnvironment::do_ldtype(KEnvironment *env)
+{
+	ktoken32_t tok;
+	BCREAD(tok, ktoken32_t);
+
+	env->stackPushRaw((void *) env->module->typeList[tok]);
+}
+
+void KEnvironment::do_ldmethod(KEnvironment *env)
+{
+	ktoken16_t clstok, mettok;
+	BCREAD(clstok, ktoken16_t);
+	BCREAD(mettok, ktoken16_t);
+
+	env->stackPushRaw(env->module->classList[clstok]->methodList[mettok]);
+}
 
 void KEnvironment::do_ldloc(KEnvironment *env)
 {
@@ -798,7 +814,6 @@ void KEnvironment::do_enter(KEnvironment *env)
 	const TypeDef *excType = env->module->typeList[tok];
 
 	KExceptionHandler handler = { };
-	handler.native = false;
 	handler.excType = excType;
 	handler.frame = env->frame;
 	handler.addr = env->ip + offset;
@@ -1383,7 +1398,7 @@ void KEnvironment::do_cast(KEnvironment *env)
 				env->stackPushULong((kulong_t)0);
 				break;
 			case KT_STRING:
-				env->stackPushString(NULL);
+				env->stackPushString(NULL, 0);
 				break;
 			}
 		}

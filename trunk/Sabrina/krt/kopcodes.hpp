@@ -21,6 +21,8 @@ enum OpCodes
 
 	OP_LDTHIS,
 	OP_LDNULL,
+	OP_LDTYPE,
+	OP_LDMETHOD,
 
 	OP_LDLOC,
 	OP_LDLOCA,

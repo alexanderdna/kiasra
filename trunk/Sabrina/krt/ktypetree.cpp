@@ -215,6 +215,7 @@ const TypeDef * KTypeTree::add(ktypetag_t tag, kushort_t dim, const void *udt)
 {
 	TypeDef type = { tag, dim };
 	type.cls = (ClassDef *)udt;
+	type.size = sizeof(TypeDef);
 
 	TypeOrd ord = { };
 	ord.type = type;

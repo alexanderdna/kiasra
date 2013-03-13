@@ -74,9 +74,6 @@ typedef void * HKENV;
 /* Native extern function prototype */
 typedef NINVOKE_RESULT (*NFUNC)(HKENV hKEnv);
 
-/* Exception handling function prototype */
-typedef void (*KEXCFUNC)(HKENV hKEnv);
-
 typedef unsigned char  kbool_t;
 typedef wchar_t        kchar_t;
 typedef int8_t         kbyte_t;
@@ -335,7 +332,7 @@ void KNI_API KniSetLocalFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 /* Sets double value to local variable */
 void KNI_API KniSetLocalDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 /* Sets string value to local variable */
-void KNI_API KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val);
+void KNI_API KniSetLocalString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
 
 /* Sets bool value to argument */
 void KNI_API KniSetArgBool(HKENV hKEnv, kushort_t index, kbool_t val);
@@ -362,7 +359,7 @@ void KNI_API KniSetArgFloat(HKENV hKEnv, kushort_t index, kfloat_t val);
 /* Sets double value to argument */
 void KNI_API KniSetArgDouble(HKENV hKEnv, kushort_t index, kdouble_t val);
 /* Sets string value to argument */
-void KNI_API KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val);
+void KNI_API KniSetArgString(HKENV hKEnv, kushort_t index, kstring_t val, knuint_t length);
 
 
 /* Sets bool value to instance field */
@@ -390,7 +387,7 @@ void KNI_API KniSetFieldFloat(HKENV hKEnv, HKFIELD hKField, kfloat_t val);
 /* Sets double value to instance field */
 void KNI_API KniSetFieldDouble(HKENV hKEnv, HKFIELD hKField, kdouble_t val);
 /* Sets string value to instance field */
-void KNI_API KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val);
+void KNI_API KniSetFieldString(HKENV hKEnv, HKFIELD hKField, kstring_t val, knuint_t length);
 
 
 /* Sets bool value to static field */
@@ -418,7 +415,7 @@ void KNI_API KniSetStaticFieldFloat(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKFiel
 /* Sets double value to static field */
 void KNI_API KniSetStaticFieldDouble(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
 /* Sets string value to static field */
-void KNI_API KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val);
+void KNI_API KniSetStaticFieldString(HKENV hKEnv, HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
 
 
 /* Sets bool value to array element */
@@ -446,7 +443,7 @@ void KNI_API KniSetElementFloat(HKENV hKEnv, knuint_t index, kfloat_t val);
 /* Sets double value to array element */
 void KNI_API KniSetElementDouble(HKENV hKEnv, knuint_t index, kdouble_t val);
 /* Sets string value to array element */
-void KNI_API KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val);
+void KNI_API KniSetElementString(HKENV hKEnv, knuint_t index, kstring_t val, knuint_t length);
 
 
 /* Sets bool value to indirect object */
@@ -474,7 +471,7 @@ void KNI_API KniSetIndirectFloat(HKENV hKEnv, kfloat_t val);
 /* Sets double value to indirect object */
 void KNI_API KniSetIndirectDouble(HKENV hKEnv, kdouble_t val);
 /* Sets string value to indirect object */
-void KNI_API KniSetIndirectString(HKENV hKEnv, kstring_t val);
+void KNI_API KniSetIndirectString(HKENV hKEnv, kstring_t val, knuint_t length);
 
 /*===================================================*/
 
@@ -505,7 +502,7 @@ void KNI_API KniLoadFloat(HKENV hKEnv, kfloat_t val);
 /* Loads double value onto stack */
 void KNI_API KniLoadDouble(HKENV hKEnv, kdouble_t val);
 /* Loads string value onto stack */
-void KNI_API KniLoadString(HKENV hKEnv, kstring_t val);
+void KNI_API KniLoadString(HKENV hKEnv, kstring_t val, knuint_t length);
 
 /* Loads local variable onto stack */
 void KNI_API KniLoadLocal(HKENV hKEnv, kushort_t index);
@@ -639,12 +636,16 @@ KRESULT KNI_API KniInvoke(HKENV hKEnv, HKMETHOD hKMethod);
 /* Invokes a delegate object on stack top */
 KRESULT KNI_API KniInvokeObject(HKENV hKEnv);
 
-/* Marks the beginning of a protected region */
-void KNI_API KniEnterProtectedRegion(HKENV hKEnv, HKTYPE hKTypeExc, KEXCFUNC *pKExcFunc);
-/* Marks the end of a protected region */
-void KNI_API KniLeaveProtectedRegion(HKENV hKEnv);
+/* Checks if an exception has been thrown */
+kbool_t KNI_API KniHasException(HKENV hKEnv);
+/* Prints the stack trace of the current exception to the standard error output (stderr) */
+void KNI_API KniPrintExceptionDescription(HKENV hKEnv);
+/* Clears the current exception */
+void KNI_API KniClearException(HKENV hKEnv);
 /* Throws an exception loaded onto stack */
-void KNI_API KniThrowException(HKENV hKEnv);
+void KNI_API KniThrowException(HKENV hKEnv, HKFIELD hKFCode);
+/* Throws an exception loaded onto stack */
+void KNI_API KniThrowExceptionEx(HKENV hKEnv, kstring_t message, knuint_t length);
 
 /* Initializes local variables for current native method */
 void KNI_API KniInitLocals(HKENV hKEnv, HKTYPE *pHKTypes, kushort_t count);

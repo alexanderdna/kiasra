@@ -99,6 +99,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="kenv.cpp" />
+    <ClCompile Include="kenv_stack.cpp" />
     <ClCompile Include="kgc.cpp" />
     <ClCompile Include="kni.cpp" />
     <ClCompile Include="kobject.cpp" />

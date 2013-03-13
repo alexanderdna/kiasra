@@ -49,7 +49,8 @@ public:
 protected:
 	struct
 	{
-		uint32_t rowCount;
+		uint32_t   rowCount;
+		kuint_t   *lengths;
 		kstring_t *rows;
 	} stringTable;
 
