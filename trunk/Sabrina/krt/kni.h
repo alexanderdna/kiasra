@@ -44,7 +44,8 @@ typedef enum ktypetag_t
 	KT_ARRAY   = 0x0100,
 	KT_OBJECT  = 0x1000,
 	KT_RAW     = 0x2000,
-	KT_REF     = 0x4000,
+
+	KT_BYREF     = 0x4000,	/* a flag to determine address object */
 
 	KT_SCALAR_MASK = KT_VOID | KT_BOOL | KT_CHAR | KT_BYTE | KT_SBYTE |
 					KT_SHORT | KT_USHORT | KT_INT | KT_UINT | KT_LONG | KT_ULONG |

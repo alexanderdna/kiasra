@@ -54,9 +54,6 @@ public:
 
 	KObject & operator=(const KObject &obj);
 
-	// for assignment (storing)
-	void accept(const KObject &obj);
-
 	const TypeDef * getType(void) const;
 
 	knuint_t getLength(void) const;

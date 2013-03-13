@@ -6,7 +6,9 @@
 #include <cstring>
 
 #define IS_STRING(type) (type && ((type->tag & KT_SCALAR_MASK) == KT_STRING && !type->dim))
-#define IS_REF(type)    (type && (type->dim || (type->cls)))
+
+// Checks if `type` is array, class or delegate, while not ByRef
+#define IS_REF(type)    (type && ((type->dim || (type->cls)) && ((type->tag & KT_BYREF) == 0)))
 
 KGC          *KObject::gc;
 
@@ -56,23 +58,6 @@ KObject & KObject::operator=(const KObject &obj)
 	}
 
 	return *this;
-}
-
-//public
-void KObject::accept(const KObject &obj)
-{
-	if (this != &obj)
-	{
-		this->clean();
-
-		if (obj.type != KObject::nullType)
-			this->type = obj.type;
-		
-		this->length = obj.length;
-		this->vLong = obj.vLong;
-		if (IS_STRING(obj.type))
-			this->vString = KObject::strdup(obj.vString, obj.length);
-	}
 }
 
 //public
@@ -321,7 +306,7 @@ void KObject::setRaw(kref_t raw)
 //public
 void KObject::setField(ktoken16_t tok, const KObject &obj)
 {
-	this->vObj[tok].accept(obj);
+	this->vObj[tok] = obj;
 
 	if (IS_REF(obj.type) && obj.vObj)
 		KObject::gc->mark(obj.vObj);
@@ -330,7 +315,7 @@ void KObject::setField(ktoken16_t tok, const KObject &obj)
 //public
 void KObject::setElement(knuint_t idx, const KObject &obj)
 {
-	this->vObj[idx].accept(obj);
+	this->vObj[idx] = obj;
 
 	if (IS_REF(obj.type) && obj.vObj)
 		KObject::gc->mark(obj.vObj);
