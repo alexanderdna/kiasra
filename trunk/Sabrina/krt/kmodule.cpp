@@ -852,7 +852,7 @@ ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 	//		u4 entry
 
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 
 	if (stream[0] != 0xAA
 		|| stream[1] != 0xCE
@@ -921,7 +921,7 @@ ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 void ModuleLoader::loadStringTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -953,7 +953,7 @@ void ModuleLoader::loadStringTable()
 void ModuleLoader::loadTypeTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -982,7 +982,7 @@ void ModuleLoader::loadTypeTable()
 void ModuleLoader::loadModuleTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1007,7 +1007,7 @@ void ModuleLoader::loadModuleTable()
 void ModuleLoader::loadClassTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1045,7 +1045,7 @@ void ModuleLoader::loadClassTable()
 void ModuleLoader::loadDelegateTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1083,7 +1083,7 @@ void ModuleLoader::loadDelegateTable()
 void ModuleLoader::loadFieldTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1111,7 +1111,7 @@ void ModuleLoader::loadFieldTable()
 void ModuleLoader::loadMethodTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1132,7 +1132,7 @@ void ModuleLoader::loadMethodTable()
 		_READ(row.paramList, ktoken16_t);
 		_READ(row.localList, ktoken16_t);
 
-		_READ(row.addr, knuint_t);
+		_READ(row.addr, kuint_t);
 	}
 
 	this->methodTable.rowCount = rowCount;
@@ -1143,7 +1143,7 @@ void ModuleLoader::loadMethodTable()
 void ModuleLoader::loadParamTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1172,7 +1172,7 @@ void ModuleLoader::loadParamTable()
 void ModuleLoader::loadDelegateParamTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
@@ -1201,7 +1201,7 @@ void ModuleLoader::loadDelegateParamTable()
 void ModuleLoader::loadLocalTable()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
 	pos += sizeof(uint16_t);
@@ -1221,7 +1221,7 @@ void ModuleLoader::loadLocalTable()
 void ModuleLoader::loadCode()
 {
 	unsigned char *stream = this->stream;
-	uint32_t pos = this->pos;
+	knuint_t pos = this->pos;
 
 	uint32_t codeSize = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);

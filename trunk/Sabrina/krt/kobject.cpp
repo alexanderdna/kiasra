@@ -67,7 +67,7 @@ const TypeDef * KObject::getType(void) const
 }
 
 //public
-knuint_t KObject::getLength(void) const
+kuint_t KObject::getLength(void) const
 {
 	return this->length;
 }
@@ -279,7 +279,7 @@ void KObject::setDouble(kdouble_t val)
 }
 
 //public
-void KObject::setString(kstring_t val, knuint_t length)
+void KObject::setString(kstring_t val, kuint_t length)
 {
 	this->clean();
 
@@ -288,11 +288,11 @@ void KObject::setString(kstring_t val, knuint_t length)
 }
 
 //public
-void KObject::setRef(KObject *ref, knuint_t len)
+void KObject::setRef(KObject *ref, kuint_t length)
 {
 	this->clean();
 
-	this->length = len;
+	this->length = length;
 	this->vObj = ref;
 }
 

@@ -523,7 +523,7 @@ const TypeDef * KEnvironment::makeElementType(const TypeDef *typeDef)
 //protected static
 void KEnvironment::allocClassInstance(const ClassDef *classDef, KObject &outObj)
 {
-	knuint_t fieldCount = classDef->iFieldCount;
+	kuint_t fieldCount = classDef->iFieldCount;
 	FieldDef **fieldList = classDef->iFieldList;
 
 	KObject *flds = GC_ALLOC(fieldCount);
@@ -551,7 +551,7 @@ void KEnvironment::allocDelegateInstance(const DelegateDef *delegateDef, KObject
 }
 
 //protected static
-void KEnvironment::allocArray(const TypeDef *arrayType, knuint_t length, KObject &outObj)
+void KEnvironment::allocArray(const TypeDef *arrayType, kuint_t length, KObject &outObj)
 {
 	const TypeDef *elemType = KEnvironment::makeElementType(arrayType);
 	KObject *elems = GC_ALLOC(length);
@@ -565,13 +565,13 @@ void KEnvironment::allocArray(const TypeDef *arrayType, knuint_t length, KObject
 }
 
 //protected static
-void KEnvironment::allocArrayBaking(const TypeDef *arrayType, knuint_t length, KObject &outObj)
+void KEnvironment::allocArrayBaking(const TypeDef *arrayType, kuint_t length, KObject &outObj)
 {
 	const TypeDef *elemType = KEnvironment::makeElementType(arrayType);
 	KObject *elems = GC_ALLOC(length);
 
 	for (klong_t i = length - 1; i >= 0; --i)
-		elems[i] = KEnvironment::stackPeek((knuint_t)((klong_t)length - i));
+		elems[i] = KEnvironment::stackPeek((kuint_t)((klong_t)length - i));
 
 	outObj.type = arrayType;
 	outObj.vObj = elems;
@@ -579,12 +579,12 @@ void KEnvironment::allocArrayBaking(const TypeDef *arrayType, knuint_t length, K
 }
 
 //protected static
-void KEnvironment::initLocals(const TypeDef **types, knuint_t count)
+void KEnvironment::initLocals(const TypeDef **types, kuint_t count)
 {
 	KObject *locals = GC_ALLOC(count);
 	GC_REGISTER(locals);
 
-	for (knuint_t i = 0; i < count; ++i)
+	for (kuint_t i = 0; i < count; ++i)
 		INIT_DEFAULT_VALUE(locals[i], types[i]);
 
 	KEnvironment::frame->locals = locals;

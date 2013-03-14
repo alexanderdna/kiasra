@@ -168,7 +168,7 @@ KRESULT KCS_API KcsCodeEmitR8(HKCODEGEN hKCodeGen, OpCodes opcode, double val)
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, OpCodes opcode, kstring_t val, knuint_t length)
+KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, OpCodes opcode, kstring_t val, kuint_t length)
 {
 	return KRESULT_OK;
 }

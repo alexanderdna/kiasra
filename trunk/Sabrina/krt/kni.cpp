@@ -699,7 +699,7 @@ void KNI_API KniSetLocalDouble(kushort_t index, kdouble_t val)
 	KEnvironment::locals[index].setDouble(val);
 }
 
-void KNI_API KniSetLocalString(kushort_t index, kstring_t val, knuint_t length)
+void KNI_API KniSetLocalString(kushort_t index, kstring_t val, kuint_t length)
 {
 	KEnvironment::locals[index].setString(val, length);
 }
@@ -776,7 +776,7 @@ void KNI_API KniSetArgDouble(kushort_t index, kdouble_t val)
 	KEnvironment::args[index].setDouble(val);
 }
 
-void KNI_API KniSetArgString(kushort_t index, kstring_t val, knuint_t length)
+void KNI_API KniSetArgString(kushort_t index, kstring_t val, kuint_t length)
 {
 	KEnvironment::args[index].setString(val, length);
 }
@@ -895,7 +895,7 @@ void KNI_API KniSetFieldDouble(HKFIELD hKField, kdouble_t val)
 	obj.getField(Fld->localIndex).setDouble(val);
 }
 
-void KNI_API KniSetFieldString(HKFIELD hKField, kstring_t val, knuint_t length)
+void KNI_API KniSetFieldString(HKFIELD hKField, kstring_t val, kuint_t length)
 {
 	const KObject &obj = KEnvironment::stackPop();
 	CHECK_SET_FIELD;
@@ -993,7 +993,7 @@ void KNI_API KniSetStaticFieldDouble(HKCLASS hKClass, HKFIELD hKField, kdouble_t
 	obj.getField(Fld->localIndex).setDouble(val);
 }
 
-void KNI_API KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length)
+void KNI_API KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, kuint_t length)
 {
 	const KObject &obj = Cls->module->staticData[Cls->localIndex];
 	obj.getField(Fld->localIndex).setString(val, length);
@@ -1133,7 +1133,7 @@ void KNI_API KniSetElementDouble(knuint_t index, kdouble_t val)
 	obj.getElement(index).setDouble(val);
 }
 
-void KNI_API KniSetElementString(knuint_t index, kstring_t val, knuint_t length)
+void KNI_API KniSetElementString(knuint_t index, kstring_t val, kuint_t length)
 {
 	const KObject &obj = KEnvironment::stackPop();
 	CHECK_SET_ELEMENT;
@@ -1234,7 +1234,7 @@ void KNI_API KniSetIndirectDouble(kdouble_t val)
 	obj.getRef()->setDouble(val);
 }
 
-void KNI_API KniSetIndirectString(kstring_t val, knuint_t length)
+void KNI_API KniSetIndirectString(kstring_t val, kuint_t length)
 {
 	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->setString(val, length);
@@ -1317,7 +1317,7 @@ void KNI_API KniLoadDouble(kdouble_t val)
 	KEnvironment::stackPushDouble(val);
 }
 
-void KNI_API KniLoadString(kstring_t val, knuint_t length)
+void KNI_API KniLoadString(kstring_t val, kuint_t length)
 {
 	KEnvironment::stackPushString(val, length);
 }
@@ -1504,14 +1504,14 @@ void KNI_API KniLoadNewDelegate(HKDELEGATE hKDelegate, HKMETHOD hKMethod)
 	KEnvironment::stackPush(obj);
 }
 
-void KNI_API KniLoadNewArray(HKTYPE hKType, knuint_t length)
+void KNI_API KniLoadNewArray(HKTYPE hKType, kuint_t length)
 {
 	KObject obj;
 	KEnvironment::allocArray(Typ, length, obj);
 	KEnvironment::stackPush(obj);
 }
 
-void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, knuint_t length)
+void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, kuint_t length)
 {
 	KObject obj;
 	KEnvironment::allocArrayBaking(Typ, length, obj);
@@ -1717,7 +1717,7 @@ void KNI_API KniThrowException(HKFIELD hKFCode)
 	KEnvironment::throwException();
 }
 
-void KNI_API KniThrowExceptionEx(kstring_t message, knuint_t length)
+void KNI_API KniThrowExceptionEx(kstring_t message, kuint_t length)
 {
 	const ClassDef *cls = KEnvironment::exceptions.klass;
 	
