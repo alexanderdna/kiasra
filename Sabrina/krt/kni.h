@@ -342,7 +342,7 @@ void KNI_API KniSetLocalFloat(kushort_t index, kfloat_t val);
 /* Sets double value to local variable */
 void KNI_API KniSetLocalDouble(kushort_t index, kdouble_t val);
 /* Sets string value to local variable */
-void KNI_API KniSetLocalString(kushort_t index, kstring_t val, knuint_t length);
+void KNI_API KniSetLocalString(kushort_t index, kstring_t val, kuint_t length);
 /* Sets raw value to local variable */
 void KNI_API KniSetLocalRaw(kushort_t index, kref_t val);
 /* Set null value to local variable */
@@ -373,7 +373,7 @@ void KNI_API KniSetArgFloat(kushort_t index, kfloat_t val);
 /* Sets double value to argument */
 void KNI_API KniSetArgDouble(kushort_t index, kdouble_t val);
 /* Sets string value to argument */
-void KNI_API KniSetArgString(kushort_t index, kstring_t val, knuint_t length);
+void KNI_API KniSetArgString(kushort_t index, kstring_t val, kuint_t length);
 /* Sets raw value to argument */
 void KNI_API KniSetArgRaw(kushort_t index, kref_t val);
 /* Set null value to argument */
@@ -405,7 +405,7 @@ void KNI_API KniSetFieldFloat(HKFIELD hKField, kfloat_t val);
 /* Sets double value to instance field */
 void KNI_API KniSetFieldDouble(HKFIELD hKField, kdouble_t val);
 /* Sets string value to instance field */
-void KNI_API KniSetFieldString(HKFIELD hKField, kstring_t val, knuint_t length);
+void KNI_API KniSetFieldString(HKFIELD hKField, kstring_t val, kuint_t length);
 /* Sets raw value to instannce field */
 void KNI_API KniSetFieldRaw(HKFIELD hKField, kref_t val);
 /* Set null value to instance field */
@@ -437,7 +437,7 @@ void KNI_API KniSetStaticFieldFloat(HKCLASS hKClass, HKFIELD hKField, kfloat_t v
 /* Sets double value to static field */
 void KNI_API KniSetStaticFieldDouble(HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
 /* Sets string value to static field */
-void KNI_API KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
+void KNI_API KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, kuint_t length);
 /* Sets raw value to static field */
 void KNI_API KniSetStaticFieldRaw(HKCLASS hKClass, HKFIELD hKField, kref_t val);
 /* Set null value to static field */
@@ -469,7 +469,7 @@ void KNI_API KniSetElementFloat(knuint_t index, kfloat_t val);
 /* Sets double value to array element */
 void KNI_API KniSetElementDouble(knuint_t index, kdouble_t val);
 /* Sets string value to array element */
-void KNI_API KniSetElementString(knuint_t index, kstring_t val, knuint_t length);
+void KNI_API KniSetElementString(knuint_t index, kstring_t val, kuint_t length);
 /* Sets raw value to array element */
 void KNI_API KniSetElementRaw(knuint_t index, kref_t val);
 /* Sets null value to array element */
@@ -501,7 +501,7 @@ void KNI_API KniSetIndirectFloat(kfloat_t val);
 /* Sets double value to indirect object */
 void KNI_API KniSetIndirectDouble(kdouble_t val);
 /* Sets string value to indirect object */
-void KNI_API KniSetIndirectString(kstring_t val, knuint_t length);
+void KNI_API KniSetIndirectString(kstring_t val, kuint_t length);
 /* Sets raw value to indirect object */
 void KNI_API KniSetIndirectRaw(kref_t val);
 /* Sets null value to indirect object */
@@ -536,7 +536,7 @@ void KNI_API KniLoadFloat(kfloat_t val);
 /* Loads double value onto stack */
 void KNI_API KniLoadDouble(kdouble_t val);
 /* Loads string value onto stack */
-void KNI_API KniLoadString(kstring_t val, knuint_t length);
+void KNI_API KniLoadString(kstring_t val, kuint_t length);
 /* Loads raw value onto stack */
 void KNI_API KniLoadRaw(kref_t val);
 
@@ -604,9 +604,9 @@ void KNI_API KniLoadNewObject(HKCLASS hKClass);
 /* Loads new delegate instance onto stack */
 void KNI_API KniLoadNewDelegate(HKDELEGATE hKDelegate, HKMETHOD hKMethod);
 /* Loads new array onto stack */
-void KNI_API KniLoadNewArray(HKTYPE hKType, knuint_t length);
+void KNI_API KniLoadNewArray(HKTYPE hKType, kuint_t length);
 /* Loads new array onto stack, elements are already loaded */
-void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, knuint_t length);
+void KNI_API KniLoadNewArrayBaking(HKTYPE hKType, kuint_t length);
 
 /*===================================================*/
 
@@ -681,7 +681,7 @@ void KNI_API KniClearException(void);
 /* Throws an exception loaded onto stack */
 void KNI_API KniThrowException(HKFIELD hKFCode);
 /* Throws an exception loaded onto stack */
-void KNI_API KniThrowExceptionEx(kstring_t message, knuint_t length);
+void KNI_API KniThrowExceptionEx(kstring_t message, kuint_t length);
 
 /* Initializes local variables for current native method */
 void KNI_API KniInitLocals(HKTYPE *pHKTypes, kushort_t count);

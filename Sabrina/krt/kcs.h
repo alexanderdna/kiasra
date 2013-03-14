@@ -131,7 +131,7 @@ KRESULT KCS_API KcsCodeEmitI8(HKCODEGEN hKCodeGen, OpCodes opcode, int64_t val);
 KRESULT KCS_API KcsCodeEmitU8(HKCODEGEN hKCodeGen, OpCodes opcode, uint64_t val);
 KRESULT KCS_API KcsCodeEmitR4(HKCODEGEN hKCodeGen, OpCodes opcode, float val);
 KRESULT KCS_API KcsCodeEmitR8(HKCODEGEN hKCodeGen, OpCodes opcode, double val);
-KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, OpCodes opcode, kstring_t val, knuint_t length);
+KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, OpCodes opcode, kstring_t val, kuint_t length);
 KRESULT KCS_API KcsCodeEmitLocal(HKCODEGEN hKCodeGen, OpCodes opcode, HKLOCALBUILDER hKLocalBuilder);
 KRESULT KCS_API KcsCodeEmitJump(HKCODEGEN hKCodeGen, OpCodes opcode, HKCODELABEL hKCodeLabel);
 KRESULT KCS_API KcsCodeEmitClass(HKCODEGEN hKCodeGen, OpCodes opcode, HKCLASS hKClass);

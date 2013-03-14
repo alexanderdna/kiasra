@@ -171,7 +171,7 @@ void KEnvironment::stackPushDouble(kdouble_t val)
 }
 
 //protected
-void KEnvironment::stackPushString(kstring_t val, knuint_t length)
+void KEnvironment::stackPushString(kstring_t val, kuint_t length)
 {
 	if (KEnvironment::stackPointer >= KEnvironment::stackSize)
 		KEnvironment::stackExpand();
@@ -182,7 +182,7 @@ void KEnvironment::stackPushString(kstring_t val, knuint_t length)
 }
 
 //protected
-void KEnvironment::stackPushStringMoved(kstring_t val, knuint_t len)
+void KEnvironment::stackPushStringMoved(kstring_t val, kuint_t len)
 {
 	if (KEnvironment::stackPointer >= KEnvironment::stackSize)
 		KEnvironment::stackExpand();

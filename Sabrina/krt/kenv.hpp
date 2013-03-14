@@ -136,10 +136,10 @@ protected:
 
 	static void allocClassInstance(const ClassDef *classDef, KObject &outObj);
 	static void allocDelegateInstance(const DelegateDef *delegateDef, KObject *objThis, const MethodDef *method, KObject &outObj);
-	static void allocArray(const TypeDef *arrayType, knuint_t length, KObject &outObj);
-	static void allocArrayBaking(const TypeDef *arrayType, knuint_t length, KObject &outObj);
+	static void allocArray(const TypeDef *arrayType, kuint_t length, KObject &outObj);
+	static void allocArrayBaking(const TypeDef *arrayType, kuint_t length, KObject &outObj);
 
-	static void initLocals(const TypeDef **types, knuint_t count);
+	static void initLocals(const TypeDef **types, kuint_t count);
 	
 	// Calls
 
@@ -169,8 +169,8 @@ protected:
 	static void stackPushULong(kulong_t val);
 	static void stackPushFloat(kfloat_t val);
 	static void stackPushDouble(kdouble_t val);
-	static void stackPushString(kstring_t val, knuint_t length);
-	static void stackPushStringMoved(kstring_t val, knuint_t len);
+	static void stackPushString(kstring_t val, kuint_t length);
+	static void stackPushStringMoved(kstring_t val, kuint_t len);
 	static void stackPushRaw(kref_t val);
 	static KObject & stackPeek(void);
 	static KObject & stackPeek(knuint_t offset);
@@ -414,7 +414,7 @@ protected:
 	friend void KniSetLocalULong(kushort_t index, kulong_t val);
 	friend void KniSetLocalFloat(kushort_t index, kfloat_t val);
 	friend void KniSetLocalDouble(kushort_t index, kdouble_t val);
-	friend void KniSetLocalString(kushort_t index, kstring_t val, knuint_t length);
+	friend void KniSetLocalString(kushort_t index, kstring_t val, kuint_t length);
 	friend void KniSetLocalRaw(kushort_t index, kref_t val);
 	friend void KniSetLocalNull(kushort_t index);
 
@@ -430,7 +430,7 @@ protected:
 	friend void KniSetArgULong(kushort_t index, kulong_t val);
 	friend void KniSetArgFloat(kushort_t index, kfloat_t val);
 	friend void KniSetArgDouble(kushort_t index, kdouble_t val);
-	friend void KniSetArgString(kushort_t index, kstring_t val, knuint_t length);
+	friend void KniSetArgString(kushort_t index, kstring_t val, kuint_t length);
 	friend void KniSetArgRaw(kushort_t index, kref_t val);
 	friend void KniSetArgNull(kushort_t index);
 
@@ -446,7 +446,7 @@ protected:
 	friend void KniSetFieldULong(HKFIELD hKField, kulong_t val);
 	friend void KniSetFieldFloat(HKFIELD hKField, kfloat_t val);
 	friend void KniSetFieldDouble(HKFIELD hKField, kdouble_t val);
-	friend void KniSetFieldString(HKFIELD hKField, kstring_t val, knuint_t length);
+	friend void KniSetFieldString(HKFIELD hKField, kstring_t val, kuint_t length);
 	friend void KniSetFieldRaw(HKFIELD hKField, kref_t val);
 	friend void KniSetFieldNull(HKFIELD hKField);
 
@@ -462,7 +462,7 @@ protected:
 	friend void KniSetStaticFieldULong(HKCLASS hKClass, HKFIELD hKField, kulong_t val);
 	friend void KniSetStaticFieldFloat(HKCLASS hKClass, HKFIELD hKField, kfloat_t val);
 	friend void KniSetStaticFieldDouble(HKCLASS hKClass, HKFIELD hKField, kdouble_t val);
-	friend void KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, knuint_t length);
+	friend void KniSetStaticFieldString(HKCLASS hKClass, HKFIELD hKField, kstring_t val, kuint_t length);
 	friend void KniSetStaticFieldRaw(HKCLASS hKClass, HKFIELD hKField, kref_t val);
 	friend void KniSetStaticFieldNull(HKCLASS hKClass, HKFIELD hKField);
 
@@ -478,7 +478,7 @@ protected:
 	friend void KniSetElementULong(knuint_t index, kulong_t val);
 	friend void KniSetElementFloat(knuint_t index, kfloat_t val);
 	friend void KniSetElementDouble(knuint_t index, kdouble_t val);
-	friend void KniSetElementString(knuint_t index, kstring_t val, knuint_t length);
+	friend void KniSetElementString(knuint_t index, kstring_t val, kuint_t length);
 	friend void KniSetElementRaw(knuint_t index, kref_t val);
 	friend void KniSetElementNull(knuint_t index);
 
@@ -494,7 +494,7 @@ protected:
 	friend void KniSetIndirectULong(kulong_t val);
 	friend void KniSetIndirectFloat(kfloat_t val);
 	friend void KniSetIndirectDouble(kdouble_t val);
-	friend void KniSetIndirectString(kstring_t val, knuint_t length);
+	friend void KniSetIndirectString(kstring_t val, kuint_t length);
 	friend void KniSetIndirectRaw(kref_t val);
 	friend void KniSetIndirectNull(void);
 
@@ -510,7 +510,7 @@ protected:
 	friend void KniLoadULong(kulong_t val);
 	friend void KniLoadFloat(kfloat_t val);
 	friend void KniLoadDouble(kdouble_t val);
-	friend void KniLoadString(kstring_t val, knuint_t length);
+	friend void KniLoadString(kstring_t val, kuint_t length);
 	friend void KniLoadRaw(kref_t val);
 
 	friend void KniLoadLocal(kushort_t index);
@@ -547,8 +547,8 @@ protected:
 
 	friend void KniLoadNewObject(HKCLASS hKClass);
 	friend void KniLoadNewDelegate(HKDELEGATE hKDelegate, HKMETHOD hKMethod);
-	friend void KniLoadNewArray(HKTYPE hKType, knuint_t length);
-	friend void KniLoadNewArrayBaking(HKTYPE hKType, knuint_t length);
+	friend void KniLoadNewArray(HKTYPE hKType, kuint_t length);
+	friend void KniLoadNewArrayBaking(HKTYPE hKType, kuint_t length);
 
 	friend void KniStoreLocal(kushort_t index);
 	friend void KniStoreArg(kushort_t index);
@@ -583,7 +583,7 @@ protected:
 	friend void KniPrintExceptionDescription();
 	friend void KniClearException();
 	friend void KniThrowException(HKFIELD hKFCode);
-	friend void KniThrowExceptionEx(kstring_t message, knuint_t length);
+	friend void KniThrowExceptionEx(kstring_t message, kuint_t length);
 
 	friend void KniInitLocals(HKTYPE *pHKTypes, kushort_t count);
 

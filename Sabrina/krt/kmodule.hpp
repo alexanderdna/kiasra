@@ -130,8 +130,8 @@ protected:
 	ktoken16_t entryMethod;
 
 	unsigned char *stream;
-	uint32_t pos;
-	uint32_t streamLength;
+	knuint_t pos;
+	knuint_t streamLength;
 
 	bool isCleaned;
 	

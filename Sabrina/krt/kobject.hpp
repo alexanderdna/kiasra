@@ -43,7 +43,7 @@ protected:
 		KObject  *vObj;	    // for class fields, array elements
 		kref_t    vRaw;
 	};
-	knuint_t length;        // array or string length
+	kuint_t length;        // array or string length
 
 public:
 	KObject(void);
@@ -56,7 +56,7 @@ public:
 
 	const TypeDef * getType(void) const;
 
-	knuint_t getLength(void) const;
+	kuint_t getLength(void) const;
 
 	kbool_t getBool(void) const;
 	kchar_t getChar(void) const;
@@ -93,9 +93,9 @@ public:
 	void setULong(kulong_t val);
 	void setFloat(kfloat_t val);
 	void setDouble(kdouble_t val);
-	void setString(kstring_t val, knuint_t length);
+	void setString(kstring_t val, kuint_t length);
 
-	void setRef(KObject *ref, knuint_t len);
+	void setRef(KObject *ref, kuint_t length);
 	void setRaw(kref_t raw);
 
 	void setField(ktoken16_t tok, const KObject &obj);
