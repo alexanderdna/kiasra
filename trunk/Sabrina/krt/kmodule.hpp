@@ -6,7 +6,7 @@
 
 class KEnvironment;
 
-class KModuleLoader
+class ModuleLoader
 {
 public:
 	enum class ModuleLoadError
@@ -14,6 +14,7 @@ public:
 		OK = 0,
 
 		InvalidPath,
+		InvalidModule,
 		InvalidLib,
 		CannotOpen,
 		CannotLoadLib,
@@ -108,11 +109,13 @@ protected:
 		ktoken32_t *rows;
 	} localTable;
 
-	kstring_t importerPath;
-	kstring_t path;
-	ModuleAttributes attrs;
+	KMODULEATTRIBUTES attrs;
 
-	KModuleLoader **moduleLoaders;
+	kstring_t importerPath;
+	kstring_t fullPath;
+	kstring_t filename;
+
+	ModuleLoader **moduleLoaders;
 
 	ModuleLoadError err;
 
@@ -143,14 +146,23 @@ protected:
 	ModuleDef *module;
 
 public:
-	KModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash);
-	~KModuleLoader(void);
+	static ModuleLoader * create(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename);
+
+protected:
+	ModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t fullPath, kstring_t filename);
+public:
+	~ModuleLoader(void);
 
 public:
 	bool load(void);
 
 	ModuleDef * getModule(void);
-	kstring_t getPath(void);
+
+	kstring_t getImporterPath(void);
+	kstring_t getFullPath(void);
+	kstring_t getFilename(void);
+
+	ModuleLoadError getError(void);
 
 	void onDispose(void);
 

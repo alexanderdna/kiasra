@@ -1,35 +1,59 @@
 #include "kcs.h"
 #include "kcompile.hpp"
 
+#include "kconfig.hpp"
 #include "kenv.hpp"
+#include "kmodule.hpp"
+
+#include "kstringutils.hpp"
 
 //===================================================
 
-static KcsErrors lastError;
+static KCSERRORS lastError;
 
-KcsErrors KCS_API KcsGetLastError(void)
+KCSERRORS KCS_API KcsGetLastError(void)
 {
 	return lastError;
 }
 
 KRESULT KCS_API KcsCreateEnvironment()
 {
-	KEnvironment::Initialize();
+	KEnvironment::initialize();
 	lastError = KCSE_NO_ERROR;
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsLoadModule(kstring_t name, kbool_t isSystem, HKMODULE *pHKModule)
+KRESULT KCS_API KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule)
 {
-	if (isSystem)
-	{
-		kstring_t systemLibPath = KEnvironment::getSystemLibPath();
+	ModuleLoader *loader;
 
+#ifdef ISWIN
+	const kchar_t *lastSlash = wcsrchr(szFullPath, '\\');
+#else
+	const kchar_t *lastSlash = wcsrchr(szFullPath, '/');
+#endif
+
+	if (attrs & KMODA_SYSTEM)
+	{
+		loader = KEnvironment::createModuleLoader(attrs, KEnvironment::getSystemLibPath(), lastSlash);
 	}
 	else
 	{
-
+		kstring_t dirPath = krt_getdirpath(szFullPath);
+		loader = KEnvironment::createModuleLoader(attrs, dirPath, lastSlash);
+		delete []dirPath;
 	}
+
+	if (!loader->load())
+	{
+		*pHKModule = NULL;
+		lastError = KCSE_CANNOT_LOAD_MODULE;
+		return KRESULT_ERR;
+	}
+
+	*pHKModule = loader->getModule();
+	lastError = KCSE_NO_ERROR;
+
 	return KRESULT_OK;
 }
 
@@ -38,29 +62,29 @@ HKTYPE KCS_API KcsGetType(HKMODULEBUILDER hKModuleBuilder, ktypetag_t tag, kusho
 	return NULL;
 }
 
-HKMODULEBUILDER KCS_API KcsCreateModuleBuilder(ModuleTypes type)
+HKMODULEBUILDER KCS_API KcsCreateModuleBuilder(KMODULETYPES type)
 {
 	return NULL;
 }
 
-HKCLASSBUILDER KCS_API KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t name, ClassAttributes attrs)
+HKCLASSBUILDER KCS_API KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t name, KCLASSATTRIBUTES attrs)
 {
 	return NULL;
 }
 
-HKDELEGATEBUILDER KCS_API KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t name, ClassAttributes attrs,
-											HKTYPE hReturnType, const ParamInfo *pParams)
+HKDELEGATEBUILDER KCS_API KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t name, KCLASSATTRIBUTES attrs,
+											HKTYPE hReturnType, const KPARAMINFO *pParams)
 {
 	return NULL;
 }
 
-HKFIELDBUILDER KCS_API KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t name, FieldAttributes attrs, HKTYPE hReturnType)
+HKFIELDBUILDER KCS_API KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t name, KFIELDATTRIBUTES attrs, HKTYPE hReturnType)
 {
 	return NULL;
 }
 
-HKMETHODBUILDER KCS_API KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t name, MethodAttributes attrs,
-										HKTYPE hReturnType, const ParamInfo *pParams)
+HKMETHODBUILDER KCS_API KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t name, KMETHODATTRIBUTES attrs,
+										HKTYPE hReturnType, const KPARAMINFO *pParams)
 {
 	return NULL;
 }

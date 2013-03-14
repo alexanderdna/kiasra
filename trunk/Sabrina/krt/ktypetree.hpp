@@ -47,6 +47,7 @@ public:
 	KTypeTree(void);
 	~KTypeTree(void);
 
+	// Returns a TypeDef with the given properties, creates it if it does not exist.
 	const TypeDef * add(ktypetag_t tag, kushort_t dim, const void *udt);
 	knuint_t getSize(void) const;
 };

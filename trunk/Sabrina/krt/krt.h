@@ -29,7 +29,7 @@ typedef void * HKEXCEPTION;
 
 //===================================================
 
-enum ModuleAttributes
+enum KMODULEATTRIBUTES
 {
 	KMODA_SYSTEM = 0,
 	KMODA_USER   = 1,
@@ -37,14 +37,14 @@ enum ModuleAttributes
 	KMODA_NATIVE = 4,
 };
 
-enum ClassAttributes
+enum KCLASSATTRIBUTES
 {
 	KCA_PUBLIC  = 0,
 	KCA_PRIVATE = 1,
 	KCA_STATIC  = 2,
 };
 
-enum FieldAttributes
+enum KFIELDATTRIBUTES
 {
 	KFA_PUBLIC  = 0,
 	KFA_PRIVATE = 1,
@@ -52,7 +52,7 @@ enum FieldAttributes
 	KFA_FINAL   = 4,
 };
 
-enum MethodAttributes
+enum KMETHODATTRIBUTES
 {
 	KMA_PUBLIC  = 0,
 	KMA_PRIVATE = 1,
