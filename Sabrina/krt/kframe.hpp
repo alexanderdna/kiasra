@@ -12,6 +12,7 @@ struct KFrame
 	KObject         *args;
 	KObject         *locals;
 	knuint_t         ip;
+	knuint_t         stackPointer; // for stack unwinding
 };
 
 typedef std::stack<KFrame> kcallstack_t;

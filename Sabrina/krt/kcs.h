@@ -25,14 +25,14 @@ extern "C" {
 
 /*===================================================*/
 
-enum ModuleTypes
+enum KMODULETYPES
 {
 	KMOD_WINDOW  = 0,
 	KMOD_CONSOLE = 1,
 	KMOD_LIBRARY = 2,
 };
 
-enum KcsErrors
+enum KCSERRORS
 {
 	KCSE_NO_ERROR = 0,
 
@@ -70,17 +70,17 @@ typedef HKBUILDER	HKTYPEBUILDER;
 typedef void *HKCODEGEN;
 typedef void *HKCODELABEL;
 
-typedef struct _ParamInfo
+typedef struct _KPARAMINFO
 {
 	kstring_t name;
 	HKTYPE declType;
 	kbool_t byRef;
-} ParamInfo;
+} KPARAMINFO;
 
 /*===================================================*/
 
 /* Gets the code of the last error */
-KcsErrors KCS_API KcsGetLastError(void);
+KCSERRORS KCS_API KcsGetLastError(void);
 
 /* Creates an environment for compiler services */
 KRESULT KCS_API KcsCreateEnvironment(void);
@@ -89,26 +89,26 @@ KRESULT KCS_API KcsCreateEnvironment(void);
 void KCS_API KcsDestroyEnvironment(void);
 
 /* Loads an existing module */
-KRESULT KCS_API KcsLoadModule(kstring_t name, kbool_t isSystem, HKMODULE *pHKModule);
+KRESULT KCS_API KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule);
 
 /* Gets a type having the given properties */
 HKTYPE KCS_API KcsGetType(HKMODULEBUILDER hKModuleBuilder, ktypetag_t tag, kushort_t dim, HKUSERTYPE hClassOrDelegate);
 
 /* Creates a builder service for making a new module */
-HKMODULEBUILDER KCS_API KcsCreateModuleBuilder(ModuleTypes type);
+HKMODULEBUILDER KCS_API KcsCreateModuleBuilder(KMODULETYPES type);
 
 /* Defines a new class in the given module */
-HKCLASSBUILDER KCS_API KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t name, ClassAttributes attrs);
+HKCLASSBUILDER KCS_API KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t name, KCLASSATTRIBUTES attrs);
 
 /* Defines a new delegate in the given module */
-HKDELEGATEBUILDER KCS_API KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t name, ClassAttributes attrs,
-											HKTYPE hReturnType, const ParamInfo *pParams);
+HKDELEGATEBUILDER KCS_API KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t name, KCLASSATTRIBUTES attrs,
+											HKTYPE hReturnType, const KPARAMINFO *pParams);
 /* Defines a new field in the given class */
-HKFIELDBUILDER KCS_API KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t name, FieldAttributes attrs, HKTYPE hReturnType);
+HKFIELDBUILDER KCS_API KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t name, KFIELDATTRIBUTES attrs, HKTYPE hReturnType);
 
 /* Defines a new method in the given class */
-HKMETHODBUILDER KCS_API KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t name, MethodAttributes attrs,
-										HKTYPE hReturnType, const ParamInfo *pParams);
+HKMETHODBUILDER KCS_API KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t name, KMETHODATTRIBUTES attrs,
+										HKTYPE hReturnType, const KPARAMINFO *pParams);
 
 /* Declares a new local variable in the given method */
 HKLOCALBUILDER KCS_API KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType);

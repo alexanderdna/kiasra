@@ -28,6 +28,7 @@
 #define MAX_NAME_BUFFER 2048
 char nameBuffer[MAX_NAME_BUFFER];
 
+// Gets the symbol name of a native member method, in the form: _Namespace_Class_Member
 const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 {
 	knuint_t len1 = wcslen(className);
@@ -63,11 +64,35 @@ const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 
 //=============================================================
 
-KModuleLoader::KModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash)
+//public static
+ModuleLoader * ModuleLoader::create(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename)
+{
+	kstring_t _dirPath = krt_getdirpath(importerPath);
+	kstring_t _importerPath = krt_strdup(importerPath);
+	kstring_t _fullPath = krt_strcat(_dirPath, filename);
+	kstring_t _filename = krt_getfilename(filename);
+
+	delete []_dirPath;
+
+	ModuleLoader *loader = new ModuleLoader(attrs, _importerPath, _fullPath, _filename);
+	if (loader == NULL)
+	{
+		delete []_importerPath;
+		delete []_fullPath;
+		delete []_filename;
+	}
+
+	return loader;
+}
+
+//protected
+ModuleLoader::ModuleLoader(KMODULEATTRIBUTES attrs,  kstring_t importerPath, kstring_t fullPath, kstring_t filename)
 	: moduleLoaders(NULL), err(ModuleLoadError::OK),
-	importerPath(importerPath), path(path), hash(hash), libHandle(NULL),
+	importerPath(importerPath), fullPath(fullPath), filename(filename),
+	hash(hash), libHandle(NULL),
 	stream(NULL), pos(0), isCleaned(true),
-	loadPhase(ModuleLoadPhase::Initial), module(NULL)
+	loadPhase(ModuleLoadPhase::Initial), module(NULL),
+	code(NULL)
 {
 	this->stringTable.rows = NULL;
 	this->typeTable.rows = NULL;
@@ -79,10 +104,10 @@ KModuleLoader::KModuleLoader(kstring_t importerPath, kstring_t path, uint32_t ha
 	this->paramTable.rows = NULL;
 	this->dparamTable.rows = NULL;
 	this->localTable.rows = NULL;
-	this->code = NULL;
 }
 
-KModuleLoader::~KModuleLoader()
+//public
+ModuleLoader::~ModuleLoader()
 {
 	if (!this->isCleaned)
 	{
@@ -91,7 +116,7 @@ KModuleLoader::~KModuleLoader()
 	}
 }
 
-bool KModuleLoader::load(void)
+bool ModuleLoader::load(void)
 {
 	if (this->open() == false)
 		return false;
@@ -105,73 +130,12 @@ bool KModuleLoader::load(void)
 	return true;
 }
 
-bool KModuleLoader::open(void)
+bool ModuleLoader::open(void)
 {
 	if (this->loadPhase >= ModuleLoadPhase::Opened)
 		return true;
 
-	char *pathA;
-
-	if (this->importerPath)
-	{
-		switch (this->path[0])
-		{
-		case 'd':
-			this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_USER);
-			break;
-		case 'D':
-			this->attrs = (ModuleAttributes)(KMODA_NATIVE | KMODA_SYSTEM);
-			break;
-		case 'k':
-			this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_USER);
-			break;
-		case 'K':
-			this->attrs = (ModuleAttributes)(KMODA_KIASRA | KMODA_SYSTEM);
-			break;
-		default:
-			this->err = ModuleLoadError::InvalidPath;
-			return false;
-		}
-
-		kstring_t absolutePath;
-
-		if (this->attrs & KMODA_USER)
-		{
-			const kchar_t * lastSlash;
-#ifdef ISWIN
-			lastSlash = wcsrchr(this->importerPath, '\\');
-#else
-			lastSlash = wcsrchr(this->importerPath, '/');
-#endif
-
-			knuint_t len = lastSlash - this->importerPath + 1;
-
-			absolutePath = krt_strcat(this->importerPath, len, this->path + 1, wcslen(this->path) - 1);
-		}
-		else
-		{
-			absolutePath = krt_strcat(KEnvironment::getSystemLibPath(), this->path + 1);
-		}
-
-		knuint_t len = wcslen(absolutePath);
-		pathA = new char[len + 1];
-		for (knuint_t i = 0; i < len; ++i)
-			pathA[i] = (char)absolutePath[i];
-		pathA[len] = 0;
-
-		delete []absolutePath;
-	}
-	else
-	{
-		// importerPath does not exist
-		// => we have absolute path already
-
-		knuint_t len = wcslen(this->path);
-		pathA = new char[len + 1];
-		for (knuint_t i = 0; i < len; ++i)
-			pathA[i] = (char)this->path[i];
-		pathA[len] = 0;
-	}
+	const char *pathA = krt_wcstostr(this->fullPath);
 
 	FILE *fp;
 
@@ -278,7 +242,7 @@ bool KModuleLoader::open(void)
 	return true;
 }
 
-bool KModuleLoader::loadMeta(void)
+bool ModuleLoader::loadMeta(void)
 {
 	if (this->loadPhase >= ModuleLoadPhase::Loaded)
 		return true;
@@ -307,7 +271,7 @@ bool KModuleLoader::loadMeta(void)
 	return true;
 }
 
-bool KModuleLoader::bake(void)
+bool ModuleLoader::bake(void)
 {
 	if (this->loadPhase >= ModuleLoadPhase::Baked)
 		return true;
@@ -346,15 +310,15 @@ bool KModuleLoader::bake(void)
 	kuint_t moduleCount = this->moduleTable.rowCount;
 	MetaModuleDef *metaModuleRows = this->moduleTable.rows;
 
-	KModuleLoader **moduleLoaderList = new KModuleLoader* [moduleCount];
+	ModuleLoader **moduleLoaderList = new ModuleLoader* [moduleCount];
 	ModuleDef **moduleList = new ModuleDef * [moduleCount];
 	module->moduleCount = moduleCount;
 	module->moduleList = moduleList;
 
 	for (kuint_t i = 0; i < moduleCount; ++i)
 	{
-		KModuleLoader *moduleLoader = KEnvironment::createModuleLoader(this->path,
-			strings[metaModuleRows[i].path], metaModuleRows[i].hash);
+		ModuleLoader *moduleLoader = KEnvironment::createModuleLoader((KMODULEATTRIBUTES)metaModuleRows[i].attrs,
+			this->fullPath, strings[metaModuleRows[i].path]);
 
 		if (moduleLoader->loadPhase < ModuleLoadPhase::Baked)
 		{
@@ -812,17 +776,32 @@ bool KModuleLoader::bake(void)
 	return true;
 }
 
-ModuleDef * KModuleLoader::getModule(void)
+ModuleDef * ModuleLoader::getModule(void)
 {
 	return this->module;
 }
 
-kstring_t KModuleLoader::getPath(void)
+kstring_t ModuleLoader::getImporterPath(void)
 {
-	return this->path;
+	return this->importerPath;
 }
 
-void KModuleLoader::onDispose(void)
+kstring_t ModuleLoader::getFullPath(void)
+{
+	return this->fullPath;
+}
+
+kstring_t ModuleLoader::getFilename(void)
+{
+	return this->filename;
+}
+
+ModuleLoader::ModuleLoadError ModuleLoader::getError(void)
+{
+	return err;
+}
+
+void ModuleLoader::onDispose(void)
 {
 	if (!this->isCleaned)
 	{
@@ -833,82 +812,35 @@ void KModuleLoader::onDispose(void)
 	//TODO: release this->module and all its resources
 }
 
-void KModuleLoader::clean()
+void ModuleLoader::clean()
 {
-	if (this->stringTable.rows)
-	{
-		delete [] this->stringTable.rows;
-		this->stringTable.rows = NULL;
-	}
+#define DELETE_IF_NOT_NULL(var) if (var) { delete []var; var = NULL; }
 
-	if (this->typeTable.rows)
-	{
-		delete [] this->typeTable.rows;
-		this->typeTable.rows = NULL;
-	}
+	DELETE_IF_NOT_NULL(this->importerPath);
+	DELETE_IF_NOT_NULL(this->fullPath);
+	DELETE_IF_NOT_NULL(this->filename);
 
-	if (this->moduleTable.rows)
-	{
-		delete [] this->moduleTable.rows;
-		this->moduleTable.rows = NULL;
-	}
+	DELETE_IF_NOT_NULL(this->stringTable.rows);
+	DELETE_IF_NOT_NULL(this->typeTable.rows);
+	DELETE_IF_NOT_NULL(this->moduleTable.rows);
+	DELETE_IF_NOT_NULL(this->classTable.rows);
+	DELETE_IF_NOT_NULL(this->delegateTable.rows);
+	DELETE_IF_NOT_NULL(this->fieldTable.rows);
+	DELETE_IF_NOT_NULL(this->methodTable.rows);
+	DELETE_IF_NOT_NULL(this->paramTable.rows);
+	DELETE_IF_NOT_NULL(this->dparamTable.rows);
+	DELETE_IF_NOT_NULL(this->localTable.rows);
 
-	if (this->classTable.rows)
-	{
-		delete [] this->classTable.rows;
-		this->classTable.rows = NULL;
-	}
-
-	if (this->delegateTable.rows)
-	{
-		delete [] this->delegateTable.rows;
-		this->delegateTable.rows = NULL;
-	}
-
-	if (this->fieldTable.rows)
-	{
-		delete [] this->fieldTable.rows;
-		this->fieldTable.rows = NULL;
-	}
-
-	if (this->methodTable.rows)
-	{
-		delete [] this->methodTable.rows;
-		this->methodTable.rows = NULL;
-	}
-
-	if (this->paramTable.rows)
-	{
-		delete [] this->paramTable.rows;
-		this->paramTable.rows = NULL;
-	}
-
-	if (this->dparamTable.rows)
-	{
-		delete [] this->dparamTable.rows;
-		this->dparamTable.rows = NULL;
-	}
-
-	if (this->localTable.rows)
-	{
-		delete [] this->localTable.rows;
-		this->localTable.rows = NULL;
-	}
+	DELETE_IF_NOT_NULL(this->stream);
 
 	if (this->code && this->loadPhase < ModuleLoadPhase::Baked)
 	{
 		delete [] this->code;
 		this->code = NULL;
 	}
-
-	if (this->stream)
-	{
-		delete [] this->stream;
-		this->stream = NULL;
-	}
 }
 
-KModuleLoader::ModuleValidationResult KModuleLoader::validateHeader()
+ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 {
 	//	VALID HEADER
 	//		u1 magic[] = { 0xAA, 0xCE, 0xCA, 0xDE }
@@ -986,7 +918,7 @@ KModuleLoader::ModuleValidationResult KModuleLoader::validateHeader()
 	return ModuleValidationResult::OK;
 }
 
-void KModuleLoader::loadStringTable()
+void ModuleLoader::loadStringTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1018,7 +950,7 @@ void KModuleLoader::loadStringTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadTypeTable()
+void ModuleLoader::loadTypeTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1047,7 +979,7 @@ void KModuleLoader::loadTypeTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadModuleTable()
+void ModuleLoader::loadModuleTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1062,9 +994,8 @@ void KModuleLoader::loadModuleTable()
 	{
 		MetaModuleDef &row = rows[i];
 
-		_VREAD(pathToken, ktoken32_t);
-		row.path = pathToken;
-
+		_READ(row.attrs, uint16_t);
+		_READ(row.path, ktoken32_t);
 		_READ(row.hash, uint32_t);
 	}
 
@@ -1073,7 +1004,7 @@ void KModuleLoader::loadModuleTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadClassTable()
+void ModuleLoader::loadClassTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1088,7 +1019,7 @@ void KModuleLoader::loadClassTable()
 	{
 		MetaClassDef &row = rows[i];
 
-		_READ(row.attrs, ClassAttributes);
+		_READ(row.attrs, KCLASSATTRIBUTES);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1111,7 +1042,7 @@ void KModuleLoader::loadClassTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadDelegateTable()
+void ModuleLoader::loadDelegateTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1126,7 +1057,7 @@ void KModuleLoader::loadDelegateTable()
 	{
 		MetaDelegateDef &row = rows[i];
 
-		_READ(row.attrs, ClassAttributes);
+		_READ(row.attrs, KCLASSATTRIBUTES);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1149,7 +1080,7 @@ void KModuleLoader::loadDelegateTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadFieldTable()
+void ModuleLoader::loadFieldTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1164,7 +1095,7 @@ void KModuleLoader::loadFieldTable()
 	{
 		MetaFieldDef &row = rows[i];
 
-		_READ(row.attrs, FieldAttributes);
+		_READ(row.attrs, KFIELDATTRIBUTES);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1177,7 +1108,7 @@ void KModuleLoader::loadFieldTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadMethodTable()
+void ModuleLoader::loadMethodTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1192,7 +1123,7 @@ void KModuleLoader::loadMethodTable()
 	{
 		MetaMethodDef &row = rows[i];
 
-		_READ(row.attrs, MethodAttributes);
+		_READ(row.attrs, KMETHODATTRIBUTES);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1209,7 +1140,7 @@ void KModuleLoader::loadMethodTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadParamTable()
+void ModuleLoader::loadParamTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1238,7 +1169,7 @@ void KModuleLoader::loadParamTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadDelegateParamTable()
+void ModuleLoader::loadDelegateParamTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1267,7 +1198,7 @@ void KModuleLoader::loadDelegateParamTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadLocalTable()
+void ModuleLoader::loadLocalTable()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;
@@ -1287,7 +1218,7 @@ void KModuleLoader::loadLocalTable()
 	this->pos = pos;
 }
 
-void KModuleLoader::loadCode()
+void ModuleLoader::loadCode()
 {
 	unsigned char *stream = this->stream;
 	uint32_t pos = this->pos;

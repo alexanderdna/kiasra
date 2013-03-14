@@ -15,7 +15,7 @@ class KObject;
 struct ModuleDef;
 class KTypeTree;
 
-class KModuleLoader;
+class ModuleLoader;
 
 class KEnvironment
 {
@@ -66,9 +66,9 @@ protected:
 
 	static KGC *gc;
 
-	static KModuleLoader             *rootModule;
-	static std::set<KModuleLoader *> *loadedModules;
-	static KModuleLoader             *corlibModule;
+	static ModuleLoader             *rootModule;
+	static std::set<ModuleLoader *> *loadedModules;
+	static ModuleLoader             *corlibModule;
 
 	static KObject *stack;
 	static knuint_t stackSize;
@@ -100,10 +100,10 @@ private:
 	~KEnvironment(void) { }
 
 public:
-	static void Initialize(void);
-	static void Finalize(void);
+	static void initialize(void);
+	static void finalize(void);
 
-	static KModuleLoader * createModuleLoader(kstring_t importerPath, kstring_t path, uint32_t hash);
+	static ModuleLoader * createModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename);
 
 	static kstring_t getSystemLibPath(void);
 
@@ -116,8 +116,8 @@ public:
 	static const MethodDef * findMethod(const ClassDef *cls, kstring_t name);
 	
 	static const TypeDef * createType(ktypetag_t tag, kushort_t dim);
-	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, ClassDef *cls);
-	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, DelegateDef *del);
+	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, const ClassDef *cls);
+	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, const DelegateDef *del);
 
 	static const TypeDef * makeByRefType(const TypeDef *typeDef);
 	static const TypeDef * makeByValType(const TypeDef *typeDef);
