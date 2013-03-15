@@ -13,7 +13,7 @@
 class KGC;
 class KObject;
 struct ModuleDef;
-class KTypeTree;
+class TypeTree;
 
 class ModuleLoader;
 
@@ -22,29 +22,24 @@ class KEnvironment
 	friend class KGC;
 
 public:
-	struct KExceptions
+	struct Exceptions
 	{
-		const ClassDef *klass;
+		const ClassDef *general;
 
-		const MethodDef *ctor;
-		const MethodDef *fromCode;
-		const MethodDef *fromMessage;
+		const ClassDef *invalidCast;
+		const ClassDef *invalidOperation;
+		const ClassDef *invalidArgument;
+		const ClassDef *nullArgument;
+		const ClassDef *nullReference;
+		const ClassDef *indexOutOfRange;
+		const ClassDef *divisionByZero;
 
-		const FieldDef *custom;
-		const FieldDef *invalidCast;
-		const FieldDef *invalidOperation;
-		const FieldDef *invalidArgument;
-		const FieldDef *nullArgument;
-		const FieldDef *nullReference;
-		const FieldDef *indexOutOfRange;
-		const FieldDef *divisionByZero;
-
-		const FieldDef *invalidOpCode;
+		const ClassDef *invalidOpCode;
 	};
 
 protected:
 	typedef void (EXECUTOR)(void);
-	typedef std::deque<const MethodDef *> ktracedeque_t;
+	typedef std::deque<const MethodDef *> tracedeque_t;
 
 protected:
 	static bool isInitialized;
@@ -54,7 +49,7 @@ protected:
 	static EXECUTOR *executors[256];
 	static EXECUTOR *defaultExecutors[];
 
-	static KTypeTree *typeTree;
+	static TypeTree *typeTree;
 
 	static const TypeDef **primitiveTypes;
 	static const TypeDef  *voidType;
@@ -74,8 +69,8 @@ protected:
 	static knuint_t stackSize;
 	static knuint_t stackPointer;
 
-	static kcallstack_t    *callStack;
-	static KFrame          *frame;		// current call frame
+	static callstack_t     *callStack;
+	static CallFrame       *frame;		// current call frame
 	static ModuleDef       *module;	// current method's module
 	static const MethodDef *method;	// current method
 	static KObject         *locals;	// current local variables
@@ -89,11 +84,11 @@ protected:
 	static bool running;
 	static bool hasException;
 
-	static KObject       *exc;			// latest unhandled exception
-	static kcatchstack_t *catchStack;	// stack of exception handlers
-	static ktracedeque_t *traceDeque;	// deque of methods traced from exception
+	static KObject      *exc;			// latest unhandled exception
+	static catchstack_t *catchStack;	// stack of exception handlers
+	static tracedeque_t *traceDeque;	// deque of methods traced from exception
 
-	static KExceptions    exceptions;	// bundle of common exceptions
+	static Exceptions    exceptions;	// bundle of common exceptions
 
 private:
 	KEnvironment(void) { }
@@ -115,9 +110,9 @@ public:
 	static const FieldDef * findField(const ClassDef *cls, kstring_t name);
 	static const MethodDef * findMethod(const ClassDef *cls, kstring_t name);
 	
-	static const TypeDef * createType(ktypetag_t tag, kushort_t dim);
-	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, const ClassDef *cls);
-	static const TypeDef * createType(ktypetag_t tag, kushort_t dim, const DelegateDef *del);
+	static const TypeDef * createType(KTYPETAG tag, kushort_t dim);
+	static const TypeDef * createType(KTYPETAG tag, kushort_t dim, const ClassDef *cls);
+	static const TypeDef * createType(KTYPETAG tag, kushort_t dim, const DelegateDef *del);
 
 	static const TypeDef * makeByRefType(const TypeDef *typeDef);
 	static const TypeDef * makeByValType(const TypeDef *typeDef);
@@ -208,6 +203,7 @@ protected:
 	static void do_ldc_r4(void);
 	static void do_ldc_r8(void);
 	static void do_ldstr(void);
+	static void do_ldlen(void);
 
 	static void do_ldthis(void);
 	static void do_ldnull(void);
@@ -582,8 +578,9 @@ protected:
 	friend kbool_t KniHasException();
 	friend void KniPrintExceptionDescription();
 	friend void KniClearException();
-	friend void KniThrowException(HKFIELD hKFCode);
-	friend void KniThrowExceptionEx(kstring_t message, kuint_t length);
+	friend void KniThrowException(HKCLASS excType);
+	friend void KniThrowExceptionEx(HKCLASS excType);
+	friend void KniThrowExceptionGeneral(kstring_t message, kuint_t length);
 
 	friend void KniInitLocals(HKTYPE *pHKTypes, kushort_t count);
 
@@ -602,9 +599,9 @@ protected:
 	friend HKFIELD KniGetField(HKCLASS hKClass, kstring_t ksName);
 	friend HKMETHOD KniGetMethod(HKCLASS hKClass, kstring_t ksName);
 
-	friend HKTYPE KniGetPrimitiveType(ktypetag_t tag);
+	friend HKTYPE KniGetPrimitiveType(KTYPETAG tag);
 
-	friend HKTYPE KniCreateType(ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate);
+	friend HKTYPE KniCreateType(KTYPETAG tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate);
 
 	friend kbool_t KniIsClassType(HKTYPE hKType);
 	friend kbool_t KniIsDelegateType(HKTYPE hKType);

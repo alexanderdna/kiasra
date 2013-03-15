@@ -57,7 +57,7 @@ KRESULT KCS_API KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKM
 	return KRESULT_OK;
 }
 
-HKTYPE KCS_API KcsGetType(HKMODULEBUILDER hKModuleBuilder, ktypetag_t tag, kushort_t dim, HKUSERTYPE hClassOrDelegate)
+HKTYPE KCS_API KcsGetType(HKMODULEBUILDER hKModuleBuilder, KTYPETAG tag, kushort_t dim, HKUSERTYPE hClassOrDelegate)
 {
 	return NULL;
 }
@@ -108,102 +108,102 @@ void KCS_API KcsMarkCodeLabel(HKCODEGEN hKCodeGen, HKCODELABEL hKCodeLabel)
 {
 }
 
-KRESULT KCS_API KcsCodeEmit(HKCODEGEN hKCodeGen, OpCodes opcode)
+KRESULT KCS_API KcsCodeEmit(HKCODEGEN hKCodeGen, KOPCODES opcode)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitChar(HKCODEGEN hKCodeGen, OpCodes opcode, kchar_t ch)
+KRESULT KCS_API KcsCodeEmitChar(HKCODEGEN hKCodeGen, KOPCODES opcode, kchar_t ch)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI1(HKCODEGEN hKCodeGen, OpCodes opcode, int8_t val)
+KRESULT KCS_API KcsCodeEmitI1(HKCODEGEN hKCodeGen, KOPCODES opcode, int8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU1(HKCODEGEN hKCodeGen, OpCodes opcode, uint8_t val)
+KRESULT KCS_API KcsCodeEmitU1(HKCODEGEN hKCodeGen, KOPCODES opcode, uint8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI2(HKCODEGEN hKCodeGen, OpCodes opcode, int8_t val)
+KRESULT KCS_API KcsCodeEmitI2(HKCODEGEN hKCodeGen, KOPCODES opcode, int8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU2(HKCODEGEN hKCodeGen, OpCodes opcode, uint8_t val)
+KRESULT KCS_API KcsCodeEmitU2(HKCODEGEN hKCodeGen, KOPCODES opcode, uint8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI4(HKCODEGEN hKCodeGen, OpCodes opcode, int32_t val)
+KRESULT KCS_API KcsCodeEmitI4(HKCODEGEN hKCodeGen, KOPCODES opcode, int32_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU4(HKCODEGEN hKCodeGen, OpCodes opcode, uint32_t val)
+KRESULT KCS_API KcsCodeEmitU4(HKCODEGEN hKCodeGen, KOPCODES opcode, uint32_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI8(HKCODEGEN hKCodeGen, OpCodes opcode, int64_t val)
+KRESULT KCS_API KcsCodeEmitI8(HKCODEGEN hKCodeGen, KOPCODES opcode, int64_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU8(HKCODEGEN hKCodeGen, OpCodes opcode, uint64_t val)
+KRESULT KCS_API KcsCodeEmitU8(HKCODEGEN hKCodeGen, KOPCODES opcode, uint64_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitR4(HKCODEGEN hKCodeGen, OpCodes opcode, float val)
+KRESULT KCS_API KcsCodeEmitR4(HKCODEGEN hKCodeGen, KOPCODES opcode, float val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitR8(HKCODEGEN hKCodeGen, OpCodes opcode, double val)
+KRESULT KCS_API KcsCodeEmitR8(HKCODEGEN hKCodeGen, KOPCODES opcode, double val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, OpCodes opcode, kstring_t val, kuint_t length)
+KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, KOPCODES opcode, kstring_t val, kuint_t length)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitLocal(HKCODEGEN hKCodeGen, OpCodes opcode, HKLOCALBUILDER hKLocalBuilder)
+KRESULT KCS_API KcsCodeEmitLocal(HKCODEGEN hKCodeGen, KOPCODES opcode, HKLOCALBUILDER hKLocalBuilder)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitJump(HKCODEGEN hKCodeGen, OpCodes opcode, HKCODELABEL hKCodeLabel)
+KRESULT KCS_API KcsCodeEmitJump(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCODELABEL hKCodeLabel)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitClass(HKCODEGEN hKCodeGen, OpCodes opcode, HKCLASS hKClass)
+KRESULT KCS_API KcsCodeEmitClass(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCLASS hKClass)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitDelegate(HKCODEGEN hKCodeGen, OpCodes opcode, HKDELEGATE hKDelegate)
+KRESULT KCS_API KcsCodeEmitDelegate(HKCODEGEN hKCodeGen, KOPCODES opcode, HKDELEGATE hKDelegate)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitField(HKCODEGEN hKCodeGen, OpCodes opcode, HKFIELD hKField)
+KRESULT KCS_API KcsCodeEmitField(HKCODEGEN hKCodeGen, KOPCODES opcode, HKFIELD hKField)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitMethod(HKCODEGEN hKCodeGen, OpCodes opcode, HKMETHOD hKMethod)
+KRESULT KCS_API KcsCodeEmitMethod(HKCODEGEN hKCodeGen, KOPCODES opcode, HKMETHOD hKMethod)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitType(HKCODEGEN hKCodeGen, OpCodes opcode, HKTYPE hKType)
+KRESULT KCS_API KcsCodeEmitType(HKCODEGEN hKCodeGen, KOPCODES opcode, HKTYPE hKType)
 {
 	return KRESULT_OK;
 }

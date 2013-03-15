@@ -17,6 +17,7 @@ public:
 	static KGC *gc;
 	static const TypeDef *objectType;
 	static const TypeDef *nullType;
+	static const TypeDef *stringType;
 
 	static KObject nullObject;
 
@@ -104,6 +105,5 @@ public:
 protected:
 	void clean(void);
 
-	static knuint_t strlen(kstring_t s);
 	static kstring_t strdup(kstring_t src, knuint_t len);
 };

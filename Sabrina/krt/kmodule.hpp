@@ -173,15 +173,15 @@ protected:
 	void clean();
 
 	ModuleValidationResult validateHeader();
-	void loadStringTable();
-	void loadTypeTable();
-	void loadModuleTable();
-	void loadClassTable();
-	void loadDelegateTable();
-	void loadFieldTable();
-	void loadMethodTable();
-	void loadParamTable();
-	void loadDelegateParamTable();
-	void loadLocalTable();
-	void loadCode();
+	bool loadStringTable();
+	bool loadTypeTable();
+	bool loadModuleTable();
+	bool loadClassTable();
+	bool loadDelegateTable();
+	bool loadFieldTable();
+	bool loadMethodTable();
+	bool loadParamTable();
+	bool loadDelegateParamTable();
+	bool loadLocalTable();
+	bool loadCode();
 };

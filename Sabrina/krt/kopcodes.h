@@ -9,7 +9,7 @@ extern "C" {
 
 /*===================================================*/
 
-enum OpCodes
+typedef enum KOPCODES
 {
 	OP_NOP = 0,
 
@@ -27,6 +27,7 @@ enum OpCodes
 	OP_LDC_R4,
 	OP_LDC_R8,
 	OP_LDSTR,
+	OP_LDLEN,
 
 	OP_LDTHIS,
 	OP_LDNULL,
@@ -122,7 +123,7 @@ enum OpCodes
 	OP_TRACE,
 
 	OP_OPCODE_COUNT
-};
+} KOPCODES;
 
 /*===================================================*/
 

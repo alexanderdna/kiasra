@@ -351,6 +351,7 @@ KEnvironment::EXECUTOR * KEnvironment::defaultExecutors[] =
 	KEnvironment::do_ldc_r4,
 	KEnvironment::do_ldc_r8,
 	KEnvironment::do_ldstr,
+	KEnvironment::do_ldlen,
 
 	KEnvironment::do_ldthis,
 	KEnvironment::do_ldnull,
@@ -552,6 +553,12 @@ void KEnvironment::do_ldstr(void)
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
 	KEnvironment::stackPushString(KEnvironment::strings[tok], KEnvironment::stringLengths[tok]);
+}
+
+void KEnvironment::do_ldlen(void)
+{
+	const KObject &obj = KEnvironment::stackPop();
+	KEnvironment::stackPushInt(obj.length);
 }
 
 
@@ -914,11 +921,12 @@ void KEnvironment::do_enter(void)
 
 	const TypeDef *excType = KEnvironment::module->typeList[tok];
 
-	KExceptionHandler handler = { };
+	ExceptionHandler handler = { };
 	handler.excType = excType;
 	handler.frame = KEnvironment::frame;
 	handler.addr = KEnvironment::ip + offset;
 	handler.addrEnd = KEnvironment::ip + offsetEnd;
+	handler.stackPointer = KEnvironment::stackPointer;
 
 	KEnvironment::catchStack->push(handler);
 }

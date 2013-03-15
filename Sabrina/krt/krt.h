@@ -29,37 +29,37 @@ typedef void * HKEXCEPTION;
 
 //===================================================
 
-enum KMODULEATTRIBUTES
+typedef enum KMODULEATTRIBUTES
 {
 	KMODA_SYSTEM = 0,
 	KMODA_USER   = 1,
 	KMODA_KIASRA = 2,
 	KMODA_NATIVE = 4,
-};
+} KMODULEATTRIBUTES;
 
-enum KCLASSATTRIBUTES
+typedef enum KCLASSATTRIBUTES
 {
 	KCA_PUBLIC  = 0,
 	KCA_PRIVATE = 1,
 	KCA_STATIC  = 2,
-};
+} KCLASSATTRIBUTES;
 
-enum KFIELDATTRIBUTES
+typedef enum KFIELDATTRIBUTES
 {
 	KFA_PUBLIC  = 0,
 	KFA_PRIVATE = 1,
 	KFA_STATIC  = 2,
 	KFA_FINAL   = 4,
-};
+} KFIELDATTRIBUTES;
 
-enum KMETHODATTRIBUTES
+typedef enum KMETHODATTRIBUTES
 {
 	KMA_PUBLIC  = 0,
 	KMA_PRIVATE = 1,
 	KMA_STATIC  = 2,
 	KMA_CTOR    = 4,
 	KMA_NATIVE  = 8
-};
+} KMETHODATTRIBUTES;
 
 /*===================================================*/
 
