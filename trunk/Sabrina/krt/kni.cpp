@@ -1707,22 +1707,45 @@ void KNI_API KniClearException(void)
 	KEnvironment::exc->operator=(KObject::nullObject);
 }
 
-void KNI_API KniThrowException(HKFIELD hKFCode)
+void KNI_API KniThrowException(HKCLASS excType)
 {
-	const ClassDef *cls = KEnvironment::exceptions.klass;
-	
-	KEnvironment::stackPush(cls->module->staticData[cls->localIndex].getField(((FieldDef *)hKFCode)->localIndex));
-	KEnvironment::invoke(KEnvironment::exceptions.fromCode);
-	
+	KObject obj;
+	KEnvironment::allocClassInstance((ClassDef *)excType, obj);
+
+	KEnvironment::stackPush(obj);
+	KEnvironment::invokeLastThis(((ClassDef *)excType)->ctor);
+
 	KEnvironment::throwException();
 }
 
-void KNI_API KniThrowExceptionEx(kstring_t message, kuint_t length)
+void KNI_API KniThrowExceptionEx(HKCLASS excType)
 {
-	const ClassDef *cls = KEnvironment::exceptions.klass;
-	
+	// stack transition
+	// ..., extra, { excType ctor args } -> ..., exc
+
+	KObject objExtra = KEnvironment::stackPop();
+
+	KObject obj;
+	KEnvironment::allocClassInstance((ClassDef *)excType, obj);
+
+	KEnvironment::stackPush(obj);
+	KEnvironment::invokeLastThis(((ClassDef *)excType)->ctor);
+
+	const FieldDef *extra = KEnvironment::findField((ClassDef *)excType, L"extra");
+	if (extra && extra->declType == KEnvironment::objectType)
+		obj.setField(extra->localIndex, objExtra);
+
+	KEnvironment::throwException();
+}
+
+void KNI_API KniThrowExceptionGeneral(kstring_t message, kuint_t length)
+{
+	KObject obj;
+	KEnvironment::allocClassInstance(KEnvironment::exceptions.general, obj);
+
 	KEnvironment::stackPushString(message, length);
-	KEnvironment::invoke(KEnvironment::exceptions.fromMessage);
+	KEnvironment::stackPush(obj);
+	KEnvironment::invokeLastThis(KEnvironment::exceptions.general->ctor);
 
 	KEnvironment::throwException();
 }
@@ -1803,12 +1826,12 @@ HKMETHOD KNI_API KniGetMethod(HKCLASS hKClass, kstring_t ksName)
 }
 
 
-HKTYPE KNI_API KniGetPrimitiveType(ktypetag_t tag)
+HKTYPE KNI_API KniGetPrimitiveType(KTYPETAG tag)
 {
 	return &KEnvironment::primitiveTypes[tag];
 }
 
-HKTYPE KNI_API KniCreateType(ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate)
+HKTYPE KNI_API KniCreateType(KTYPETAG tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate)
 {
 	if ((tag & KT_SCALAR_MASK) == KT_CLASS)
 		return KEnvironment::createType(tag, dim, (ClassDef *)hKClassOrDelegate);

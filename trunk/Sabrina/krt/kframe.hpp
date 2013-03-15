@@ -5,7 +5,7 @@
 struct ModuleDef;
 struct MethodDef;
 
-struct KFrame
+struct CallFrame
 {
 	ModuleDef       *module;
 	const MethodDef *method;
@@ -15,4 +15,4 @@ struct KFrame
 	knuint_t         stackPointer; // for stack unwinding
 };
 
-typedef std::stack<KFrame> kcallstack_t;
+typedef std::stack<CallFrame> callstack_t;

@@ -4,19 +4,19 @@
 #include "kconfig.hpp"
 
 //public
-KTypeTree::KTypeTree(void)
+TypeTree::TypeTree(void)
 	: root(NULL), inserted(NULL), size(0)
 {
 }
 
 //public
-KTypeTree::~KTypeTree(void)
+TypeTree::~TypeTree(void)
 {
 	this->freeNode(this->root);
 }
 
 //protected static
-int KTypeTree::compare(const TypeOrd &a, const TypeOrd &b)
+int TypeTree::compare(const TypeOrd &a, const TypeOrd &b)
 {
 	uint64_t oa = a.ord, ob = b.ord;
 #ifdef IS64BIT
@@ -32,7 +32,7 @@ int KTypeTree::compare(const TypeOrd &a, const TypeOrd &b)
 }
 
 //protected static
-void KTypeTree::rotateLeft(Node *&node)
+void TypeTree::rotateLeft(Node *&node)
 {
 	Node *r = node->right;
 	node->right = r->left;
@@ -41,7 +41,7 @@ void KTypeTree::rotateLeft(Node *&node)
 }
 
 //protected static
-void KTypeTree::rotateRight(Node *&node)
+void TypeTree::rotateRight(Node *&node)
 {
 	Node *l = node->left;
 	node->left = l->right;
@@ -50,7 +50,7 @@ void KTypeTree::rotateRight(Node *&node)
 }
 
 //protected static
-void KTypeTree::balanceLeft(Node *&node)
+void TypeTree::balanceLeft(Node *&node)
 {
 	if (node->left->balance == NB_LEFT)
 	{
@@ -84,7 +84,7 @@ void KTypeTree::balanceLeft(Node *&node)
 }
 
 //protected static
-void KTypeTree::balanceRight(Node *&node)
+void TypeTree::balanceRight(Node *&node)
 {
 	if (node->right->balance == NB_RIGHT)
 	{
@@ -118,7 +118,7 @@ void KTypeTree::balanceRight(Node *&node)
 }
 
 //protected
-bool KTypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
+bool TypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 {
 	if (parentNode == NULL)
 	{
@@ -136,7 +136,7 @@ bool KTypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 	}
 	else
 	{
-		if (KTypeTree::compare(ord, parentNode->data) < 0)
+		if (TypeTree::compare(ord, parentNode->data) < 0)
 		{
 			if (!this->addNode(ord, parentNode->left, incrHeight))
 				return false;
@@ -162,7 +162,7 @@ bool KTypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 
 			return true;
 		}
-		else if (KTypeTree::compare(ord, parentNode->data) > 0)
+		else if (TypeTree::compare(ord, parentNode->data) > 0)
 		{
 			if (!this->addNode(ord, parentNode->right, incrHeight))
 				return false;
@@ -198,7 +198,7 @@ bool KTypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 }
 
 //protected
-void KTypeTree::freeNode(Node *&node)
+void TypeTree::freeNode(Node *&node)
 {
 	if (node != NULL)
 	{
@@ -211,7 +211,7 @@ void KTypeTree::freeNode(Node *&node)
 }
 
 //public
-const TypeDef * KTypeTree::add(ktypetag_t tag, kushort_t dim, const void *udt)
+const TypeDef * TypeTree::add(KTYPETAG tag, kushort_t dim, const void *udt)
 {
 	TypeDef type = { tag, dim };
 	type.cls = (ClassDef *)udt;
@@ -228,7 +228,7 @@ const TypeDef * KTypeTree::add(ktypetag_t tag, kushort_t dim, const void *udt)
 }
 
 //public
-knuint_t KTypeTree::getSize(void) const
+knuint_t TypeTree::getSize(void) const
 {
 	return size;
 }

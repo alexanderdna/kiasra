@@ -23,7 +23,7 @@ extern "C" {
 /*===================================================*/
 
 /* Type tags */
-typedef enum ktypetag_t
+typedef enum KTYPETAG
 {
 	KT_VOID    = 0x0000,
 	KT_BOOL    = 0x0001,
@@ -41,11 +41,12 @@ typedef enum ktypetag_t
 	KT_STRING  = 0x000D,
 	KT_CLASS   = 0x000E,
 	KT_DELEGATE= 0x000F,
-	KT_ARRAY   = 0x0100,
-	KT_OBJECT  = 0x1000,
-	KT_RAW     = 0x2000,
 
-	KT_BYREF     = 0x4000,	/* a flag to determine address object */
+	KT_ARRAY   = 0x0100,	/* `array` storage type */
+	KT_OBJECT  = 0x1000,	/* `object` storage type */
+	KT_RAW     = 0x2000,	/* `raw` storage type */
+
+	KT_BYREF   = 0x4000,	/*!bit flag! address type (ByRef argument) */
 
 	KT_SCALAR_MASK = KT_VOID | KT_BOOL | KT_CHAR | KT_BYTE | KT_SBYTE |
 					KT_SHORT | KT_USHORT | KT_INT | KT_UINT | KT_LONG | KT_ULONG |
@@ -53,7 +54,7 @@ typedef enum ktypetag_t
 					KT_CLASS | KT_DELEGATE,
 
 	KT_REF_MASK = KT_ARRAY | KT_OBJECT | KT_RAW
-} ktypetag_t;
+} KTYPETAG;
 
 /*===================================================*/
 
@@ -678,10 +679,12 @@ kbool_t KNI_API KniHasException(void);
 void KNI_API KniPrintExceptionDescription(void);
 /* Clears the current exception */
 void KNI_API KniClearException(void);
-/* Throws an exception loaded onto stack */
-void KNI_API KniThrowException(HKFIELD hKFCode);
-/* Throws an exception loaded onto stack */
-void KNI_API KniThrowExceptionEx(kstring_t message, kuint_t length);
+/* Throws an exception */
+void KNI_API KniThrowException(HKCLASS excType);
+/* Throws an exception with extra data loaded on the stack */
+void KNI_API KniThrowExceptionEx(HKCLASS excType);
+/* Throws a System.Exception object */
+void KNI_API KniThrowExceptionGeneral(kstring_t message, kuint_t length);
 
 /* Initializes local variables for current native method */
 void KNI_API KniInitLocals(HKTYPE *pHKTypes, kushort_t count);
@@ -718,10 +721,10 @@ HKFIELD KNI_API KniGetField(HKCLASS hKClass, kstring_t ksName);
 HKMETHOD KNI_API KniGetMethod(HKCLASS hKClass, kstring_t ksName);
 
 /* Gets handle of a primitive type */
-HKTYPE KNI_API KniGetPrimitiveType(ktypetag_t tag);
+HKTYPE KNI_API KniGetPrimitiveType(KTYPETAG tag);
 
 /* Creates TypeDef from the given attributes */
-HKTYPE KNI_API KniCreateType(ktypetag_t tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate);
+HKTYPE KNI_API KniCreateType(KTYPETAG tag, kushort_t dim, HKUSERTYPE hKClassOrDelegate);
 
 /* Checks if the given type is class type */
 kbool_t KNI_API KniIsClassType(HKTYPE hKType);

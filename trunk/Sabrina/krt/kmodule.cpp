@@ -90,7 +90,7 @@ ModuleLoader::ModuleLoader(KMODULEATTRIBUTES attrs,  kstring_t importerPath, kst
 	: moduleLoaders(NULL), err(ModuleLoadError::OK),
 	importerPath(importerPath), fullPath(fullPath), filename(filename),
 	hash(hash), libHandle(NULL),
-	stream(NULL), pos(0), isCleaned(true),
+	stream(NULL), pos(0), isCleaned(false),
 	loadPhase(ModuleLoadPhase::Initial), module(NULL),
 	code(NULL)
 {
@@ -247,25 +247,34 @@ bool ModuleLoader::loadMeta(void)
 	if (this->loadPhase >= ModuleLoadPhase::Loaded)
 		return true;
 
-	this->isCleaned = false;
-
 	if (this->validateHeader() != ModuleValidationResult::OK)
 		return false;
 
-	this->loadStringTable();
-	this->loadTypeTable();
-	this->loadModuleTable();
-	this->loadClassTable();
-	this->loadDelegateTable();
+	if (!this->loadStringTable())
+		return false;
+	if (!this->loadTypeTable())
+		return false;
+	if (!this->loadModuleTable())
+		return false;
+	if (!this->loadClassTable())
+		return false;
+	if (!this->loadDelegateTable())
+		return false;
 	
-	this->loadFieldTable();
-	this->loadMethodTable();
+	if (!this->loadFieldTable())
+		return false;
+	if (!this->loadMethodTable())
+		return false;
 	
-	this->loadParamTable();
-	this->loadDelegateParamTable();
-	this->loadLocalTable();
+	if (!this->loadParamTable())
+		return false;
+	if (!this->loadDelegateParamTable())
+		return false;
+	if (!this->loadLocalTable())
+		return false;
 
-	this->loadCode();
+	if (!this->loadCode())
+		return false;
 
 	this->loadPhase = ModuleLoadPhase::Loaded;
 	return true;
@@ -693,11 +702,11 @@ bool ModuleLoader::bake(void)
 		const MetaTypeDef &typeRow = typeRows[i];
 		
 		if ((typeRow.tag & KT_SCALAR_MASK) == KT_CLASS)
-			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim, allClassList[typeRow.tok]);
+			allTypeList[i] = KEnvironment::createType((KTYPETAG)typeRow.tag, typeRow.dim, allClassList[typeRow.tok]);
 		else if ((typeRow.tag & KT_SCALAR_MASK) == KT_DELEGATE)
-			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim, allDelegateList[typeRow.tok]);
+			allTypeList[i] = KEnvironment::createType((KTYPETAG)typeRow.tag, typeRow.dim, allDelegateList[typeRow.tok]);
 		else
-			allTypeList[i] = KEnvironment::createType((ktypetag_t)typeRow.tag, typeRow.dim);
+			allTypeList[i] = KEnvironment::createType((KTYPETAG)typeRow.tag, typeRow.dim);
 	}
 
 	// local table
@@ -918,7 +927,7 @@ ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
 	return ModuleValidationResult::OK;
 }
 
-void ModuleLoader::loadStringTable()
+bool ModuleLoader::loadStringTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -936,9 +945,10 @@ void ModuleLoader::loadStringTable()
 		// sizeof(kchar_t)==sizeof(wchar_t) can be 2 (Windows) or 4 (*nix),
 		// but for KLI, a character should always be uint16_t.
 
-		kchar_t *row = new kchar_t[length];
+		kchar_t *row = new kchar_t[length + 1];
 		for (uint32_t j = 0; j < length; ++j, pos += sizeof(uint16_t))
 			row[j] = (kchar_t)(*(uint16_t *)(stream + pos));
+		row[length] = 0;
 
 		rows[i] = row;
 		lengths[i] = length;
@@ -948,9 +958,11 @@ void ModuleLoader::loadStringTable()
 	this->stringTable.rows = rows;
 	this->stringTable.lengths = lengths;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadTypeTable()
+bool ModuleLoader::loadTypeTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -977,9 +989,11 @@ void ModuleLoader::loadTypeTable()
 	this->typeTable.rowCount = (uint32_t)rowCount;
 	this->typeTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadModuleTable()
+bool ModuleLoader::loadModuleTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1002,9 +1016,11 @@ void ModuleLoader::loadModuleTable()
 	this->moduleTable.rowCount = (uint16_t)rowCount;
 	this->moduleTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadClassTable()
+bool ModuleLoader::loadClassTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1040,9 +1056,11 @@ void ModuleLoader::loadClassTable()
 	this->classTable.rowCount = (uint16_t)rowCount;
 	this->classTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadDelegateTable()
+bool ModuleLoader::loadDelegateTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1078,9 +1096,11 @@ void ModuleLoader::loadDelegateTable()
 	this->delegateTable.rowCount = (uint16_t)rowCount;
 	this->delegateTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadFieldTable()
+bool ModuleLoader::loadFieldTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1106,9 +1126,11 @@ void ModuleLoader::loadFieldTable()
 	this->fieldTable.rowCount = (uint16_t)rowCount;
 	this->fieldTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadMethodTable()
+bool ModuleLoader::loadMethodTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1119,11 +1141,20 @@ void ModuleLoader::loadMethodTable()
 
 	MetaMethodDef *rows = new MetaMethodDef[rowCount];
 
+	bool nonNative = !(this->attrs & KMODA_NATIVE);
+
 	for (unsigned int i = 0; i < rowCount; ++i)
 	{
 		MetaMethodDef &row = rows[i];
 
 		_READ(row.attrs, KMETHODATTRIBUTES);
+
+		if (nonNative && (row.attrs & KMA_NATIVE))
+		{
+			// not a native module but has native method
+			this->err = ModuleLoadError::InvalidModule;
+			return false;
+		}
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1138,9 +1169,11 @@ void ModuleLoader::loadMethodTable()
 	this->methodTable.rowCount = rowCount;
 	this->methodTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadParamTable()
+bool ModuleLoader::loadParamTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1167,9 +1200,11 @@ void ModuleLoader::loadParamTable()
 	this->paramTable.rowCount = (uint16_t)rowCount;
 	this->paramTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadDelegateParamTable()
+bool ModuleLoader::loadDelegateParamTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1196,9 +1231,11 @@ void ModuleLoader::loadDelegateParamTable()
 	this->dparamTable.rowCount = (uint16_t)rowCount;
 	this->dparamTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadLocalTable()
+bool ModuleLoader::loadLocalTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1216,9 +1253,11 @@ void ModuleLoader::loadLocalTable()
 	this->localTable.rowCount = (uint16_t)rowCount;
 	this->localTable.rows = rows;
 	this->pos = pos;
+
+	return true;
 }
 
-void ModuleLoader::loadCode()
+bool ModuleLoader::loadCode()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
@@ -1231,4 +1270,6 @@ void ModuleLoader::loadCode()
 
 	this->code = code;
 	this->pos = pos + codeSize;
+
+	return true;
 }

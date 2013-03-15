@@ -33,7 +33,7 @@ bool KEnvironment::isInitialized = false;
 
 kstring_t KEnvironment::systemLibPath;
 
-KTypeTree *KEnvironment::typeTree;
+TypeTree *KEnvironment::typeTree;
 
 const TypeDef **KEnvironment::primitiveTypes;
 const TypeDef  *KEnvironment::voidType;
@@ -53,8 +53,8 @@ KObject *KEnvironment::stack;
 knuint_t KEnvironment::stackSize;
 knuint_t KEnvironment::stackPointer;
 
-kcallstack_t    *KEnvironment::callStack;
-KFrame          *KEnvironment::frame;		// current call frame
+callstack_t    *KEnvironment::callStack;
+CallFrame          *KEnvironment::frame;		// current call frame
 ModuleDef       *KEnvironment::module;	// current method's module
 const MethodDef *KEnvironment::method;	// current method
 KObject         *KEnvironment::locals;	// current local variables
@@ -69,10 +69,10 @@ bool KEnvironment::running;
 bool KEnvironment::hasException;
 
 KObject                     *KEnvironment::exc;			// latest unhandled exception
-kcatchstack_t               *KEnvironment::catchStack;	// stack of exception handlers
-KEnvironment::ktracedeque_t *KEnvironment::traceDeque;	// deque of methods traced from exception
+catchstack_t               *KEnvironment::catchStack;	// stack of exception handlers
+KEnvironment::tracedeque_t *KEnvironment::traceDeque;	// deque of methods traced from exception
 
-KEnvironment::KExceptions    KEnvironment::exceptions;	// bundle of common exceptions
+KEnvironment::Exceptions    KEnvironment::exceptions;	// bundle of common exceptions
 
 //===================================================
 
@@ -110,14 +110,14 @@ void KEnvironment::initialize(void)
 	//===================================
 	// prepare basic types
 
-	KTypeTree *typeTree = new KTypeTree;
+	TypeTree *typeTree = new TypeTree;
 	KEnvironment::typeTree = typeTree;
 
 	const TypeDef **primitiveTypes = new const TypeDef * [(knuint_t)KT_STRING + 1];
 	KEnvironment::primitiveTypes = primitiveTypes;
 
 	for (knuint_t i = 0; i <= (knuint_t)KT_STRING; ++i)
-		primitiveTypes[i] = typeTree->add((ktypetag_t)i, 0, NULL);
+		primitiveTypes[i] = typeTree->add((KTYPETAG)i, 0, NULL);
 
 	KEnvironment::voidType = typeTree->add(KT_VOID, 0, NULL);
 	KEnvironment::arrayType = typeTree->add(KT_ARRAY, 0, NULL);
@@ -143,16 +143,17 @@ void KEnvironment::initialize(void)
 	//===================================
 	// prepare other stacks
 
-	KEnvironment::callStack = new kcallstack_t;
-	KEnvironment::catchStack = new kcatchstack_t;
+	KEnvironment::callStack = new callstack_t;
+	KEnvironment::catchStack = new catchstack_t;
 
-	KEnvironment::traceDeque = new ktracedeque_t;
+	KEnvironment::traceDeque = new tracedeque_t;
 	
 	//===================================
 	// misc
 
 	KObject::objectType = KEnvironment::objectType;
 	KObject::nullType = KEnvironment::nullType;
+	KObject::stringType = KEnvironment::primitiveTypes[KT_STRING];
 
 	KObject::nullObject.type = KObject::nullType;
 	KObject::nullObject.setRef(NULL, 0);
@@ -296,24 +297,19 @@ void KEnvironment::initCorLib(void)
 //protected static
 void KEnvironment::initExceptions(void)
 {
-	KExceptions &exc = KEnvironment::exceptions;
+	Exceptions &exc = KEnvironment::exceptions;
 
-	const ClassDef *excClass = KEnvironment::findClass(L"System.Exception", KEnvironment::corlibModule->getModule());
-	exc.klass = excClass;
+	const ModuleDef *corlib = KEnvironment::corlibModule->getModule();
 
-	exc.ctor = (MethodDef *) findMethod(excClass, L".ctor");
-	exc.fromCode = (MethodDef *) findMethod(excClass, L"fromCode");
-	exc.fromMessage = (MethodDef *) findMethod(excClass, L"fromMessage");
-
-	exc.custom = (FieldDef *) findField(excClass, L"Custom");
-	exc.invalidCast = (FieldDef *) findField(excClass, L"InvalidCast");
-	exc.invalidOperation = (FieldDef *) findField(excClass, L"InvalidOperation");
-	exc.invalidArgument = (FieldDef *) findField(excClass, L"InvalidArgument");
-	exc.nullArgument = (FieldDef *) findField(excClass, L"NullArgument");
-	exc.nullReference = (FieldDef *) findField(excClass, L"NullReference");
-	exc.indexOutOfRange = (FieldDef *) findField(excClass, L"IndexOutOfRange");
-	exc.divisionByZero = (FieldDef *) findField(excClass, L"DivisionByZero");
-	exc.invalidOpCode = (FieldDef *) findField(excClass, L"InvalidOpCode");
+	exc.general = (ClassDef *) KEnvironment::findClass(L"System.Exception", corlib);
+	exc.invalidCast = (ClassDef *) KEnvironment::findClass(L"System.InvalidCastException", corlib);
+	exc.invalidOperation = (ClassDef *) KEnvironment::findClass(L"System.InvalidOperationException", corlib);
+	exc.invalidArgument = (ClassDef *) KEnvironment::findClass(L"System.InvalidArgumentException", corlib);
+	exc.nullArgument = (ClassDef *) KEnvironment::findClass(L"System.NullArgumentException", corlib);
+	exc.nullReference = (ClassDef *) KEnvironment::findClass(L"System.NullReferenceException", corlib);
+	exc.indexOutOfRange = (ClassDef *) KEnvironment::findClass(L"System.IndexOutOfRangeException", corlib);
+	exc.divisionByZero = (ClassDef *) KEnvironment::findClass(L"System.DivisionByZeroException", corlib);
+	exc.invalidOpCode = (ClassDef *) KEnvironment::findClass(L"System.InvalidOpCodeException", corlib);
 }
 
 //===================================================
@@ -335,8 +331,8 @@ KRESULT KEnvironment::execute(void)
 
 			while (!KEnvironment::catchStack->empty())
 			{
-				KExceptionHandler &handler = KEnvironment::catchStack->top();
-				KFrame *frame = handler.frame;
+				ExceptionHandler &handler = KEnvironment::catchStack->top();
+				CallFrame *frame = handler.frame;
 
 				for (; KEnvironment::frame != frame; )
 				{
@@ -346,11 +342,13 @@ KRESULT KEnvironment::execute(void)
 					KEnvironment::leaveMethod();
 				}
 
-				// unwind stack
-				KEnvironment::stackPointer = frame->stackPointer;
-
 				if (handler.excType == KEnvironment::exc->type)
 				{
+					// unwind stack
+					KEnvironment::stackPointer = handler.stackPointer;
+					// and load exception object
+					KEnvironment::stackPush(*KEnvironment::exc);
+
 					knuint_t addr = handler.addr;
 					KEnvironment::catchStack->pop();
 					
@@ -475,19 +473,19 @@ const MethodDef * KEnvironment::findMethod(const ClassDef *cls, kstring_t name)
 }
 
 //public static
-const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim)
+const TypeDef * KEnvironment::createType(KTYPETAG tag, kushort_t dim)
 {
 	return KEnvironment::typeTree->add(tag, dim, NULL);
 }
 
 //public static
-const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, const ClassDef *cls)
+const TypeDef * KEnvironment::createType(KTYPETAG tag, kushort_t dim, const ClassDef *cls)
 {
 	return KEnvironment::typeTree->add(tag, dim, cls);
 }
 
 //public static
-const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, const DelegateDef *del)
+const TypeDef * KEnvironment::createType(KTYPETAG tag, kushort_t dim, const DelegateDef *del)
 {
 	return KEnvironment::typeTree->add(tag, dim, del);
 }
@@ -496,25 +494,25 @@ const TypeDef * KEnvironment::createType(ktypetag_t tag, kushort_t dim, const De
 //public static
 const TypeDef * KEnvironment::makeByRefType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag | KT_BYREF), typeDef->dim, typeDef->cls);
+	return KEnvironment::typeTree->add((KTYPETAG)(typeDef->tag | KT_BYREF), typeDef->dim, typeDef->cls);
 }
 
 //public static
 const TypeDef * KEnvironment::makeByValType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)(typeDef->tag & ~KT_BYREF), typeDef->dim, typeDef->cls);
+	return KEnvironment::typeTree->add((KTYPETAG)(typeDef->tag & ~KT_BYREF), typeDef->dim, typeDef->cls);
 }
 
 //public static
 const TypeDef * KEnvironment::makeArrayType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)typeDef->tag, typeDef->dim + 1, typeDef->cls);
+	return KEnvironment::typeTree->add((KTYPETAG)typeDef->tag, typeDef->dim + 1, typeDef->cls);
 }
 
 //public static
 const TypeDef * KEnvironment::makeElementType(const TypeDef *typeDef)
 {
-	return KEnvironment::typeTree->add((ktypetag_t)typeDef->tag, typeDef->dim - 1, typeDef->cls);
+	return KEnvironment::typeTree->add((KTYPETAG)typeDef->tag, typeDef->dim - 1, typeDef->cls);
 }
 
 //===================================================
@@ -672,7 +670,7 @@ KRESULT KEnvironment::invokeLastThis(const MethodDef *methodDef)
 //protected static
 void KEnvironment::enterMethod(const MethodDef *method, KObject *args)
 {
-	KFrame frame = { };
+	CallFrame frame = { };
 	frame.module = method->klass->module;
 	frame.method = method;
 	frame.stackPointer = KEnvironment::stackPointer;
@@ -718,7 +716,7 @@ void KEnvironment::enterMethod(const MethodDef *method, KObject *args)
 //protected static
 void KEnvironment::leaveMethod()
 {
-	KFrame *frame = KEnvironment::frame;
+	CallFrame *frame = KEnvironment::frame;
 
 	GC_UNREGISTER(frame->args);
 	GC_UNREGISTER(frame->locals);

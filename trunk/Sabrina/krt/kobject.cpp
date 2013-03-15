@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-#define IS_STRING(type) (type && ((type->tag & KT_SCALAR_MASK) == KT_STRING && !type->dim))
+#define IS_STRING(type) (type == KObject::stringType)
 
 // Checks if `type` is array, class or delegate, while not ByRef
 #define IS_REF(type)    (type && ((type->dim || (type->cls)) && ((type->tag & KT_BYREF) == 0)))
@@ -14,6 +14,7 @@ KGC          *KObject::gc;
 
 const TypeDef *KObject::objectType;
 const TypeDef *KObject::nullType;
+const TypeDef *KObject::stringType;
 
 KObject KObject::nullObject;
 
@@ -330,18 +331,6 @@ void KObject::clean(void)
 		delete [] this->vString;
 		this->vLong = NULL; //long to ensure 64 bits are unset
 	}
-}
-
-//protected static
-knuint_t KObject::strlen(kstring_t s)
-{
-	if (!s)
-		return 0;
-
-	knuint_t len;
-	for (len = 0; s[len]; ++len)
-		;
-	return len;
 }
 
 //protected static

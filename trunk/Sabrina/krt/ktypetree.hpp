@@ -2,7 +2,7 @@
 
 #include "kmeta.hpp"
 
-class KTypeTree
+class TypeTree
 {
 protected:
 	enum nodebalance_t
@@ -44,10 +44,10 @@ protected:
 	void freeNode(Node *&node);
 
 public:
-	KTypeTree(void);
-	~KTypeTree(void);
+	TypeTree(void);
+	~TypeTree(void);
 
 	// Returns a TypeDef with the given properties, creates it if it does not exist.
-	const TypeDef * add(ktypetag_t tag, kushort_t dim, const void *udt);
+	const TypeDef * add(KTYPETAG tag, kushort_t dim, const void *udt);
 	knuint_t getSize(void) const;
 };
