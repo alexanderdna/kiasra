@@ -11,25 +11,25 @@
 
 static KCSERRORS lastError;
 
-KCSERRORS KCS_API KcsGetLastError(void)
+KCS_API KCSERRORS KcsGetLastError(void)
 {
 	return lastError;
 }
 
-KRESULT KCS_API KcsCreateEnvironment()
+KCS_API KRESULT KcsCreateEnvironment()
 {
 	KEnvironment::initialize(false);
 	lastError = KCSE_NO_ERROR;
 	return KRESULT_OK;
 }
 
-void KCS_API KcsDestroyEnvironment(void)
+KCS_API void KcsDestroyEnvironment(void)
 {
 	KEnvironment::finalize();
 	lastError = KCSE_NO_ERROR;
 }
 
-KRESULT KCS_API KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule)
+KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule)
 {
 	ModuleLoader *loader;
 
@@ -65,57 +65,57 @@ KRESULT KCS_API KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKM
 
 //===================================================
 
-HKCLASS KCS_API KcsFindClass(HKMODULE hKModule, kstring_t szName)
+KCS_API HKCLASS KcsFindClass(HKMODULE hKModule, kstring_t szName)
 {
 	return KEnvironment::findClass(szName, (ModuleDef *)hKModule);
 }
 
-HKDELEGATE KCS_API KcsFindDelegate(HKMODULE hKModule, kstring_t szName)
+KCS_API HKDELEGATE KcsFindDelegate(HKMODULE hKModule, kstring_t szName)
 {
 	return KEnvironment::findDelegate(szName, (ModuleDef *)hKModule);
 }
 
-HKFIELD KCS_API KcsFindField(HKCLASS hKClass, kstring_t szName)
+KCS_API HKFIELD KcsFindField(HKCLASS hKClass, kstring_t szName)
 {
 	return KEnvironment::findField((ClassDef *)hKClass, szName);
 }
 
-HKMETHOD KCS_API KcsFindMethod(HKCLASS hKClass, kstring_t szName)
+KCS_API HKMETHOD KcsFindMethod(HKCLASS hKClass, kstring_t szName)
 {
 	return KEnvironment::findMethod((ClassDef *)hKClass, szName);
 }
 
-KCLASSATTRIBUTES KCS_API KcsGetClassAttributes(HKCLASS hKClass)
+KCS_API KCLASSATTRIBUTES KcsGetClassAttributes(HKCLASS hKClass)
 {
-	return ((ClassDef *)hKClass)->attrs;
+	return (KCLASSATTRIBUTES)((ClassDef *)hKClass)->attrs;
 }
 
-KCLASSATTRIBUTES KCS_API KcsGetDelegateAttributes(HKDELEGATE hKDelegate)
+KCS_API KCLASSATTRIBUTES KcsGetDelegateAttributes(HKDELEGATE hKDelegate)
 {
-	return ((DelegateDef *)hKDelegate)->attrs;
+	return (KCLASSATTRIBUTES)((DelegateDef *)hKDelegate)->attrs;
 }
 
-KFIELDATTRIBUTES KCS_API KcsGetFieldAttributes(HKFIELD hKField)
+KCS_API KFIELDATTRIBUTES KcsGetFieldAttributes(HKFIELD hKField)
 {
 	return (KFIELDATTRIBUTES)((FieldDef *)hKField)->attrs;
 }
 
-HKTYPE KCS_API KcsGetFieldType(HKFIELD hKField)
+KCS_API HKTYPE KcsGetFieldType(HKFIELD hKField)
 {
 	return ((FieldDef *)hKField)->declType;
 }
 
-KMETHODATTRIBUTES KCS_API KcsGetMethodAttributes(HKMETHOD hKMethod)
+KCS_API KMETHODATTRIBUTES KcsGetMethodAttributes(HKMETHOD hKMethod)
 {
 	return (KMETHODATTRIBUTES)((MethodDef *)hKMethod)->attrs;
 }
 
-HKTYPE KCS_API KcsGetMethodReturnType(HKMETHOD hKMethod)
+KCS_API HKTYPE KcsGetMethodReturnType(HKMETHOD hKMethod)
 {
 	return ((MethodDef *)hKMethod)->returnType;
 }
 
-KPARAMINFO * KCS_API KcsGetMethodParameters(HKMETHOD hKMethod)
+KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod)
 {
 	const MethodDef *met = (MethodDef *)hKMethod;
 	kushort_t paramCount = met->paramCount;
@@ -131,12 +131,12 @@ KPARAMINFO * KCS_API KcsGetMethodParameters(HKMETHOD hKMethod)
 	return params;
 }
 
-HKTYPE KCS_API KcsGetDelegateReturnType(HKDELEGATE hKDelegate)
+KCS_API HKTYPE KcsGetDelegateReturnType(HKDELEGATE hKDelegate)
 {
 	return ((DelegateDef *)hKDelegate)->returnType;
 }
 
-KPARAMINFO * KCS_API KcsGetDelegateParameters(HKDELEGATE hKDelegate)
+KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate)
 {
 	const DelegateDef *del = (DelegateDef *)hKDelegate;
 	kushort_t paramCount = del->paramCount;
@@ -152,7 +152,7 @@ KPARAMINFO * KCS_API KcsGetDelegateParameters(HKDELEGATE hKDelegate)
 	return params;
 }
 
-void KCS_API KcsFreeParameters(KPARAMINFO **ppKParamInfo)
+KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo)
 {
 	delete [](*ppKParamInfo);
 	*ppKParamInfo = NULL;
@@ -160,24 +160,24 @@ void KCS_API KcsFreeParameters(KPARAMINFO **ppKParamInfo)
 
 //===================================================
 
-HKMODULEBUILDER KCS_API KcsCreateModuleBuilder(KMODULETYPES type)
+KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULETYPES type)
 {
 	return NULL;
 }
 
-KRESULT KCS_API KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
+KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPath)
+KCS_API KRESULT KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPath)
 {
 	return KRESULT_OK;
 }
 
 //===================================================
 
-HKTYPE KCS_API KcsCreateType(HKMODULEBUILDER hKModuleBuilder, KTYPETAG tag, kushort_t dim, HKUSERTYPE hClassOrDelegate)
+KCS_API HKTYPE KcsCreateType(HKMODULEBUILDER hKModuleBuilder, KTYPETAG tag, kushort_t dim, HKUSERTYPE hClassOrDelegate)
 {
 	if ((tag & KT_SCALAR_MASK) == KT_CLASS)
 		return KEnvironment::createType(tag, dim, (ClassDef *)hClassOrDelegate);
@@ -187,155 +187,155 @@ HKTYPE KCS_API KcsCreateType(HKMODULEBUILDER hKModuleBuilder, KTYPETAG tag, kush
 		return KEnvironment::createType(tag, dim);
 }
 
-HKCLASSBUILDER KCS_API KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs)
+KCS_API HKCLASSBUILDER KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs)
 {
 	return NULL;
 }
 
-HKDELEGATEBUILDER KCS_API KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs,
+KCS_API HKDELEGATEBUILDER KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs,
                                             HKTYPE hReturnType, const KPARAMINFO *pParams)
 {
 	return NULL;
 }
 
-HKFIELDBUILDER KCS_API KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hReturnType)
+KCS_API HKFIELDBUILDER KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hReturnType)
 {
 	return NULL;
 }
 
-HKMETHODBUILDER KCS_API KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KMETHODATTRIBUTES attrs,
+KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KMETHODATTRIBUTES attrs,
                                         HKTYPE hReturnType, const KPARAMINFO *pParams)
 {
 	return NULL;
 }
 
-HKLOCALBUILDER KCS_API KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType)
+KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType)
 {
 	return NULL;
 }
 
 //===================================================
 
-HKCODEGEN KCS_API KcsGetCodeGen(HKMETHODBUILDER hKMethodBuilder)
+KCS_API HKCODEGEN KcsGetCodeGen(HKMETHODBUILDER hKMethodBuilder)
 {
 	return NULL;
 }
 
-KRESULT KCS_API KcsFinishCodeGen(HKMETHODBUILDER hKMethodBuilder)
+KCS_API KRESULT KcsFinishCodeGen(HKMETHODBUILDER hKMethodBuilder)
 {
 	return KRESULT_OK;
 }
 
-HKCODELABEL KCS_API KcsDefineCodeLabel(HKCODEGEN hKCodeGen)
+KCS_API HKCODELABEL KcsDefineCodeLabel(HKCODEGEN hKCodeGen)
 {
 	return NULL;
 }
 
-void KCS_API KcsMarkCodeLabel(HKCODEGEN hKCodeGen, HKCODELABEL hKCodeLabel)
+KCS_API void KcsMarkCodeLabel(HKCODEGEN hKCodeGen, HKCODELABEL hKCodeLabel)
 {
 }
 
-KRESULT KCS_API KcsCodeEmit(HKCODEGEN hKCodeGen, KOPCODES opcode)
-{
-	return KRESULT_OK;
-}
-
-KRESULT KCS_API KcsCodeEmitChar(HKCODEGEN hKCodeGen, KOPCODES opcode, kchar_t ch)
+KCS_API KRESULT KcsCodeEmit(HKCODEGEN hKCodeGen, KOPCODES opcode)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI1(HKCODEGEN hKCodeGen, KOPCODES opcode, int8_t val)
+KCS_API KRESULT KcsCodeEmitChar(HKCODEGEN hKCodeGen, KOPCODES opcode, kchar_t ch)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU1(HKCODEGEN hKCodeGen, KOPCODES opcode, uint8_t val)
+KCS_API KRESULT KcsCodeEmitI1(HKCODEGEN hKCodeGen, KOPCODES opcode, int8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI2(HKCODEGEN hKCodeGen, KOPCODES opcode, int16_t val)
+KCS_API KRESULT KcsCodeEmitU1(HKCODEGEN hKCodeGen, KOPCODES opcode, uint8_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU2(HKCODEGEN hKCodeGen, KOPCODES opcode, uint16_t val)
+KCS_API KRESULT KcsCodeEmitI2(HKCODEGEN hKCodeGen, KOPCODES opcode, int16_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI4(HKCODEGEN hKCodeGen, KOPCODES opcode, int32_t val)
+KCS_API KRESULT KcsCodeEmitU2(HKCODEGEN hKCodeGen, KOPCODES opcode, uint16_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU4(HKCODEGEN hKCodeGen, KOPCODES opcode, uint32_t val)
+KCS_API KRESULT KcsCodeEmitI4(HKCODEGEN hKCodeGen, KOPCODES opcode, int32_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitI8(HKCODEGEN hKCodeGen, KOPCODES opcode, int64_t val)
+KCS_API KRESULT KcsCodeEmitU4(HKCODEGEN hKCodeGen, KOPCODES opcode, uint32_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitU8(HKCODEGEN hKCodeGen, KOPCODES opcode, uint64_t val)
+KCS_API KRESULT KcsCodeEmitI8(HKCODEGEN hKCodeGen, KOPCODES opcode, int64_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitR4(HKCODEGEN hKCodeGen, KOPCODES opcode, float val)
+KCS_API KRESULT KcsCodeEmitU8(HKCODEGEN hKCodeGen, KOPCODES opcode, uint64_t val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitR8(HKCODEGEN hKCodeGen, KOPCODES opcode, double val)
+KCS_API KRESULT KcsCodeEmitR4(HKCODEGEN hKCodeGen, KOPCODES opcode, float val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitString(HKCODEGEN hKCodeGen, KOPCODES opcode, kstring_t val, kuint_t length)
+KCS_API KRESULT KcsCodeEmitR8(HKCODEGEN hKCodeGen, KOPCODES opcode, double val)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitLocal(HKCODEGEN hKCodeGen, KOPCODES opcode, HKLOCALBUILDER hKLocalBuilder)
+KCS_API KRESULT KcsCodeEmitString(HKCODEGEN hKCodeGen, KOPCODES opcode, kstring_t val, kuint_t length)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitJump(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCODELABEL hKCodeLabel)
+KCS_API KRESULT KcsCodeEmitLocal(HKCODEGEN hKCodeGen, KOPCODES opcode, HKLOCALBUILDER hKLocalBuilder)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitClass(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCLASS hKClass)
+KCS_API KRESULT KcsCodeEmitJump(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCODELABEL hKCodeLabel)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitDelegate(HKCODEGEN hKCodeGen, KOPCODES opcode, HKDELEGATE hKDelegate)
+KCS_API KRESULT KcsCodeEmitClass(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCLASS hKClass)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitField(HKCODEGEN hKCodeGen, KOPCODES opcode, HKFIELD hKField)
+KCS_API KRESULT KcsCodeEmitDelegate(HKCODEGEN hKCodeGen, KOPCODES opcode, HKDELEGATE hKDelegate)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitMethod(HKCODEGEN hKCodeGen, KOPCODES opcode, HKMETHOD hKMethod)
+KCS_API KRESULT KcsCodeEmitField(HKCODEGEN hKCodeGen, KOPCODES opcode, HKFIELD hKField)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitType(HKCODEGEN hKCodeGen, KOPCODES opcode, HKTYPE hKType)
+KCS_API KRESULT KcsCodeEmitMethod(HKCODEGEN hKCodeGen, KOPCODES opcode, HKMETHOD hKMethod)
 {
 	return KRESULT_OK;
 }
 
-KRESULT KCS_API KcsCodeEmitEnter(HKCODEGEN hKCodeGen, HKTYPE hExcType, HKCODELABEL hHandlerLabel, HKCODELABEL hLeaveLabel)
+KCS_API KRESULT KcsCodeEmitType(HKCODEGEN hKCodeGen, KOPCODES opcode, HKTYPE hKType)
+{
+	return KRESULT_OK;
+}
+
+KCS_API KRESULT KcsCodeEmitEnter(HKCODEGEN hKCodeGen, HKTYPE hExcType, HKCODELABEL hHandlerLabel, HKCODELABEL hLeaveLabel)
 {
 	return KRESULT_OK;
 }
