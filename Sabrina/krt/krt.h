@@ -27,7 +27,7 @@ typedef void * HKMODULE;
 /* Handle of exception */
 typedef void * HKEXCEPTION;
 
-//===================================================
+/*===================================================*/
 
 typedef enum KMODULEATTRIBUTES
 {

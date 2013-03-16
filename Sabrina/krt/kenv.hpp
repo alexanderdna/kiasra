@@ -43,6 +43,7 @@ protected:
 
 protected:
 	static bool isInitialized;
+	static bool isForExecution;
 
 	static kstring_t systemLibPath;
 
@@ -95,7 +96,7 @@ private:
 	~KEnvironment(void) { }
 
 public:
-	static void initialize(void);
+	static void initialize(bool isForExecution);
 	static void finalize(void);
 
 	static ModuleLoader * createModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename);
