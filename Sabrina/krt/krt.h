@@ -64,16 +64,16 @@ typedef enum KMETHODATTRIBUTES
 /*===================================================*/
 
 /* Creates a new execution environment */
-KRESULT KRT_API KrtCreateEnvironment(void);
+KRT_API KRESULT KrtCreateEnvironment(void);
 
 /* Destroys an execution environment and all its resources */
-void KRT_API KrtDestroyEnvironment(void);
+KRT_API void KrtDestroyEnvironment(void);
 
 /* Loads a module from the specified path */
-KRESULT KRT_API KrtLoadModule(kstring_t ksPath, HKMODULE *pHKModule);
+KRT_API KRESULT KrtLoadModule(kstring_t ksPath, HKMODULE *pHKModule);
 
 /* Runs a loaded module */
-KRESULT KRT_API KrtRunModule(HKMODULE hKModule);
+KRT_API KRESULT KrtRunModule(HKMODULE hKModule);
 
 /*===================================================*/
 
