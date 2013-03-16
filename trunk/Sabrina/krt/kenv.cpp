@@ -30,6 +30,7 @@
 // Static fields
 
 bool KEnvironment::isInitialized = false;
+bool KEnvironment::isForExecution = false;
 
 kstring_t KEnvironment::systemLibPath;
 
@@ -77,10 +78,18 @@ KEnvironment::Exceptions    KEnvironment::exceptions;	// bundle of common except
 //===================================================
 
 //public static
-void KEnvironment::initialize(void)
+void KEnvironment::initialize(bool isForExecution)
 {
 	if (KEnvironment::isInitialized)
+	{
+		if (isForExecution != KEnvironment::isForExecution)
+		{
+			// not the same reason => re-initialize
+			KEnvironment::finalize();
+			KEnvironment::initialize(isForExecution);
+		}
 		return;
+	}
 
 	KEnvironment::rootModule = NULL;
 	KEnvironment::stackSize = INIT_STACK_SIZE;
@@ -101,11 +110,14 @@ void KEnvironment::initialize(void)
 	//===================================
 	// prepare executors
 
-	for (knuint_t i = 0; i < OP_OPCODE_COUNT; ++i)
-		KEnvironment::executors[i] = KEnvironment::defaultExecutors[i];
+	if (isForExecution)
+	{
+		for (knuint_t i = 0; i < OP_OPCODE_COUNT; ++i)
+			KEnvironment::executors[i] = KEnvironment::defaultExecutors[i];
 
-	for (knuint_t i = OP_OPCODE_COUNT; i < 256; ++i)
-		KEnvironment::executors[i] = KEnvironment::do_InvalidOpcode;
+		for (knuint_t i = OP_OPCODE_COUNT; i < 256; ++i)
+			KEnvironment::executors[i] = KEnvironment::do_InvalidOpcode;
+	}
 
 	//===================================
 	// prepare basic types
@@ -135,19 +147,34 @@ void KEnvironment::initialize(void)
 	//===================================
 	// prepare GC
 
-	KEnvironment::gc = new KGC;
+	if (isForExecution)
+	{
+		KEnvironment::gc = new KGC;
 
-	KEnvironment::stack = KEnvironment::gc->allocForStack(INIT_STACK_SIZE);
-	GC_REGISTER(KEnvironment::stack);
+		KEnvironment::stack = KEnvironment::gc->allocForStack(INIT_STACK_SIZE);
+		GC_REGISTER(KEnvironment::stack);
+	}
+	else
+	{
+		KEnvironment::gc = NULL;
+	}
 
 	//===================================
 	// prepare other stacks
 
-	KEnvironment::callStack = new callstack_t;
-	KEnvironment::catchStack = new catchstack_t;
+	if (isForExecution)
+	{
+		KEnvironment::callStack = new callstack_t;
+		KEnvironment::catchStack = new catchstack_t;
+		KEnvironment::traceDeque = new tracedeque_t;
+	}
+	else
+	{
+		KEnvironment::callStack = NULL;
+		KEnvironment::catchStack = NULL;
+		KEnvironment::traceDeque = NULL;
+	}
 
-	KEnvironment::traceDeque = new tracedeque_t;
-	
 	//===================================
 	// misc
 
@@ -161,6 +188,7 @@ void KEnvironment::initialize(void)
 	//===================================
 
 	KEnvironment::isInitialized = true;
+	KEnvironment::isForExecution = isForExecution;
 }
 
 //public static
@@ -183,53 +211,17 @@ void KEnvironment::finalize(void)
 		KEnvironment::loadedModules = NULL;
 	}
 
-	if (KEnvironment::typeTree)
-	{
-		delete KEnvironment::typeTree;
-		KEnvironment::typeTree = NULL;
-	}
+#define DELETE_IF_NOT_NULL(p) if (p) { delete p; p = NULL; }
+#define ADELETE_IF_NOT_NULL(p) if (p) { delete []p; p = NULL; }
 
-	if (KEnvironment::primitiveTypes)
-	{
-		delete []KEnvironment::primitiveTypes;
-		KEnvironment::primitiveTypes = NULL;
-	}
-
-	if (KEnvironment::nullType)
-	{
-		delete KEnvironment::nullType;
-		KEnvironment::nullType = NULL;
-	}
-
-	if (KEnvironment::callStack)
-	{
-		delete KEnvironment::callStack;
-		KEnvironment::callStack = NULL;
-	}
-
-	if (KEnvironment::catchStack)
-	{
-		delete KEnvironment::catchStack;
-		KEnvironment::catchStack = NULL;
-	}
-
-	if (KEnvironment::traceDeque)
-	{
-		delete KEnvironment::traceDeque;
-		KEnvironment::traceDeque = NULL;
-	}
-
-	if (KEnvironment::gc)
-	{
-		delete KEnvironment::gc;
-		KEnvironment::gc = NULL;
-	}
-
-	if (KEnvironment::systemLibPath)
-	{
-		delete [] KEnvironment::systemLibPath;
-		KEnvironment::systemLibPath = NULL;
-	}
+	DELETE_IF_NOT_NULL(KEnvironment::typeTree);
+	ADELETE_IF_NOT_NULL(KEnvironment::primitiveTypes);
+	DELETE_IF_NOT_NULL(KEnvironment::nullType);
+	DELETE_IF_NOT_NULL(KEnvironment::callStack);
+	DELETE_IF_NOT_NULL(KEnvironment::catchStack);
+	DELETE_IF_NOT_NULL(KEnvironment::traceDeque);
+	DELETE_IF_NOT_NULL(KEnvironment::gc);
+	ADELETE_IF_NOT_NULL(KEnvironment::systemLibPath);
 
 	KEnvironment::isInitialized = false;
 }

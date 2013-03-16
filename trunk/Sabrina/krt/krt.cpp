@@ -9,24 +9,26 @@
 #endif
 
 // Creates a new execution environment
-KRT_API KRESULT KrtCreateEnvironment(void)
+KRESULT KRT_API KrtCreateEnvironment(void)
 {
+	KEnvironment::initialize(true);
 	return KRESULT_OK;
 }
 
 // Destroys an execution environment and all its resources
-KRT_API void KrtDestroyEnvironment(void)
+void KRT_API KrtDestroyEnvironment(void)
 {
+	KEnvironment::finalize();
 }
 
 // Loads a module from the specified path
-KRT_API KRESULT KrtLoadModule(kstring_t path, HKMODULE *pHKModule)
+KRESULT KRT_API KrtLoadModule(kstring_t path, HKMODULE *pHKModule)
 {
 	return KRESULT_OK;
 }
 
 // Runs a loaded module
-KRT_API KRESULT KrtRunModule(HKMODULE hKModule)
+KRESULT KRT_API KrtRunModule(HKMODULE hKModule)
 {
 	return KRESULT_OK;
 }
