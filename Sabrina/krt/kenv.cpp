@@ -54,26 +54,26 @@ KObject *KEnvironment::stack;
 knuint_t KEnvironment::stackSize;
 knuint_t KEnvironment::stackPointer;
 
-callstack_t    *KEnvironment::callStack;
-CallFrame          *KEnvironment::frame;		// current call frame
-ModuleDef       *KEnvironment::module;	// current method's module
-const MethodDef *KEnvironment::method;	// current method
-KObject         *KEnvironment::locals;	// current local variables
-KObject         *KEnvironment::args;		// current arguments
-kstring_t       *KEnvironment::strings;	// current string table
-kuint_t         *KEnvironment::stringLengths;
+callstack_t     *KEnvironment::callStack;
+CallFrame       *KEnvironment::frame;         // current call frame
+ModuleDef       *KEnvironment::module;        // current method's module
+const MethodDef *KEnvironment::method;        // current method
+KObject         *KEnvironment::locals;        // current local variables
+KObject         *KEnvironment::args;          // current arguments
+kstring_t       *KEnvironment::strings;	      // current string table
+kuint_t         *KEnvironment::stringLengths; // length of constant strings
 
-const unsigned char *KEnvironment::code;	// code to execute
-knuint_t             KEnvironment::ip;	// pointer to next instruction
+const unsigned char *KEnvironment::code;	  // code to execute
+knuint_t             KEnvironment::ip;        // pointer to next instruction
 
 bool KEnvironment::running;
 bool KEnvironment::hasException;
 
-KObject                     *KEnvironment::exc;			// latest unhandled exception
-catchstack_t               *KEnvironment::catchStack;	// stack of exception handlers
-KEnvironment::tracedeque_t *KEnvironment::traceDeque;	// deque of methods traced from exception
+KObject                    *KEnvironment::exc;        // latest unhandled exception
+catchstack_t               *KEnvironment::catchStack; // stack of exception handlers
+KEnvironment::tracedeque_t *KEnvironment::traceDeque; // deque of methods traced from exception
 
-KEnvironment::Exceptions    KEnvironment::exceptions;	// bundle of common exceptions
+KEnvironment::Exceptions    KEnvironment::exceptions; // bundle of common exceptions
 
 //===================================================
 
@@ -153,6 +153,9 @@ void KEnvironment::initialize(bool isForExecution)
 
 		KEnvironment::stack = KEnvironment::gc->allocForStack(INIT_STACK_SIZE);
 		GC_REGISTER(KEnvironment::stack);
+
+		// element 0 is unused
+		KEnvironment::stack[0] = KObject::nullObject;
 	}
 	else
 	{
@@ -293,19 +296,72 @@ void KEnvironment::initExceptions(void)
 
 	const ModuleDef *corlib = KEnvironment::corlibModule->getModule();
 
-	// TODO: develop a better way to populate the exception class list
-	//       instead of repeatedly calling `findClass`.
+	// exception classes, in no particular order
+	enum KEXCEPTION_CLASSES
+	{
+		KEXC_GENERAL,
+		KEXC_INVALIDCAST,
+		KEXC_INVALIDOPERATION,
+		KEXC_INVALIDARGUMENT,
+		KEXC_NULLARGUMENT,
+		KEXC_NULLREFERENCE,
+		KEXC_INDEXOUTOFRANGE,
+		KEXC_DIVISIONBYZERO,
+		KEXC_STACKOVERFLOW,
+		KEXC_STACKEMPTY,
+		KEXC_INVALIDOPCODE,
 
-	exc.general          = (ClassDef *) KEnvironment::findClass(L"System.Exception",                 corlib);
-	exc.invalidCast      = (ClassDef *) KEnvironment::findClass(L"System.InvalidCastException",      corlib);
-	exc.invalidOperation = (ClassDef *) KEnvironment::findClass(L"System.InvalidOperationException", corlib);
-	exc.invalidArgument  = (ClassDef *) KEnvironment::findClass(L"System.InvalidArgumentException",  corlib);
-	exc.nullArgument     = (ClassDef *) KEnvironment::findClass(L"System.NullArgumentException",     corlib);
-	exc.nullReference    = (ClassDef *) KEnvironment::findClass(L"System.NullReferenceException",    corlib);
-	exc.indexOutOfRange  = (ClassDef *) KEnvironment::findClass(L"System.IndexOutOfRangeException",  corlib);
-	exc.divisionByZero   = (ClassDef *) KEnvironment::findClass(L"System.DivisionByZeroException",   corlib);
-	exc.stackOverflow    = (ClassDef *) KEnvironment::findClass(L"System.StackOverflowException",    corlib);
-	exc.invalidOpCode    = (ClassDef *) KEnvironment::findClass(L"System.InvalidOpCodeException",    corlib);
+		KEXCEPTION_COUNT,
+	};
+
+	static kstring_t exceptionNames[] =
+	{
+		L"System.Exception",
+		L"System.InvalidCastException",
+		L"System.InvalidOperationException",
+		L"System.InvalidArgumentException",
+		L"System.NullArgumentException",
+		L"System.NullReferenceException",
+		L"System.IndexOutOfRangeException",
+		L"System.DivisionByZeroException",
+		L"System.StackOverflowException",
+		L"System.StackEmptyException",
+		L"System.InvalidOpCodeException",
+	};
+
+	static const ClassDef *exceptionClasses[KEXCEPTION_COUNT];
+	
+	knuint_t classCount = corlib->classCount;
+	ClassDef **classList = corlib->classList;
+	knuint_t nFoundExceptions = 0;
+
+	for (knuint_t i = 0; i < classCount; ++i)
+	{
+		for (knuint_t j = 0; j < KEXCEPTION_COUNT; ++j)
+		{
+			if (krt_strequ(exceptionNames[j], classList[i]->name))
+			{
+				exceptionClasses[j] = classList[i];
+				++nFoundExceptions;
+				break;
+			}
+		}
+
+		if (nFoundExceptions == KEXCEPTION_COUNT)
+			break;
+	}
+
+	exc.general          = exceptionClasses[KEXC_GENERAL];
+	exc.invalidCast      = exceptionClasses[KEXC_INVALIDCAST];
+	exc.invalidOperation = exceptionClasses[KEXC_INVALIDOPERATION];
+	exc.invalidArgument  = exceptionClasses[KEXC_INVALIDARGUMENT];
+	exc.nullArgument     = exceptionClasses[KEXC_NULLARGUMENT];
+	exc.nullReference    = exceptionClasses[KEXC_NULLREFERENCE];
+	exc.indexOutOfRange  = exceptionClasses[KEXC_INDEXOUTOFRANGE];
+	exc.divisionByZero   = exceptionClasses[KEXC_DIVISIONBYZERO];
+	exc.stackOverflow    = exceptionClasses[KEXC_STACKOVERFLOW];
+	exc.stackEmpty       = exceptionClasses[KEXC_STACKEMPTY];
+	exc.invalidOpCode    = exceptionClasses[KEXC_INVALIDOPCODE];
 }
 
 //===================================================
@@ -592,21 +648,21 @@ void KEnvironment::initLocals(const TypeDef **types, kuint_t count)
         if (KEnvironment::callStack->size() == MAX_CALL_STACK)                             \
         {                                                                                  \
             KObject obj;                                                                   \
-			KEnvironment::allocClassInstance(KEnvironment::exceptions.stackOverflow, obj); \
-			KEnvironment::stackPush(obj);                                                  \
+            KEnvironment::allocClassInstance(KEnvironment::exceptions.stackOverflow, obj); \
+            KEnvironment::stackPush(obj);                                                  \
             KEnvironment::throwException();                                                \
             return KRESULT_ERR;                                                            \
         }
 
 //protected static
-KRESULT KEnvironment::invoke(const MethodDef *methodDef)
+KRESULT KEnvironment::invoke(const MethodDef *method)
 {
 	CHECK_CALLSTACK_OVERFLOW;
 
 	kushort_t paramCount = method->paramCount;
 	ParamDef **paramList = method->paramList;
 
-	kushort_t argCount = (methodDef->attrs & KMA_STATIC) ? paramCount : paramCount + 1;
+	kushort_t argCount = (method->attrs & KMA_STATIC) ? paramCount : paramCount + 1;
 
 	KObject *args = GC_ALLOC(argCount);
 	GC_REGISTER(args);
@@ -616,9 +672,9 @@ KRESULT KEnvironment::invoke(const MethodDef *methodDef)
 
 	KEnvironment::stackClear(argCount);
 
-	KEnvironment::enterMethod(methodDef, args);
+	KEnvironment::enterMethod(method, args);
 
-	if (methodDef->attrs & KMA_NATIVE)
+	if (method->attrs & KMA_NATIVE)
 	{
 		if (method->func() == KRESULT_ERR)
 		{
@@ -638,7 +694,7 @@ KRESULT KEnvironment::invoke(const MethodDef *methodDef)
 }
 
 //protected static
-KRESULT KEnvironment::invokeLastThis(const MethodDef *methodDef)
+KRESULT KEnvironment::invokeLastThis(const MethodDef *method)
 {
 	CHECK_CALLSTACK_OVERFLOW;
 
@@ -657,9 +713,47 @@ KRESULT KEnvironment::invokeLastThis(const MethodDef *methodDef)
 
 	KEnvironment::stackClear(argCount);
 
-	KEnvironment::enterMethod(methodDef, args);
+	KEnvironment::enterMethod(method, args);
 
-	if (methodDef->attrs & KMA_NATIVE)
+	if (method->attrs & KMA_NATIVE)
+	{
+		if (method->func() == KRESULT_ERR)
+		{
+			KEnvironment::throwException();
+			return KRESULT_ERR;
+		}
+	}
+	else
+	{
+		if (KEnvironment::execute() == KRESULT_ERR)
+			return KRESULT_ERR;
+	}
+
+	KEnvironment::leaveMethod();
+
+	return KRESULT_OK;
+}
+
+KRESULT KEnvironment::invokeExceptionCtor(const MethodDef *ctor)
+{
+	kushort_t paramCount = ctor->paramCount;
+	ParamDef **paramList = ctor->paramList;
+
+	kushort_t argCount = paramCount + 1;
+
+	KObject *args = GC_ALLOC(argCount);
+	GC_REGISTER(args);
+
+	args[0] = KEnvironment::stackPeek(1);
+
+	for (knuint_t i = 1; i < argCount; ++i)
+		args[i] = KEnvironment::stackPeek(argCount - i + 1);
+
+	KEnvironment::stackClear(argCount);
+
+	KEnvironment::enterMethod(ctor, args);
+
+	if (ctor->attrs & KMA_NATIVE)
 	{
 		if (method->func() == KRESULT_ERR)
 		{

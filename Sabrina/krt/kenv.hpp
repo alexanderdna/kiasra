@@ -34,6 +34,7 @@ public:
 		const ClassDef *indexOutOfRange;
 		const ClassDef *divisionByZero;
 		const ClassDef *stackOverflow;
+		const ClassDef *stackEmpty;
 
 		const ClassDef *invalidOpCode;
 	};
@@ -140,8 +141,9 @@ protected:
 	
 	// Calls
 
-	static KRESULT invoke(const MethodDef *methodDef);
-	static KRESULT invokeLastThis(const MethodDef *methodDef);
+	static KRESULT invoke(const MethodDef *method);
+	static KRESULT invokeLastThis(const MethodDef *method);
+	static KRESULT invokeExceptionCtor(const MethodDef *ctor);
 
 	static void enterMethod(const MethodDef *method, KObject *args);
 	static void leaveMethod(void);
@@ -176,6 +178,12 @@ protected:
 	// definition in kenv_stack.cpp and
 	// used by only the functions there
 	inline static void stackExpand(void);
+
+	// definition put right here for uses in many other places
+	inline static const TypeDef * stackPeekType(void)
+	{
+		return KEnvironment::stack[KEnvironment::stackPointer].type;
+	}
 
 	// definition put right here for uses in many other places
 	inline static void stackClear(knuint_t count)

@@ -298,7 +298,7 @@ void KGC::propagate(void)
 	KObject *arr = ARRAY_FROM_HEADER(hdr);
 	size_t len;
 	if (IS_STACK(hdr))
-		len = this->env->stackPointer;
+		len = this->env->stackPointer + 1;
 	else
 		len = hdr->len;
 

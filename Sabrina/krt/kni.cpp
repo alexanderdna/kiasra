@@ -1713,7 +1713,7 @@ KNI_API void KniThrowException(HKCLASS excType)
 	KEnvironment::allocClassInstance((ClassDef *)excType, obj);
 
 	KEnvironment::stackPush(obj);
-	KEnvironment::invokeLastThis(((ClassDef *)excType)->ctor);
+	KEnvironment::invokeExceptionCtor(((ClassDef *)excType)->ctor);
 
 	KEnvironment::throwException();
 }
@@ -1729,7 +1729,7 @@ KNI_API void KniThrowExceptionEx(HKCLASS excType)
 	KEnvironment::allocClassInstance((ClassDef *)excType, obj);
 
 	KEnvironment::stackPush(obj);
-	KEnvironment::invokeLastThis(((ClassDef *)excType)->ctor);
+	KEnvironment::invokeExceptionCtor(((ClassDef *)excType)->ctor);
 
 	const FieldDef *extra = KEnvironment::findField((ClassDef *)excType, L"extra");
 	if (extra && extra->declType == KEnvironment::objectType)
