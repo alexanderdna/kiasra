@@ -33,6 +33,7 @@ public:
 		const ClassDef *nullReference;
 		const ClassDef *indexOutOfRange;
 		const ClassDef *divisionByZero;
+		const ClassDef *stackOverflow;
 
 		const ClassDef *invalidOpCode;
 	};
