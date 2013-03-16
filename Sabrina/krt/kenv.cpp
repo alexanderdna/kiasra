@@ -293,15 +293,19 @@ void KEnvironment::initExceptions(void)
 
 	const ModuleDef *corlib = KEnvironment::corlibModule->getModule();
 
-	exc.general = (ClassDef *) KEnvironment::findClass(L"System.Exception", corlib);
-	exc.invalidCast = (ClassDef *) KEnvironment::findClass(L"System.InvalidCastException", corlib);
+	// TODO: develop a better way to populate the exception class list
+	//       instead of repeatedly calling `findClass`.
+
+	exc.general          = (ClassDef *) KEnvironment::findClass(L"System.Exception",                 corlib);
+	exc.invalidCast      = (ClassDef *) KEnvironment::findClass(L"System.InvalidCastException",      corlib);
 	exc.invalidOperation = (ClassDef *) KEnvironment::findClass(L"System.InvalidOperationException", corlib);
-	exc.invalidArgument = (ClassDef *) KEnvironment::findClass(L"System.InvalidArgumentException", corlib);
-	exc.nullArgument = (ClassDef *) KEnvironment::findClass(L"System.NullArgumentException", corlib);
-	exc.nullReference = (ClassDef *) KEnvironment::findClass(L"System.NullReferenceException", corlib);
-	exc.indexOutOfRange = (ClassDef *) KEnvironment::findClass(L"System.IndexOutOfRangeException", corlib);
-	exc.divisionByZero = (ClassDef *) KEnvironment::findClass(L"System.DivisionByZeroException", corlib);
-	exc.invalidOpCode = (ClassDef *) KEnvironment::findClass(L"System.InvalidOpCodeException", corlib);
+	exc.invalidArgument  = (ClassDef *) KEnvironment::findClass(L"System.InvalidArgumentException",  corlib);
+	exc.nullArgument     = (ClassDef *) KEnvironment::findClass(L"System.NullArgumentException",     corlib);
+	exc.nullReference    = (ClassDef *) KEnvironment::findClass(L"System.NullReferenceException",    corlib);
+	exc.indexOutOfRange  = (ClassDef *) KEnvironment::findClass(L"System.IndexOutOfRangeException",  corlib);
+	exc.divisionByZero   = (ClassDef *) KEnvironment::findClass(L"System.DivisionByZeroException",   corlib);
+	exc.stackOverflow    = (ClassDef *) KEnvironment::findClass(L"System.StackOverflowException",    corlib);
+	exc.invalidOpCode    = (ClassDef *) KEnvironment::findClass(L"System.InvalidOpCodeException",    corlib);
 }
 
 //===================================================
@@ -583,9 +587,22 @@ void KEnvironment::initLocals(const TypeDef **types, kuint_t count)
 //===================================================
 // Calls
 
+#define MAX_CALL_STACK	50000
+#define CHECK_CALLSTACK_OVERFLOW                                                           \
+        if (KEnvironment::callStack->size() == MAX_CALL_STACK)                             \
+        {                                                                                  \
+            KObject obj;                                                                   \
+			KEnvironment::allocClassInstance(KEnvironment::exceptions.stackOverflow, obj); \
+			KEnvironment::stackPush(obj);                                                  \
+            KEnvironment::throwException();                                                \
+            return KRESULT_ERR;                                                            \
+        }
+
 //protected static
 KRESULT KEnvironment::invoke(const MethodDef *methodDef)
 {
+	CHECK_CALLSTACK_OVERFLOW;
+
 	kushort_t paramCount = method->paramCount;
 	ParamDef **paramList = method->paramList;
 
@@ -623,6 +640,8 @@ KRESULT KEnvironment::invoke(const MethodDef *methodDef)
 //protected static
 KRESULT KEnvironment::invokeLastThis(const MethodDef *methodDef)
 {
+	CHECK_CALLSTACK_OVERFLOW;
+
 	kushort_t paramCount = method->paramCount;
 	ParamDef **paramList = method->paramList;
 
