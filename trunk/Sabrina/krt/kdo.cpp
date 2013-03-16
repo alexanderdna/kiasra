@@ -25,6 +25,13 @@
 
 #define BCREAD(v, t)		v = *(t *)(KEnvironment::code + KEnvironment::ip); KEnvironment::ip += sizeof(t)
 
+#define ENSURE_STACK_LOAD(c) \
+	if (KEnvironment::stackPointer < c) \
+	{ \
+		KniThrowException(KEnvironment::exceptions.stackEmpty); \
+		return; \
+	}
+
 #define COND_JUMP(OP) \
 	{ \
 		if (a.type == GET_PRIMITIVE_TYPE(KT_DOUBLE)) \
@@ -557,6 +564,8 @@ void KEnvironment::do_ldstr(void)
 
 void KEnvironment::do_ldlen(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &obj = KEnvironment::stackPop();
 	KEnvironment::stackPushInt(obj.length);
 }
@@ -621,6 +630,8 @@ void KEnvironment::do_ldfld(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	if (obj.type == KObject::nullType)
@@ -636,6 +647,8 @@ void KEnvironment::do_ldflda(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	if (obj.type == KObject::nullType)
@@ -673,6 +686,8 @@ void KEnvironment::do_ldsflda(void)
 
 void KEnvironment::do_ldelem(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &objIdx = KEnvironment::stackPop();
 	const KObject &objArr = KEnvironment::stackPop();
 
@@ -696,6 +711,8 @@ void KEnvironment::do_ldelem(void)
 
 void KEnvironment::do_ldelema(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &objIdx = KEnvironment::stackPop();
 	const KObject &objArr = KEnvironment::stackPop();
 
@@ -719,6 +736,8 @@ void KEnvironment::do_ldelema(void)
 
 void KEnvironment::do_ldind(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &objAddr = KEnvironment::stackPop();
 	KEnvironment::stackPush(*objAddr.getRef());
 }
@@ -728,6 +747,8 @@ void KEnvironment::do_stloc(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	KEnvironment::locals[idx] = obj;
@@ -737,6 +758,8 @@ void KEnvironment::do_starg(void)
 {
 	kushort_t idx;
 	BCREAD(idx, kushort_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	KEnvironment::args[idx] = obj;
@@ -746,9 +769,12 @@ void KEnvironment::do_stfld(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &val = KEnvironment::stackPop();
 	KObject &obj = KEnvironment::stackPop();
+
 	if (obj.type == KObject::nullType)
 	{
 		KniThrowException(KEnvironment::exceptions.nullReference);
@@ -763,6 +789,8 @@ void KEnvironment::do_stsfld(void)
 	ktoken16_t clstok, fldtok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(fldtok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const ClassDef *cls = KEnvironment::module->classList[clstok];
 
@@ -773,6 +801,8 @@ void KEnvironment::do_stsfld(void)
 
 void KEnvironment::do_stelem(void)
 {
+	ENSURE_STACK_LOAD(3);
+
 	const KObject &objVal = KEnvironment::stackPop();
 	const KObject &objIdx = KEnvironment::stackPop();
 	KObject &objArr = KEnvironment::stackPop();
@@ -797,6 +827,8 @@ void KEnvironment::do_stelem(void)
 
 void KEnvironment::do_stind(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &val = KEnvironment::stackPop();
 	const KObject &obj = KEnvironment::stackPop();
 	obj.getRef()->operator=(val);
@@ -805,11 +837,13 @@ void KEnvironment::do_stind(void)
 	
 void KEnvironment::do_pop(void)
 {
+	ENSURE_STACK_LOAD(1);
 	KEnvironment::stackPop();
 }
 
 void KEnvironment::do_dup(void)
 {
+	ENSURE_STACK_LOAD(1);
 	KEnvironment::stackPush(KEnvironment::stackPeek());
 }
 
@@ -826,6 +860,8 @@ void KEnvironment::do_je(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -838,6 +874,8 @@ void KEnvironment::do_jne(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -850,6 +888,8 @@ void KEnvironment::do_jl(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -861,6 +901,8 @@ void KEnvironment::do_jle(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -872,6 +914,8 @@ void KEnvironment::do_jg(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -883,6 +927,8 @@ void KEnvironment::do_jge(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(2);
 
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
@@ -894,6 +940,8 @@ void KEnvironment::do_jtrue(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	if (obj.vBool)
@@ -904,6 +952,8 @@ void KEnvironment::do_jfalse(void)
 {
 	kshort_t offset;
 	BCREAD(offset, kshort_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
 	if (!obj.vBool)
@@ -940,6 +990,7 @@ void KEnvironment::do_leave(void)
 
 void KEnvironment::do_throw(void)
 {
+	ENSURE_STACK_LOAD(1);
 	KEnvironment::throwException();
 }
 
@@ -948,6 +999,8 @@ void KEnvironment::do_calli(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPeek();
 	const MethodDef *met = obj.type->cls->iMethodList[tok];
@@ -966,6 +1019,8 @@ void KEnvironment::do_calls(void)
 
 void KEnvironment::do_callo(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &obj = KEnvironment::stackPop();
 
 	const MethodDef *met = (MethodDef *)(obj.getField(1).getRaw());
@@ -988,6 +1043,8 @@ void KEnvironment::do_ret(void)
 	
 void KEnvironment::do_add(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -996,6 +1053,8 @@ void KEnvironment::do_add(void)
 
 void KEnvironment::do_sub(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1004,6 +1063,8 @@ void KEnvironment::do_sub(void)
 
 void KEnvironment::do_mul(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1012,6 +1073,8 @@ void KEnvironment::do_mul(void)
 
 void KEnvironment::do_div(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1020,6 +1083,8 @@ void KEnvironment::do_div(void)
 
 void KEnvironment::do_rem(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1057,6 +1122,8 @@ void KEnvironment::do_rem(void)
 
 void KEnvironment::do_neg(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &a = KEnvironment::stackPop();
 
 	switch (a.type->tag & KT_SCALAR_MASK)
@@ -1099,6 +1166,8 @@ void KEnvironment::do_neg(void)
 
 void KEnvironment::do_equ(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1107,6 +1176,8 @@ void KEnvironment::do_equ(void)
 
 void KEnvironment::do_neq(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1115,6 +1186,8 @@ void KEnvironment::do_neq(void)
 
 void KEnvironment::do_les(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1123,6 +1196,8 @@ void KEnvironment::do_les(void)
 
 void KEnvironment::do_leq(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1131,6 +1206,8 @@ void KEnvironment::do_leq(void)
 
 void KEnvironment::do_grt(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1139,6 +1216,8 @@ void KEnvironment::do_grt(void)
 
 void KEnvironment::do_geq(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1147,6 +1226,8 @@ void KEnvironment::do_geq(void)
 
 void KEnvironment::do_cat(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1156,6 +1237,8 @@ void KEnvironment::do_cat(void)
 
 void KEnvironment::do_and(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1164,6 +1247,8 @@ void KEnvironment::do_and(void)
 
 void KEnvironment::do_or(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1172,6 +1257,8 @@ void KEnvironment::do_or(void)
 
 void KEnvironment::do_xor(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1180,6 +1267,8 @@ void KEnvironment::do_xor(void)
 
 void KEnvironment::do_not(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &a = KEnvironment::stackPop();
 
 	switch (a.type->tag & KT_SCALAR_MASK)
@@ -1219,6 +1308,8 @@ void KEnvironment::do_not(void)
 
 void KEnvironment::do_shl(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1258,6 +1349,8 @@ void KEnvironment::do_shl(void)
 
 void KEnvironment::do_shr(void)
 {
+	ENSURE_STACK_LOAD(2);
+
 	const KObject &b = KEnvironment::stackPop();
 	const KObject &a = KEnvironment::stackPop();
 
@@ -1298,12 +1391,16 @@ void KEnvironment::do_shr(void)
 
 void KEnvironment::do_istrue(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &obj = KEnvironment::stackPop();
 	KEnvironment::stackPushBool((kbool_t)obj.vULong);
 }
 
 void KEnvironment::do_isnull(void)
 {
+	ENSURE_STACK_LOAD(1);
+
 	const KObject &obj = KEnvironment::stackPop();
 	KEnvironment::stackPushBool(obj.vRaw == NULL);
 }
@@ -1328,6 +1425,8 @@ void KEnvironment::do_newdel(void)
 {
 	ktoken16_t tok;
 	BCREAD(tok, ktoken16_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const DelegateDef *del = KEnvironment::module->delegateList[tok];
 
@@ -1336,9 +1435,14 @@ void KEnvironment::do_newdel(void)
 
 	KObject obj;
 	if (met->addr & KMA_STATIC)
+	{
 		KEnvironment::allocDelegateInstance(del, NULL, met, obj);
+	}
 	else
+	{
+		ENSURE_STACK_LOAD(1);
 		KEnvironment::allocDelegateInstance(del, &KEnvironment::stackPop(), met, obj);
+	}
 
 	KEnvironment::stackPush(obj);
 }
@@ -1347,6 +1451,8 @@ void KEnvironment::do_newarr(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const TypeDef *type = KEnvironment::module->typeList[tok];
 
@@ -1362,11 +1468,15 @@ void KEnvironment::do_makearr(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const TypeDef *type = KEnvironment::module->typeList[tok];
 
 	const KObject &objLength = KEnvironment::stackPop();
 	kuint_t length = objLength.vUInt;
+	
+	ENSURE_STACK_LOAD(length);
 
 	KObject obj;
 	KEnvironment::allocArrayBaking(type, length, obj);
@@ -1376,80 +1486,134 @@ void KEnvironment::do_makearr(void)
 	
 void KEnvironment::do_conv_ch(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_CHAR))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kchar_t, Char);
 }
 
 void KEnvironment::do_conv_i1(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_SBYTE))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(ksbyte_t, SByte);
 }
 
 void KEnvironment::do_conv_u1(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_BYTE))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kbyte_t, Byte);
 }
 
 void KEnvironment::do_conv_i2(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_SHORT))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kshort_t, Short);
 }
 
 void KEnvironment::do_conv_u2(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_USHORT))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kushort_t, UShort);
 }
 
 void KEnvironment::do_conv_i4(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_INT))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kint_t, Int);
 }
 
 void KEnvironment::do_conv_u4(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_UINT))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kuint_t, UInt);
 }
 
 void KEnvironment::do_conv_i8(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_LONG))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(klong_t, Long);
 }
 
 void KEnvironment::do_conv_u8(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_ULONG))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kulong_t, ULong);
 }
 
 void KEnvironment::do_conv_r4(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_FLOAT))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kfloat_t, Float);
 }
 
 void KEnvironment::do_conv_r8(void)
 {
+	ENSURE_STACK_LOAD(1);
+
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_DOUBLE))
+		return;
+
 	const KObject &obj = KEnvironment::stackPop();
 	CONV_OP(kdouble_t, Double);
 }
 
 void KEnvironment::do_conv_s(void)
 {
-	const KObject &obj = KEnvironment::stackPop();
+	ENSURE_STACK_LOAD(1);
 
-	if (obj.type == GET_PRIMITIVE_TYPE(KT_STRING)
-		|| obj.type == KObject::nullType)
-	{
-		KEnvironment::stackPush(obj);
+	if (KEnvironment::stackPeekType() == GET_PRIMITIVE_TYPE(KT_STRING)
+		|| KEnvironment::stackPeekType() == KObject::nullType)
 		return;
-	}
+
+	const KObject &obj = KEnvironment::stackPop();
 
 	const TypeDef *srcType = obj.type;
 	CONV_S;
@@ -1460,18 +1624,18 @@ void KEnvironment::do_cast(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
+	
+	ENSURE_STACK_LOAD(1);
 
+	const TypeDef *destType = KEnvironment::module->typeList[tok];
+
+	if (KEnvironment::stackPeekType() == destType)
+		return;
 
 	const KObject &obj = KEnvironment::stackPop();
 	const TypeDef *srcType = obj.type;
-	const TypeDef *destType = KEnvironment::module->typeList[tok];
 
-	if (srcType == destType)
-	{
-		// identical type
-		KEnvironment::stackPush(obj);
-	}
-	else if (srcType == KEnvironment::nullType)
+	if (srcType == KEnvironment::nullType)
 	{
 		// null object
 
@@ -1604,6 +1768,8 @@ void KEnvironment::do_isinst(void)
 {
 	ktoken32_t tok;
 	BCREAD(tok, ktoken32_t);
+	
+	ENSURE_STACK_LOAD(1);
 
 	const TypeDef *type = KEnvironment::module->typeList[tok];
 
