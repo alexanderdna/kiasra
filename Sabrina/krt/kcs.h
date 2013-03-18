@@ -124,13 +124,13 @@ KCS_API KMETHODATTRIBUTES KcsGetMethodAttributes(HKMETHOD hKMethod);
 KCS_API HKTYPE KcsGetMethodReturnType(HKMETHOD hKMethod);
 
 /* Gets the parameters of the given method. */
-KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod);
+KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod, kushort_t *puwCount);
 
 /* Gets the return type of the given delegate. */
 KCS_API HKTYPE KcsGetDelegateReturnType(HKDELEGATE hKDelegate);
 
 /* Gets the parameters of the given delegate. */
-KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate);
+KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate, kushort_t *puwCount);
 
 /* Deallocates the given array of KPARAMINFO structs and sets the pointer to NULL. */
 KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo);
@@ -156,13 +156,13 @@ KCS_API HKCLASSBUILDER KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t
 
 /* Defines a new delegate in the given module. */
 KCS_API HKDELEGATEBUILDER KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs,
-                                            HKTYPE hReturnType, const KPARAMINFO *pParams);
+                                            HKTYPE hReturnType, const KPARAMINFO *pParams, kushort_t uwCount);
 /* Defines a new field in the given class. */
-KCS_API HKFIELDBUILDER KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hReturnType);
+KCS_API HKFIELDBUILDER KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hDeclType);
 
 /* Defines a new method in the given class. */
 KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KMETHODATTRIBUTES attrs,
-                                        HKTYPE hReturnType, const KPARAMINFO *pParams);
+                                        HKTYPE hReturnType, const KPARAMINFO *pParams, kushort_t uwCount);
 
 /* Declares a new local variable in the given method. */
 KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType);

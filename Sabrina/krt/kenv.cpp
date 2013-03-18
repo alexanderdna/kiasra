@@ -587,6 +587,12 @@ void KEnvironment::allocClassInstance(const ClassDef *classDef, KObject &outObj)
 //protected static
 void KEnvironment::allocDelegateInstance(const DelegateDef *delegateDef, KObject *objThis, const MethodDef *method, KObject &outObj)
 {
+	if (!(method->attrs & KMA_STATIC) && objThis->type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
+
 	KObject *flds = GC_ALLOC(2);
 	if (objThis)
 		flds[0] = *objThis;
@@ -647,10 +653,7 @@ void KEnvironment::initLocals(const TypeDef **types, kuint_t count)
 #define CHECK_CALLSTACK_OVERFLOW                                                           \
         if (KEnvironment::callStack->size() == MAX_CALL_STACK)                             \
         {                                                                                  \
-            KObject obj;                                                                   \
-            KEnvironment::allocClassInstance(KEnvironment::exceptions.stackOverflow, obj); \
-            KEnvironment::stackPush(obj);                                                  \
-            KEnvironment::throwException();                                                \
+            KniThrowException(KEnvironment::exceptions.stackOverflow);                     \
             return KRESULT_ERR;                                                            \
         }
 
@@ -664,6 +667,12 @@ KRESULT KEnvironment::invoke(const MethodDef *method)
 
 	kushort_t argCount = (method->attrs & KMA_STATIC) ? paramCount : paramCount + 1;
 
+	if (KEnvironment::stackPointer < argCount)
+	{
+		KniThrowException(KEnvironment::exceptions.stackEmpty);
+		return KRESULT_ERR;
+	}
+
 	KObject *args = GC_ALLOC(argCount);
 	GC_REGISTER(args);
 
@@ -671,6 +680,79 @@ KRESULT KEnvironment::invoke(const MethodDef *method)
 		args[i] = KEnvironment::stackPeek(argCount - i);
 
 	KEnvironment::stackClear(argCount);
+
+	if (!(method->attrs & KMA_STATIC) && args[0].type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return KRESULT_ERR;
+	}
+
+	KEnvironment::enterMethod(method, args);
+
+	if (method->attrs & KMA_NATIVE)
+	{
+		if (method->func() == KRESULT_ERR)
+		{
+			KEnvironment::throwException();
+			return KRESULT_ERR;
+		}
+	}
+	else
+	{
+		if (KEnvironment::execute() == KRESULT_ERR)
+			return KRESULT_ERR;
+	}
+
+	KEnvironment::leaveMethod();
+
+	return KRESULT_OK;
+}
+
+//protected static
+KRESULT KEnvironment::invokeDelegate(const DelegateDef *dele)
+{
+	CHECK_CALLSTACK_OVERFLOW;
+
+	kushort_t paramCount = dele->paramCount;
+	ParamDef **paramList = dele->paramList;
+
+	if (KEnvironment::stackPointer < paramCount + 1u)
+	{
+		KniThrowException(KEnvironment::exceptions.stackEmpty);
+		return KRESULT_ERR;
+	}
+
+	const KObject &objCallable = KEnvironment::stackPeek(paramCount + 1);
+	const MethodDef *method = (MethodDef *)objCallable.getField(1).getRaw();
+
+	bool isStatic = (method->attrs & KMA_STATIC) != 0;
+
+	kushort_t argCount = isStatic ? paramCount : paramCount + 1;
+
+	KObject *args = GC_ALLOC(argCount);
+	GC_REGISTER(args);
+
+	if (isStatic)
+	{
+		for (knuint_t i = 0; i < argCount; ++i)
+			args[i] = KEnvironment::stackPeek(argCount - i);
+		
+		KEnvironment::stackClear(paramCount + 1);
+	}
+	else
+	{
+		args[0] = objCallable.getField(0);
+		for (knuint_t i = 1; i < argCount; ++i)
+			args[i] = KEnvironment::stackPeek(argCount - i);
+
+		if (args[0].type == KObject::nullType)
+		{
+			KniThrowException(KEnvironment::exceptions.nullReference);
+			return KRESULT_ERR;
+		}
+		
+		KEnvironment::stackClear(paramCount + 1);
+	}
 
 	KEnvironment::enterMethod(method, args);
 
@@ -702,6 +784,12 @@ KRESULT KEnvironment::invokeLastThis(const MethodDef *method)
 	ParamDef **paramList = method->paramList;
 
 	kushort_t argCount = paramCount + 1;
+
+	if (KEnvironment::stackPointer < argCount)
+	{
+		KniThrowException(KEnvironment::exceptions.stackEmpty);
+		return KRESULT_ERR;
+	}
 
 	KObject *args = GC_ALLOC(argCount);
 	GC_REGISTER(args);

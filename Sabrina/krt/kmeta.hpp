@@ -53,20 +53,20 @@ struct MetaParamDef;
 
 struct TypeDef
 {
-	size_t size;
-
-	uint16_t tag;
-	kushort_t  dim;
+	uint16_t  tag;
+	kushort_t dim;
 	union
 	{
 		ClassDef    *cls;
 		DelegateDef *del;
 	};
+
+	ktoken32_t localIndex; // position in type list, only used by Compiler Services
 };
 
 struct MetaTypeDef
 {
-	uint16_t   tag;
+	kushort_t  tag;
 	kushort_t  dim;
 	ktoken16_t tok;
 };
@@ -94,23 +94,25 @@ struct ModuleDef
 	DelegateDef    **delegateList;	// array of pointers to internal and external delegates
 	MetaDelegateDef *metaDelegateList;	// for internal/external detection
 
-	kushort_t        fieldCount;
+	kuint_t          fieldCount;
 	FieldDef        *fieldList;		// array of class fields
 
-	kushort_t        methodCount;
+	kuint_t          methodCount;
 	MethodDef       *methodList;	// array of class methods
 
-	kushort_t        paramCount;
+	kuint_t          paramCount;
 	ParamDef        *paramList;		// array of method parameters
 
-	kushort_t        dparamCount;
+	kuint_t          dparamCount;
 	ParamDef        *dparamList;	// array of delegate parameters
 
-	kushort_t        localCount;
+	kuint_t          localCount;
 	const TypeDef  **localList;		// array of pointers to elements of `types`
 
 	KObject         *staticData;	// objects to store static fields
 	const unsigned char *code;		// module bytecode
+
+	const MethodDef *entryMethod;	// execution starts here
 
 #ifdef ISWIN
 		HMODULE      libHandle;
@@ -149,12 +151,6 @@ struct ClassDef
 	kushort_t       sFieldCount;
 	FieldDef      **sFieldList; // static fields
 
-	kushort_t       iMethodCount;
-	MethodDef     **iMethodList;// instance method
-
-	kushort_t       sMethodCount;
-	MethodDef     **sMethodList;// static method
-
 	MethodDef      *ctor;		// instance constructor
 	MethodDef      *cctor;		// static constructor
 };
@@ -165,8 +161,8 @@ struct MetaClassDef
 	ktoken32_t      name;
 	ktoken16_t      farIndex;
 	ktoken16_t      moduleIndex;
-	ktoken16_t      fieldList;
-	ktoken16_t      methodList;
+	ktoken32_t      fieldList;
+	ktoken32_t      methodList;
 };
 
 struct DelegateDef
@@ -193,7 +189,7 @@ struct MetaDelegateDef
 	ktoken16_t      farIndex;
 	ktoken16_t      moduleIndex;
 	ktoken32_t      returnType;
-	ktoken16_t      paramList;
+	ktoken32_t      paramList;
 };
 
 struct FieldDef
@@ -245,18 +241,18 @@ struct MetaMethodDef
 	uint16_t         attrs;
 	ktoken32_t       name;
 	ktoken32_t       returnType;
-	ktoken16_t       paramList;
-	ktoken16_t       localList;
+	ktoken32_t       paramList;
+	ktoken32_t       localList;
 	kuint_t          addr;
 };
 
 struct ParamDef
 {
-	size_t size;
-
 	kstring_t       name;
 	const TypeDef  *declType;
 	bool            byRef;
+
+	ktoken16_t      globalIndex;
 };
 
 struct MetaParamDef

@@ -670,8 +670,8 @@ KNI_API kbool_t KniIsInstanceOfDelegate(HKDELEGATE hKDelegate);
 
 /* Invokes a method */
 KNI_API KRESULT KniInvoke(HKMETHOD hKMethod);
-/* Invokes a delegate object on stack top */
-KNI_API KRESULT KniInvokeObject(void);
+/* Invokes a delegate object */
+KNI_API KRESULT KniInvokeObject(HKDELEGATE hKDelegate);
 
 /* Checks if an exception has been thrown */
 KNI_API kbool_t KniHasException(void);

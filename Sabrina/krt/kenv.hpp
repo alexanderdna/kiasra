@@ -142,6 +142,7 @@ protected:
 	// Calls
 
 	static KRESULT invoke(const MethodDef *method);
+	static KRESULT invokeDelegate(const DelegateDef *dele);
 	static KRESULT invokeLastThis(const MethodDef *method);
 	static KRESULT invokeExceptionCtor(const MethodDef *ctor);
 
@@ -179,11 +180,8 @@ protected:
 	// used by only the functions there
 	inline static void stackExpand(void);
 
-	// definition put right here for uses in many other places
-	inline static const TypeDef * stackPeekType(void)
-	{
-		return KEnvironment::stack[KEnvironment::stackPointer].type;
-	}
+	// definition in kdo.cpp
+	inline static const TypeDef * stackPeekType(void);
 
 	// definition put right here for uses in many other places
 	inline static void stackClear(knuint_t count)
@@ -256,8 +254,7 @@ protected:
 	static void do_leave(void);
 	static void do_throw(void);
 	
-	static void do_calli(void);
-	static void do_calls(void);
+	static void do_call(void);
 	static void do_callo(void);
 	static void do_ret(void);
 	
@@ -583,7 +580,7 @@ protected:
 	friend kbool_t KniIsInstanceOfDelegate(HKDELEGATE hKDelegate);
 
 	friend KRESULT KniInvoke(HKMETHOD hKMethod);
-	friend KRESULT KniInvokeObject();
+	friend KRESULT KniInvokeObject(HKDELEGATE hKDelegate);
 
 	friend kbool_t KniHasException();
 	friend void KniPrintExceptionDescription();
