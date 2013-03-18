@@ -24,13 +24,14 @@
 
 #define MAX_MARK	5
 #define MAX_SWEEP	5
+#define DEFAULT_THRESHOLD	1024
 
 // Checks if `type` is array, class or delegate, while not ByRef
 #define IS_REF(type)    (type && ((type->dim || (type->cls)) && ((type->tag & KT_BYREF) == 0)))
 
 KGC::KGC(void)
 	: paused(false), phase(KGC_IDLE),
-	allocAmount(0), allocCount(0),
+	allocAmount(0), allocCount(0), threshold(DEFAULT_THRESHOLD),
 	gchead(NULL), gcsweeping(NULL), gcswept(NULL)
 {
 	this->rootset = new rootset_t;
@@ -101,6 +102,9 @@ KObject * KGC::alloc(size_t len)
 	this->allocAmount += len;
 	++this->allocCount;
 
+	if (this->allocAmount >= this->threshold)
+		this->step();
+
 	Header *hdr = (Header *)mem;
 	hdr->next = this->gchead;
 	hdr->len = len;
@@ -129,6 +133,9 @@ KObject * KGC::allocForStack(size_t len)
 
 	this->allocAmount += len;
 	++this->allocCount;
+
+	if (this->allocAmount >= this->threshold)
+		this->step();
 
 	Header *hdr = (Header *)mem;
 	hdr->next = this->gchead;
@@ -237,7 +244,7 @@ void KGC::doMark(void)
 	{
 		if (this->greystack->empty())
 		{
-			phase = KGC_SWEEP;
+			this->phase = KGC_SWEEP;
 			return;
 		}
 		this->propagate();
@@ -252,7 +259,8 @@ void KGC::doSweep(void)
 		if (!this->gcsweeping)
 		{
 			this->gcswept = NULL;
-			phase = KGC_IDLE;
+			this->threshold = this->allocAmount * 2;
+			this->phase = KGC_IDLE;
 			return;
 		}
 

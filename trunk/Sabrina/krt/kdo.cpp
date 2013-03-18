@@ -401,8 +401,7 @@ KEnvironment::EXECUTOR * KEnvironment::defaultExecutors[] =
 	KEnvironment::do_leave,
 	KEnvironment::do_throw,
 	
-	KEnvironment::do_calli,
-	KEnvironment::do_calls,
+	KEnvironment::do_call,
 	KEnvironment::do_callo,
 	KEnvironment::do_ret,
 	
@@ -456,6 +455,13 @@ KEnvironment::EXECUTOR * KEnvironment::defaultExecutors[] =
 };
 
 //===================================================
+
+inline const TypeDef * KEnvironment::stackPeekType(void)
+{
+	return KEnvironment::stack[KEnvironment::stackPointer].type;
+}
+
+//===================================================
 // Opcode executors
 
 void KEnvironment::do_InvalidOpcode(void)
@@ -465,7 +471,6 @@ void KEnvironment::do_InvalidOpcode(void)
 
 void KEnvironment::do_nop(void)
 {
-	(void)0;
 }
 
 void KEnvironment::do_ldtrue(void)
@@ -567,6 +572,12 @@ void KEnvironment::do_ldlen(void)
 	ENSURE_STACK_LOAD(1);
 
 	const KObject &obj = KEnvironment::stackPop();
+	if (obj.type == KObject::nullType)
+	{
+		KniThrowException(KEnvironment::exceptions.nullReference);
+		return;
+	}
+
 	KEnvironment::stackPushInt(obj.length);
 }
 
@@ -994,50 +1005,27 @@ void KEnvironment::do_throw(void)
 	KEnvironment::throwException();
 }
 
-	
-void KEnvironment::do_calli(void)
-{
-	ktoken16_t tok;
-	BCREAD(tok, ktoken16_t);
-	
-	ENSURE_STACK_LOAD(1);
-
-	const KObject &obj = KEnvironment::stackPeek();
-	const MethodDef *met = obj.type->cls->iMethodList[tok];
-	KEnvironment::invokeLastThis(met);
-}
-
-void KEnvironment::do_calls(void)
+void KEnvironment::do_call(void)
 {
 	ktoken16_t clstok, mettok;
 	BCREAD(clstok, ktoken16_t);
 	BCREAD(mettok, ktoken16_t);
 
-	const MethodDef *met = KEnvironment::module->classList[clstok]->sMethodList[mettok];
+	const MethodDef *met = KEnvironment::module->classList[clstok]->methodList[mettok];
 	KEnvironment::invoke(met);
 }
 
 void KEnvironment::do_callo(void)
 {
-	ENSURE_STACK_LOAD(1);
+	ktoken16_t deltok;
+	BCREAD(deltok, ktoken16_t);
 
-	const KObject &obj = KEnvironment::stackPop();
-
-	const MethodDef *met = (MethodDef *)(obj.getField(1).getRaw());
-	if (met->attrs & KMA_STATIC)
-	{
-		KEnvironment::invoke(met);
-	}
-	else
-	{
-		KEnvironment::stackPush(obj.getField(0));
-		KEnvironment::invokeLastThis(met);
-	}
+	const DelegateDef *dele = KEnvironment::module->delegateList[deltok];
+	KEnvironment::invokeDelegate(dele);
 }
 
 void KEnvironment::do_ret(void)
 {
-	(void)0;
 }
 
 	
@@ -1405,7 +1393,7 @@ void KEnvironment::do_isnull(void)
 	KEnvironment::stackPushBool(obj.vRaw == NULL);
 }
 
-	
+
 void KEnvironment::do_newobj(void)
 {
 	ktoken16_t tok;
@@ -1442,6 +1430,10 @@ void KEnvironment::do_newdel(void)
 	{
 		ENSURE_STACK_LOAD(1);
 		KEnvironment::allocDelegateInstance(del, &KEnvironment::stackPop(), met, obj);
+
+		// allocDelegateInstance may throw NullReferenceException
+		if (KEnvironment::hasException)
+			return;
 	}
 
 	KEnvironment::stackPush(obj);

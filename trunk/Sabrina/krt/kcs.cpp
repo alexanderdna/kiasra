@@ -4,6 +4,7 @@
 #include "kconfig.hpp"
 #include "kenv.hpp"
 #include "kmodule.hpp"
+#include "ktypetree.hpp"
 
 #include "kstringutils.hpp"
 
@@ -115,7 +116,7 @@ KCS_API HKTYPE KcsGetMethodReturnType(HKMETHOD hKMethod)
 	return ((MethodDef *)hKMethod)->returnType;
 }
 
-KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod)
+KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod, kushort_t *puwCount)
 {
 	const MethodDef *met = (MethodDef *)hKMethod;
 	kushort_t paramCount = met->paramCount;
@@ -128,6 +129,7 @@ KCS_API KPARAMINFO * KcsGetMethodParameters(HKMETHOD hKMethod)
 		params[i].byRef = (kbool_t)paramList[i]->byRef;
 	}
 
+	*puwCount = paramCount;
 	return params;
 }
 
@@ -136,7 +138,7 @@ KCS_API HKTYPE KcsGetDelegateReturnType(HKDELEGATE hKDelegate)
 	return ((DelegateDef *)hKDelegate)->returnType;
 }
 
-KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate)
+KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate, kushort_t *puwCount)
 {
 	const DelegateDef *del = (DelegateDef *)hKDelegate;
 	kushort_t paramCount = del->paramCount;
@@ -149,6 +151,7 @@ KCS_API KPARAMINFO * KcsGetDelegateParameters(HKDELEGATE hKDelegate)
 		params[i].byRef = (kbool_t)paramList[i]->byRef;
 	}
 
+	*puwCount = paramCount;
 	return params;
 }
 
@@ -179,34 +182,29 @@ KCS_API KRESULT KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPat
 
 KCS_API HKTYPE KcsCreateType(HKMODULEBUILDER hKModuleBuilder, KTYPETAG tag, kushort_t dim, HKUSERTYPE hClassOrDelegate)
 {
-	if ((tag & KT_SCALAR_MASK) == KT_CLASS)
-		return KEnvironment::createType(tag, dim, (ClassDef *)hClassOrDelegate);
-	else if ((tag & KT_SCALAR_MASK) == KT_DELEGATE)
-		return KEnvironment::createType(tag, dim, (DelegateDef *)hClassOrDelegate);
-	else
-		return KEnvironment::createType(tag, dim);
+	return ((ModuleBuilder *)hKModuleBuilder)->createType(tag, dim, hClassOrDelegate);
 }
 
 KCS_API HKCLASSBUILDER KcsDefineClass(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs)
 {
-	return NULL;
+	return ((ModuleBuilder *)hKModuleBuilder)->defineClass(attrs, szName);
 }
 
 KCS_API HKDELEGATEBUILDER KcsDefineDelegate(HKMODULEBUILDER hKModuleBuilder, kstring_t szName, KCLASSATTRIBUTES attrs,
-                                            HKTYPE hReturnType, const KPARAMINFO *pParams)
+                                            HKTYPE hReturnType, const KPARAMINFO *pParams, kushort_t uwCount)
 {
-	return NULL;
+	return ((ModuleBuilder *)hKModuleBuilder)->defineDelegate(attrs, szName, (TypeDef *)hReturnType, pParams, uwCount);
 }
 
-KCS_API HKFIELDBUILDER KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hReturnType)
+KCS_API HKFIELDBUILDER KcsDefineField(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KFIELDATTRIBUTES attrs, HKTYPE hDeclType)
 {
-	return NULL;
+	return ((ClassBuilder *)hKClassBuilder)->defineField(attrs, szName, (TypeDef *)hDeclType);
 }
 
 KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t szName, KMETHODATTRIBUTES attrs,
-                                        HKTYPE hReturnType, const KPARAMINFO *pParams)
+                                        HKTYPE hReturnType, const KPARAMINFO *pParams, kushort_t uwCount)
 {
-	return NULL;
+	return ((ClassBuilder *)hKClassBuilder)->defineMethod(attrs, szName, (TypeDef *)hReturnType, pParams, uwCount);
 }
 
 KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType)

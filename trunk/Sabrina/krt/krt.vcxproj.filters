@@ -107,6 +107,9 @@
     <ClCompile Include="kcs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="kcompile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="krt.rc">

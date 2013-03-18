@@ -81,31 +81,31 @@ protected:
 
 	struct
 	{
-		uint16_t rowCount;
+		uint32_t rowCount;
 		MetaFieldDef *rows;
 	} fieldTable;
 
 	struct
 	{
-		uint16_t rowCount;
+		uint32_t rowCount;
 		MetaMethodDef *rows;
 	} methodTable;
 
 	struct
 	{
-		uint16_t rowCount;
+		uint32_t rowCount;
 		MetaParamDef *rows;
 	} paramTable;
 
 	struct
 	{
-		uint16_t rowCount;
+		uint32_t rowCount;
 		MetaParamDef *rows;
 	} dparamTable;
 
 	struct
 	{
-		uint16_t rowCount;
+		uint32_t rowCount;
 		ktoken32_t *rows;
 	} localTable;
 

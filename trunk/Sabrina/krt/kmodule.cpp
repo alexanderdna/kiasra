@@ -53,7 +53,12 @@ const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 
 	nameBuffer[0] = '_';
 	for (knuint_t i = 0; i < len1; ++i, ++j)
-		nameBuffer[j] = (char)className[i];
+	{
+		if (className[i] == L'.')
+			nameBuffer[j] = '_';
+		else
+			nameBuffer[j] = (char)className[i];
+	}
 
 	for (knuint_t i = 0; i < len2; ++i, ++j)
 		nameBuffer[j] = (char)memberName[i];
@@ -344,14 +349,14 @@ bool ModuleLoader::bake(void)
 
 	// field table
 
-	kushort_t allFieldCount = this->fieldTable.rowCount;
+	kuint_t allFieldCount = this->fieldTable.rowCount;
 	MetaFieldDef *fieldRows = this->fieldTable.rows;
 
 	FieldDef *allFieldList = new FieldDef [allFieldCount + 1];
 	module->fieldCount = allFieldCount;
 	module->fieldList = allFieldList;
 
-	for (kushort_t i = 0; i < allFieldCount; ++i)
+	for (kuint_t i = 0; i < allFieldCount; ++i)
 	{
 		FieldDef &fld = allFieldList[i + 1];
 
@@ -362,32 +367,31 @@ bool ModuleLoader::bake(void)
 
 	// param table
 
-	kushort_t allParamCount = this->paramTable.rowCount;
+	kuint_t allParamCount = this->paramTable.rowCount;
 	MetaParamDef *paramRows = this->paramTable.rows;
 
 	ParamDef *allParamList = new ParamDef [allParamCount + 1];
 	module->paramCount = allParamCount;
 	module->paramList = allParamList;
 
-	for (kushort_t i = 0; i < allParamCount; ++i)
+	for (kuint_t i = 0; i < allParamCount; ++i)
 	{
 		ParamDef &param = allParamList[i + 1];
 
-		param.size = sizeof(ParamDef);
 		param.byRef = paramRows[i].byRef != 0;
 		param.name = strings[paramRows[i].name];
 	}
 
 	// method table
 
-	kushort_t allMethodCount = this->methodTable.rowCount;
+	kuint_t allMethodCount = this->methodTable.rowCount;
 	MetaMethodDef *methodRows = this->methodTable.rows;
 
 	MethodDef *allMethodList = new MethodDef [allMethodCount + 1];
 	module->methodCount = allMethodCount;
 	module->methodList = allMethodList;
 
-	for (kushort_t i = 0; i < allMethodCount; ++i)
+	for (kuint_t i = 0; i < allMethodCount; ++i)
 	{
 		MetaMethodDef &methodRow = methodRows[i];
 
@@ -402,7 +406,7 @@ bool ModuleLoader::bake(void)
 		else
 			met.addr = methodRow.addr;
 
-		kushort_t paramCount = 0;
+		kuint_t paramCount = 0;
 			
 		if (methodRow.paramList)
 		{
@@ -412,7 +416,7 @@ bool ModuleLoader::bake(void)
 			}
 			else
 			{
-				ktoken16_t nextParamList = 0;
+				ktoken32_t nextParamList = 0;
 				for (kuint_t j = i + 1; j < allMethodCount; ++j)
 					if (nextParamList = methodRows[j].paramList)
 						break;
@@ -426,7 +430,7 @@ bool ModuleLoader::bake(void)
 			
 		ParamDef **paramList = new ParamDef* [paramCount];
 
-		for (kushort_t i = methodRow.paramList, j = 0; j < paramCount; ++i, ++j)
+		for (kuint_t i = methodRow.paramList, j = 0; j < paramCount; ++i, ++j)
 			paramList[j] = &allParamList[i];
 
 		met.paramCount = paramCount;
@@ -463,8 +467,8 @@ bool ModuleLoader::bake(void)
 			cls->name = strings[classRow.name];
 			cls->module = module;
 
-			kushort_t fieldCount = 0;
-			kushort_t iFieldCount = 0, sFieldCount = 0;
+			kuint_t fieldCount = 0;
+			kuint_t iFieldCount = 0, sFieldCount = 0;
 			
 			if (classRow.fieldList)
 			{
@@ -474,7 +478,7 @@ bool ModuleLoader::bake(void)
 				}
 				else
 				{
-					ktoken16_t nextClassFieldList = 0;
+					ktoken32_t nextClassFieldList = 0;
 					for (kuint_t j = i + 1; j < allClassCount; ++j)
 						if (nextClassFieldList = classRows[j].fieldList)
 							break;
@@ -488,7 +492,7 @@ bool ModuleLoader::bake(void)
 			
 			FieldDef **fieldList = new FieldDef* [fieldCount];
 
-			for (kushort_t k = classRow.fieldList, j = 0; j < fieldCount; ++k, ++j)
+			for (kuint_t k = classRow.fieldList, j = 0; j < fieldCount; ++k, ++j)
 			{
 				FieldDef *fld = &allFieldList[k];
 
@@ -505,7 +509,7 @@ bool ModuleLoader::bake(void)
 			
 			FieldDef **sFieldList = new FieldDef* [sFieldCount];
 
-			for (kushort_t k = 0, j = 0, m = 0; k < fieldCount; ++k)
+			for (kuint_t k = 0, j = 0, m = 0; k < fieldCount; ++k)
 			{
 				if (fieldList[k]->attrs & KFA_STATIC)
 					iFieldList[j++] = fieldList[k];
@@ -522,8 +526,9 @@ bool ModuleLoader::bake(void)
 			cls->sFieldCount = sFieldCount;
 			cls->sFieldList = sFieldList;
 
-			kushort_t methodCount = 0;
-			kushort_t iMethodCount = 0, sMethodCount = 0;
+			//================================
+
+			kuint_t methodCount = 0;
 			
 			if (classRow.methodList)
 			{
@@ -533,7 +538,7 @@ bool ModuleLoader::bake(void)
 				}
 				else
 				{
-					ktoken16_t nextClassMethodList = 0;
+					ktoken32_t nextClassMethodList = 0;
 					for (kuint_t j = i + 1; j < allClassCount; ++j)
 						if (nextClassMethodList = classRows[j].methodList)
 							break;
@@ -547,17 +552,13 @@ bool ModuleLoader::bake(void)
 			
 			MethodDef **methodList = new MethodDef* [methodCount];
 
-			for (kushort_t k = classRow.methodList, j = 0; j < methodCount; ++k, ++j)
+			for (kuint_t k = classRow.methodList, j = 0; j < methodCount; ++k, ++j)
 			{
 				MethodDef *met = &allMethodList[k];
 				methodList[j + 1] = met;
 				met->localIndex = j + 1;
 
 				met->klass = cls;
-				if (met->attrs & KMA_STATIC)
-					++sMethodCount;
-				else
-					++iMethodCount;
 
 				if (met->attrs & KMA_CTOR)
 				{
@@ -593,26 +594,8 @@ bool ModuleLoader::bake(void)
 				methodList[j] = met;
 			}
 
-			MethodDef **iMethodList = new MethodDef* [iMethodCount];
-			
-			MethodDef **sMethodList = new MethodDef* [sMethodCount];
-
-			for (kushort_t k = 0, j = 0, m = 0; k < methodCount; ++k)
-			{
-				if (methodList[k]->attrs & KMA_STATIC)
-					iMethodList[j++] = methodList[k];
-				else
-					sMethodList[m++] = methodList[k];
-			}
-
 			cls->methodCount = methodCount;
 			cls->methodList = methodList;
-
-			cls->iMethodCount = iMethodCount;
-			cls->iMethodList = iMethodList;
-
-			cls->sMethodCount = sMethodCount;
-			cls->sMethodList = sMethodList;
 		}
 
 		allClassList[i+1] = cls;
@@ -620,18 +603,17 @@ bool ModuleLoader::bake(void)
 
 	// delegate param table
 
-	kushort_t allDParamCount = this->dparamTable.rowCount;
+	kuint_t allDParamCount = this->dparamTable.rowCount;
 	MetaParamDef *dparamRows = this->dparamTable.rows;
 
 	ParamDef *allDParamList = new ParamDef [allDParamCount + 1];
 	module->dparamCount = allDParamCount;
 	module->dparamList = allDParamList;
 
-	for (kushort_t i = 0; i < allDParamCount; ++i)
+	for (kuint_t i = 0; i < allDParamCount; ++i)
 	{
 		ParamDef &dparam = allDParamList[i + 1];
 
-		dparam.size = sizeof(ParamDef);
 		dparam.byRef = dparamRows[i].byRef != 0;
 		dparam.name = strings[dparamRows[i].name];
 	}
@@ -657,7 +639,7 @@ bool ModuleLoader::bake(void)
 		del->attrs = delegateRow.attrs;
 		del->name = strings[delegateRow.name];
 
-		kushort_t paramCount = 0;
+		kuint_t paramCount = 0;
 			
 		if (delegateRow.paramList)
 		{
@@ -667,7 +649,7 @@ bool ModuleLoader::bake(void)
 			}
 			else
 			{
-				ktoken16_t nextDParamList = 0;
+				ktoken32_t nextDParamList = 0;
 				for (kuint_t j = i + 1; j < allDelegateCount; ++j)
 					if (nextDParamList = delegateRows[j].paramList)
 						break;
@@ -681,7 +663,7 @@ bool ModuleLoader::bake(void)
 			
 		ParamDef **paramList = new ParamDef* [paramCount];
 
-		for (kushort_t k = delegateRow.paramList, j = 0; j < paramCount; ++k, ++j)
+		for (kuint_t k = delegateRow.paramList, j = 0; j < paramCount; ++k, ++j)
 			paramList[j] = &allDParamList[k];
 
 		del->paramCount = paramCount;
@@ -711,7 +693,7 @@ bool ModuleLoader::bake(void)
 
 	// local table
 
-	kushort_t allLocalCount = this->localTable.rowCount;
+	kuint_t allLocalCount = this->localTable.rowCount;
 	ktoken32_t *localRows = this->localTable.rows;
 
 	const TypeDef **allLocalList = new const TypeDef* [allLocalCount + 1];
@@ -719,16 +701,16 @@ bool ModuleLoader::bake(void)
 	module->localList = allLocalList;
 
 	allLocalList[0] = NULL;
-	for (kushort_t i = 0; i < allLocalCount; ++i)
+	for (kuint_t i = 0; i < allLocalCount; ++i)
 		allLocalList[i+1] = allTypeList[localRows[i]];
 
-	for (kushort_t i = 0; i < allMethodCount; ++i)
+	for (kuint_t i = 0; i < allMethodCount; ++i)
 	{
 		MetaMethodDef &methodRow = methodRows[i];
 
 		MethodDef &met = allMethodList[i + 1];
 
-		kushort_t localCount = 0;
+		kuint_t localCount = 0;
 			
 		if (methodRow.localList)
 		{
@@ -738,7 +720,7 @@ bool ModuleLoader::bake(void)
 			}
 			else
 			{
-				ktoken16_t nextLocalList = 0;
+				ktoken32_t nextLocalList = 0;
 				for (kuint_t j = i + 1; j < allMethodCount; ++j)
 					if (nextLocalList = methodRows[j].localList)
 						break;
@@ -752,7 +734,7 @@ bool ModuleLoader::bake(void)
 			
 		const TypeDef **localList = new const TypeDef* [localCount];
 
-		for (kushort_t k = methodRow.localList, j = 0; j < localCount; ++k, ++j)
+		for (kuint_t k = methodRow.localList, j = 0; j < localCount; ++k, ++j)
 			localList[j] = allLocalList[k];
 
 		met.localCount = localCount;
@@ -761,23 +743,28 @@ bool ModuleLoader::bake(void)
 
 	// param decltype
 
-	for (kushort_t i = 0; i < allParamCount; ++i)
+	for (kuint_t i = 0; i < allParamCount; ++i)
 		allParamList[i + 1].declType = allTypeList[paramRows[i].declType];
 
 	// delegate param decltype
 
-	for (kushort_t i = 0; i < allDParamCount; ++i)
+	for (kuint_t i = 0; i < allDParamCount; ++i)
 		allDParamList[i + 1].declType = allTypeList[dparamRows[i].declType];
 
 	// field type
 
-	for (kushort_t i = 0; i < allFieldCount; ++i)
+	for (kuint_t i = 0; i < allFieldCount; ++i)
 		allFieldList[i + 1].declType = allTypeList[fieldRows[i].declType];
 
 	// method return type
 
-	for (kushort_t i = 0; i < allMethodCount; ++i)
+	for (kuint_t i = 0; i < allMethodCount; ++i)
 		allMethodList[i + 1].returnType = allTypeList[methodRows[i].returnType];
+
+	// entry point
+
+	if (this->entryClass)
+		module->entryMethod = allClassList[this->entryClass]->methodList[this->entryMethod];
 
 	// DONE!
 
@@ -1048,8 +1035,8 @@ bool ModuleLoader::loadClassTable()
 		}
 		else
 		{
-			_READ(row.fieldList, ktoken16_t);
-			_READ(row.methodList, ktoken16_t);
+			_READ(row.fieldList, ktoken32_t);
+			_READ(row.methodList, ktoken32_t);
 		}
 	}
 
@@ -1089,7 +1076,7 @@ bool ModuleLoader::loadDelegateTable()
 		else
 		{
 			_READ(row.returnType, ktoken32_t);
-			_READ(row.paramList, ktoken16_t);
+			_READ(row.paramList, ktoken32_t);
 		}
 	}
 
@@ -1123,7 +1110,7 @@ bool ModuleLoader::loadFieldTable()
 		_READ(row.declType, ktoken32_t);
 	}
 
-	this->fieldTable.rowCount = (uint16_t)rowCount;
+	this->fieldTable.rowCount = (uint32_t)rowCount;
 	this->fieldTable.rows = rows;
 	this->pos = pos;
 
@@ -1160,13 +1147,13 @@ bool ModuleLoader::loadMethodTable()
 		row.name = nameToken;
 
 		_READ(row.returnType, ktoken32_t);
-		_READ(row.paramList, ktoken16_t);
-		_READ(row.localList, ktoken16_t);
+		_READ(row.paramList, ktoken32_t);
+		_READ(row.localList, ktoken32_t);
 
 		_READ(row.addr, kuint_t);
 	}
 
-	this->methodTable.rowCount = rowCount;
+	this->methodTable.rowCount = (uint32_t)rowCount;
 	this->methodTable.rows = rows;
 	this->pos = pos;
 
@@ -1197,7 +1184,7 @@ bool ModuleLoader::loadParamTable()
 		row.byRef = isByRef!=0;
 	}
 
-	this->paramTable.rowCount = (uint16_t)rowCount;
+	this->paramTable.rowCount = (uint32_t)rowCount;
 	this->paramTable.rows = rows;
 	this->pos = pos;
 
@@ -1228,7 +1215,7 @@ bool ModuleLoader::loadDelegateParamTable()
 		row.byRef = isByRef!=0;
 	}
 
-	this->dparamTable.rowCount = (uint16_t)rowCount;
+	this->dparamTable.rowCount = (uint32_t)rowCount;
 	this->dparamTable.rows = rows;
 	this->pos = pos;
 
@@ -1250,7 +1237,7 @@ bool ModuleLoader::loadLocalTable()
 		_READ(rows[i], ktoken32_t);
 	}
 
-	this->localTable.rowCount = (uint16_t)rowCount;
+	this->localTable.rowCount = (uint32_t)rowCount;
 	this->localTable.rows = rows;
 	this->pos = pos;
 

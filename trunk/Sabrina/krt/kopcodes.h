@@ -69,8 +69,7 @@ typedef enum KOPCODES
 	OP_LEAVE,
 	OP_THROW,
 	
-	OP_CALLI,
-	OP_CALLS,
+	OP_CALL,
 	OP_CALLO,
 	OP_RET,
 

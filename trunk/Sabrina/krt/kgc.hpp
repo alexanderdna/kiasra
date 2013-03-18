@@ -39,6 +39,8 @@ protected:
 	size_t allocAmount;
 	size_t allocCount;
 
+	size_t threshold;
+
 	rootset_t   *rootset;
 	greystack_t *greystack;
 

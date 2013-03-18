@@ -1661,34 +1661,12 @@ KNI_API kbool_t KniIsInstanceOfDelegate(HKDELEGATE hKDelegate)
 
 KNI_API KRESULT KniInvoke(HKMETHOD hKMethod)
 {
-	KEnvironment::invoke(Met);
-
-	if (KEnvironment::exc->getRef() == NULL)
-		return KRESULT_OK;
-	else
-		return KRESULT_ERR;
+	return KEnvironment::invoke(Met);
 }
 
-KNI_API KRESULT KniInvokeObject(void)
+KNI_API KRESULT KniInvokeObject(HKDELEGATE hKDelegate)
 {
-	//ASSUMED: delegate instance is in the form { [0] = thisObj, [1] = methodDef }.
-
-	const KObject &obj = KEnvironment::stackPop();
-	const MethodDef *met = (MethodDef *) (obj.getRef() + 1)->getRaw();
-	if (met->attrs & KMA_STATIC)
-	{
-		KEnvironment::invoke(met);
-	}
-	else
-	{
-		KEnvironment::stackPush(*obj.getRef());
-		KEnvironment::invokeLastThis(met);
-	}
-
-	if (KEnvironment::exc->getRef() == NULL)
-		return KRESULT_OK;
-	else
-		return KRESULT_ERR;
+	return KEnvironment::invokeDelegate(Del);
 }
 
 KNI_API kbool_t KniHasException(void)
@@ -1745,7 +1723,7 @@ KNI_API void KniThrowExceptionGeneral(kstring_t message, kuint_t length)
 
 	KEnvironment::stackPushString(message, length);
 	KEnvironment::stackPush(obj);
-	KEnvironment::invokeLastThis(KEnvironment::exceptions.general->ctor);
+	KEnvironment::invokeExceptionCtor(KEnvironment::exceptions.general->ctor);
 
 	KEnvironment::throwException();
 }
