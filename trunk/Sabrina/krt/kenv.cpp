@@ -595,7 +595,10 @@ void KEnvironment::allocDelegateInstance(const DelegateDef *delegateDef, KObject
 
 	KObject *flds = GC_ALLOC(2);
 	if (objThis)
+	{
 		flds[0] = *objThis;
+		KEnvironment::gc->mark(objThis->vObj);
+	}
 
 	flds[1].type = KEnvironment::rawType;
 	flds[1].vRaw = (void *) method;

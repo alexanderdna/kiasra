@@ -138,7 +138,7 @@ KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo);
 /*===================================================*/
 
 /* Creates a builder service for making a new module. */
-KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULETYPES type);
+KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULEATTRIBUTES attrs, KMODULETYPES type);
 
 /* Bakes a module to prepare for saving. */
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder);

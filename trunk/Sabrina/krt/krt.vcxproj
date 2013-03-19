@@ -149,6 +149,7 @@
     <ClInclude Include="kobject.hpp" />
     <ClInclude Include="krt.h" />
     <ClInclude Include="kmodule.hpp" />
+    <ClInclude Include="kstringpool.hpp" />
     <ClInclude Include="kstringutils.hpp" />
     <ClInclude Include="ktypetree.hpp" />
     <ClInclude Include="resource.h" />
@@ -168,6 +169,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="kcodegen.cpp" />
     <ClCompile Include="kcompile.cpp" />
     <ClCompile Include="kcs.cpp" />
     <ClCompile Include="kenv.cpp" />
@@ -177,6 +179,7 @@
     <ClCompile Include="kobject.cpp" />
     <ClCompile Include="krt.cpp" />
     <ClCompile Include="kmodule.cpp" />
+    <ClCompile Include="kstringpool.cpp" />
     <ClCompile Include="kstringutils.cpp" />
     <ClCompile Include="ktypetree.cpp" />
     <ClCompile Include="kdo.cpp" />
