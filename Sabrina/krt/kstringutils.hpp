@@ -3,6 +3,7 @@
 #include "kni.h"
 
 kbool_t krt_strequ(kstring_t s1, kstring_t s2);
+kbool_t krt_strequ(kstring_t s1, kstring_t s2, knuint_t length1, knuint_t length2);
 
 // Returns true if s1 == (s2 + s3)
 kbool_t krt_strequ(kstring_t s1, kstring_t s2, kstring_t s3);

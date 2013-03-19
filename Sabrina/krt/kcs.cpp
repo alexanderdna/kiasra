@@ -1,5 +1,7 @@
 #include "kcs.h"
+
 #include "kcompile.hpp"
+#include "kcodegen.hpp"
 
 #include "kconfig.hpp"
 #include "kenv.hpp"
@@ -7,6 +9,8 @@
 #include "ktypetree.hpp"
 
 #include "kstringutils.hpp"
+
+#define CGen	((CodeGen *)hKCodeGen)
 
 //===================================================
 
@@ -163,14 +167,17 @@ KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo)
 
 //===================================================
 
-KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULETYPES type)
+KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULEATTRIBUTES attrs, KMODULETYPES type)
 {
-	return NULL;
+	return new ModuleBuilder(attrs, type);
 }
 
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 {
-	return KRESULT_OK;
+	if (((ModuleBuilder *)hKModuleBuilder)->bake())
+		return KRESULT_OK;
+	else
+		return KRESULT_ERR;
 }
 
 KCS_API KRESULT KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPath)
@@ -209,131 +216,154 @@ KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t
 
 KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType)
 {
-	return NULL;
+	return ((MethodBuilder *)hKMethodBuilder)->declareLocal((TypeDef *)hDeclType);
 }
 
 //===================================================
 
 KCS_API HKCODEGEN KcsGetCodeGen(HKMETHODBUILDER hKMethodBuilder)
 {
-	return NULL;
+	return ((MethodBuilder *)hKMethodBuilder)->getCodeGenerator();
 }
 
 KCS_API KRESULT KcsFinishCodeGen(HKMETHODBUILDER hKMethodBuilder)
 {
+	((MethodBuilder *)hKMethodBuilder)->getCodeGenerator()->finish();
 	return KRESULT_OK;
 }
 
 KCS_API HKCODELABEL KcsDefineCodeLabel(HKCODEGEN hKCodeGen)
 {
-	return NULL;
+	return CGen->defineLabel();
 }
 
 KCS_API void KcsMarkCodeLabel(HKCODEGEN hKCodeGen, HKCODELABEL hKCodeLabel)
 {
+	CGen->markLabel((Label *)hKCodeLabel);
 }
 
 KCS_API KRESULT KcsCodeEmit(HKCODEGEN hKCodeGen, KOPCODES opcode)
 {
+	CGen->emit(opcode);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitChar(HKCODEGEN hKCodeGen, KOPCODES opcode, kchar_t ch)
 {
+	CGen->emit(opcode, ch);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitI1(HKCODEGEN hKCodeGen, KOPCODES opcode, int8_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitU1(HKCODEGEN hKCodeGen, KOPCODES opcode, uint8_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitI2(HKCODEGEN hKCodeGen, KOPCODES opcode, int16_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitU2(HKCODEGEN hKCodeGen, KOPCODES opcode, uint16_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitI4(HKCODEGEN hKCodeGen, KOPCODES opcode, int32_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitU4(HKCODEGEN hKCodeGen, KOPCODES opcode, uint32_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitI8(HKCODEGEN hKCodeGen, KOPCODES opcode, int64_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitU8(HKCODEGEN hKCodeGen, KOPCODES opcode, uint64_t val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitR4(HKCODEGEN hKCodeGen, KOPCODES opcode, float val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitR8(HKCODEGEN hKCodeGen, KOPCODES opcode, double val)
 {
+	CGen->emit(opcode, val);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitString(HKCODEGEN hKCodeGen, KOPCODES opcode, kstring_t val, kuint_t length)
 {
+	CGen->emit(opcode, val, length);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitLocal(HKCODEGEN hKCodeGen, KOPCODES opcode, HKLOCALBUILDER hKLocalBuilder)
 {
+	CGen->emit(opcode, (LocalBuilder *)hKLocalBuilder);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitJump(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCODELABEL hKCodeLabel)
 {
+	CGen->emit(opcode, (Label *)hKCodeLabel);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitClass(HKCODEGEN hKCodeGen, KOPCODES opcode, HKCLASS hKClass)
 {
+	CGen->emit(opcode, (ClassDef *)hKClass);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitDelegate(HKCODEGEN hKCodeGen, KOPCODES opcode, HKDELEGATE hKDelegate)
 {
+	CGen->emit(opcode, (DelegateDef *)hKDelegate);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitField(HKCODEGEN hKCodeGen, KOPCODES opcode, HKFIELD hKField)
 {
+	CGen->emit(opcode, (FieldDef *)hKField);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitMethod(HKCODEGEN hKCodeGen, KOPCODES opcode, HKMETHOD hKMethod)
 {
+	CGen->emit(opcode, (MethodDef *)hKMethod);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitType(HKCODEGEN hKCodeGen, KOPCODES opcode, HKTYPE hKType)
 {
+	CGen->emit(opcode, (TypeDef *)hKType);
 	return KRESULT_OK;
 }
 
 KCS_API KRESULT KcsCodeEmitEnter(HKCODEGEN hKCodeGen, HKTYPE hExcType, HKCODELABEL hHandlerLabel, HKCODELABEL hLeaveLabel)
 {
+	CGen->emit(OP_ENTER, (TypeDef *)hExcType, (Label *)hHandlerLabel, (Label *)hLeaveLabel);
 	return KRESULT_OK;
 }

@@ -13,6 +13,18 @@ kbool_t krt_strequ(kstring_t s1, kstring_t s2)
 	return true;
 }
 
+kbool_t krt_strequ(kstring_t s1, kstring_t s2, knuint_t length1, knuint_t length2)
+{
+	if (length1 != length2)
+		return false;
+
+	for (knuint_t i = 0; i < length1; ++i)
+		if (s1[i] != s2[i])
+			return false;
+
+	return true;
+}
+
 kbool_t krt_strequ(kstring_t s1, kstring_t s2, kstring_t s3)
 {
 	knuint_t i, j;
