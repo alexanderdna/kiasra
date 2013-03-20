@@ -130,6 +130,8 @@ public:
 	ModuleBuilder(bool isNative, KMODULETYPES type);
 	~ModuleBuilder(void);
 
+	const unsigned char * getCodeStream(kuint_t &codeSize);
+
 	bool isBaked(void);
 	bool isNative(void);
 
@@ -186,6 +188,8 @@ struct DelegateBuilder : public DelegateDef
 	
 	DelegateBuilder(ModuleBuilder *moduleBuilder, KCLASSATTRIBUTES attrs, kstring_t name,
 		const TypeDef *returnType, const KPARAMINFO *params, kushort_t paramCount);
+
+	~DelegateBuilder(void);
 };
 
 struct FieldBuilder : public FieldDef
@@ -210,6 +214,8 @@ struct MethodBuilder : public MethodDef
 
 	MethodBuilder(ClassBuilder *classBuilder, KMETHODATTRIBUTES attrs, kstring_t name,
 		const TypeDef *returnType, const KPARAMINFO *params, kushort_t paramCount);
+	
+	~MethodBuilder(void);
 
 	LocalBuilder * declareLocal(const TypeDef *declType);
 

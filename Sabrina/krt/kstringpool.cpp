@@ -14,7 +14,6 @@ StringPool::~StringPool(void)
 		it != this->stringList.end(); ++it)
 	{
 		delete [](it->str);
-		this->stringList.erase(it);
 	}
 }
 
