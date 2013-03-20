@@ -3,6 +3,7 @@
 #include "kenv.hpp"
 #include "kmeta.hpp"
 #include "kobject.hpp"
+#include "kmodule.hpp"
 
 #ifndef NULL
 #define NULL 0
@@ -24,6 +25,14 @@ KRT_API void KrtDestroyEnvironment(void)
 // Loads a module from the specified path
 KRT_API KRESULT KrtLoadModule(kstring_t path, HKMODULE *pHKModule)
 {
+	ModuleLoader *loader = KEnvironment::createModuleLoader((KMODULEATTRIBUTES)(KMODA_KIASRA | KMODA_USER), L"", path);
+	if (!loader->load())
+	{
+		*pHKModule = NULL;
+		return KRESULT_ERR;
+	}
+
+	*pHKModule = loader->getModule();
 	return KRESULT_OK;
 }
 

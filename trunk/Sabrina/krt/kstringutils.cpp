@@ -64,7 +64,7 @@ kstring_t krt_strcat(kstring_t s1, kstring_t s2)
 {
 	knuint_t len1 = wcslen(s1), len2 = wcslen(s2);
 	knuint_t len = len1 + len2;
-	kchar_t *s = new kchar_t[len];
+	kchar_t *s = new kchar_t[len + 1];
 	knuint_t i, j;
 
 	for (i = 0, j = 0; i < len1; ++i, ++j)
@@ -80,7 +80,7 @@ kstring_t krt_strcat(kstring_t s1, kstring_t s2)
 kstring_t krt_strcat(kstring_t s1, knuint_t len1, kstring_t s2, knuint_t len2)
 {
 	knuint_t len = len1 + len2;
-	kchar_t *s = new kchar_t[len];
+	kchar_t *s = new kchar_t[len + 1];
 	knuint_t i, j;
 
 	for (i = 0, j = 0; i < len1; ++i, ++j)
@@ -101,7 +101,7 @@ kstring_t krt_getdirpath(kstring_t fullPath)
 	const kchar_t *lastSlash = wcsrchr(fullPath, '/');
 #endif
 
-	knuint_t len = (lastSlash) ? (lastSlash - fullPath + 1) : 1;
+	knuint_t len = (lastSlash) ? (lastSlash - fullPath) : 0;
 	return krt_strdup(fullPath, len);
 }
 
@@ -113,7 +113,7 @@ kstring_t krt_getfilename(kstring_t fullPath)
 	const kchar_t *lastSlash = wcsrchr(fullPath, '/');
 #endif
 
-	return krt_strdup(lastSlash);
+	return krt_strdup(lastSlash ? lastSlash : fullPath);
 }
 
 const char * krt_wcstostr(kstring_t src)

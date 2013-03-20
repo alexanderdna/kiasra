@@ -12,6 +12,8 @@
 #include <vector>
 #include <cstring>
 
+#include <cassert>
+
 extern KCSERRORS lastCompileError;
 
 //===================================================
@@ -115,7 +117,7 @@ bool ModuleBuilder::bake(void)
 		
 		if (def->size == sizeof(ClassDef))
 		{
-			meta.moduleIndex = (ktoken16_t)this->importedModuleMap->operator[](def->module);
+			meta.moduleIndex = 1 + (ktoken16_t)this->importedModuleMap->operator[](def->module);
 			meta.farIndex = def->localIndex;
 
 			//attrs+name+moduleIndex+farIndex
@@ -138,7 +140,7 @@ bool ModuleBuilder::bake(void)
 			meta.moduleIndex = 0;
 
 			//attrs+name+moduleIndex+fieldList+methodList
-			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t);
+			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t);
 		}
 	}
 
@@ -163,7 +165,7 @@ bool ModuleBuilder::bake(void)
 		
 		if (def->size == sizeof(DelegateDef))
 		{
-			meta.moduleIndex = (ktoken16_t)this->importedModuleMap->operator[](def->module);
+			meta.moduleIndex = 1 + (ktoken16_t)this->importedModuleMap->operator[](def->module);
 			meta.farIndex = def->localIndex;
 
 			//attrs+name+moduleIndex+farIndex
@@ -217,9 +219,7 @@ bool ModuleBuilder::bake(void)
 	this->methodTable.rowCount = methodCount;
 	this->methodTable.rows = methodRows;
 
-	//count + count * (attrs+name+returnType+paramList+localList+addr)
-	binarySize += sizeof(kuint_t) + methodCount *
-		(sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(kuint_t));
+	binarySize += sizeof(kuint_t);//count
 
 	for (kuint_t i = 0; i < methodCount; ++i)
 	{
@@ -240,7 +240,18 @@ bool ModuleBuilder::bake(void)
 		else
 			meta.localList = 0;
 
-		meta.addr = builder->classBuilder->relativeAddr + builder->addr;
+		if (meta.attrs & KMA_NATIVE)
+		{
+			meta.addr = 0;
+			//attrs+name+returnType+paramList+localList
+			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t);
+		}
+		else
+		{
+			meta.addr = builder->classBuilder->relativeAddr + builder->addr;
+			//attrs+name+returnType+paramList+localList + addr
+			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(kuint_t);
+		}
 	}
 
 	// param table
@@ -325,6 +336,9 @@ bool ModuleBuilder::bake(void)
 
 	// now bake the binary representation
 
+	// code size
+	binarySize += sizeof(kuint_t);
+
 	this->binarySize = binarySize;
 	this->bakeBinary();
 
@@ -382,7 +396,7 @@ void ModuleBuilder::bakeBinary(void)
 		BINWRITE(lengthRows[i], kuint_t, pos);
 		pos += sizeof(kuint_t);
 
-		memcpy(stream+pos, stringRows+i, lengthRows[i] * sizeof(kchar_t));
+		memcpy(stream+pos, stringRows[i], lengthRows[i] * sizeof(kchar_t));
 		pos += lengthRows[i] * sizeof(kchar_t);
 	}
 
@@ -398,11 +412,11 @@ void ModuleBuilder::bakeBinary(void)
 	{
 		const MetaTypeDef &meta = typeRows[i];
 
-		if (meta.tok)
+		if ((meta.tag & KT_SCALAR_MASK) == KT_CLASS || (meta.tag & KT_SCALAR_MASK) == KT_DELEGATE)
 		{
 			BINWRITE(meta.tag, kushort_t, pos);
 			BINWRITE(meta.dim, kushort_t, pos + sizeof(kushort_t));
-			BINWRITE(meta.tok, ktoken16_t, pos + sizeof(kuint_t) + sizeof(kushort_t));
+			BINWRITE(meta.tok, ktoken16_t, pos + sizeof(kushort_t) + sizeof(kushort_t));
 
 			pos += sizeof(kushort_t) + sizeof(kushort_t) + sizeof(ktoken16_t);
 		}
@@ -524,7 +538,16 @@ void ModuleBuilder::bakeBinary(void)
 		BINWRITE(meta.paramList, ktoken32_t, pos + sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t));
 		BINWRITE(meta.localList, ktoken32_t, pos + sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t));
 
-		pos += sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t);
+		if (meta.attrs & KMA_NATIVE)
+		{
+			pos += sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t);
+		}
+		else
+		{
+			BINWRITE(meta.addr, kuint_t, pos +
+				sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t));
+			pos += sizeof(uint16_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(ktoken32_t) + sizeof(kuint_t);
+		}
 	}
 
 	// param table
@@ -576,6 +599,9 @@ void ModuleBuilder::bakeBinary(void)
 
 	// code
 
+	BINWRITE(this->codeSize, kuint_t, pos);
+	pos += sizeof(kuint_t);
+
 	decltype(this->classList) classList = this->classList;
 	for (kuint_t i = 0; i < classCount; ++i)
 	{
@@ -595,6 +621,8 @@ void ModuleBuilder::bakeBinary(void)
 			}
 		}
 	}
+
+	assert(this->binarySize == pos);
 }
 
 bool ModuleBuilder::validateBaking(void)
@@ -651,8 +679,6 @@ bool ModuleBuilder::setEntryPoint(MethodBuilder *method)
 ModuleBuilder::ModuleBuilder(bool isNative, KMODULETYPES type)
 	: baked(false), native(isNative), type(type), entryPoint(NULL), codeSize(0), entryClassToken(0), entryMethodToken(0)
 {
-	this->binarySize = 16; //header
-
 	this->importedModuleMap = new std::map<ModuleDef *, kushort_t>;
 	this->importedClassMap = new std::map<ClassDef *, kushort_t>;
 	this->importedDelegateMap = new std::map<DelegateDef *, kushort_t>;
@@ -818,23 +844,27 @@ const TypeDef * ModuleBuilder::createType(KTYPETAG tag, kushort_t dim, HKUSERTYP
 	}
 
 	TypeDef * typeDef = this->typeTree->add(tag, dim, classOrDelegate);
-	
-	typeDef->localIndex = (ktoken32_t)(this->typeList->size());
-	this->typeList->push_back(typeDef);
 
-	if ((tag & KT_SCALAR_MASK) == KT_CLASS)
+	    // really new type          ||  index is 0 but not identical to the first type
+	if (this->typeList->size() == 0 || (typeDef->localIndex == 0 && typeDef != this->typeList->operator[](0)))
 	{
-		ClassDef *cls = (ClassDef *)classOrDelegate;
-		if (cls->size == sizeof(ClassDef))
-			this->referenceClass(cls);
+		typeDef->localIndex = (ktoken32_t)(this->typeList->size());
+		this->typeList->push_back(typeDef);
+
+		if ((tag & KT_SCALAR_MASK) == KT_CLASS)
+		{
+			ClassDef *cls = (ClassDef *)classOrDelegate;
+			if (cls->size == sizeof(ClassDef))
+				this->referenceClass(cls);
+		}
+		else if ((tag & KT_SCALAR_MASK) == KT_DELEGATE)
+		{
+			DelegateDef *del = (DelegateDef *)classOrDelegate;
+			if (del->size == sizeof(DelegateDef))
+				this->referenceDelegate(del);
+		}
 	}
-	else if ((tag & KT_SCALAR_MASK) == KT_DELEGATE)
-	{
-		DelegateDef *del = (DelegateDef *)classOrDelegate;
-		if (del->size == sizeof(DelegateDef))
-			this->referenceDelegate(del);
-	}
-	
+
 	lastCompileError = KCSE_NO_ERROR;
 	return typeDef;
 }

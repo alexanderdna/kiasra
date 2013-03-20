@@ -136,7 +136,8 @@ bool TypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 	}
 	else
 	{
-		if (TypeTree::compare(ord, parentNode->data) < 0)
+		int cmp = TypeTree::compare(ord, parentNode->data);
+		if (cmp < 0)
 		{
 			if (!this->addNode(ord, parentNode->left, incrHeight))
 				return false;
@@ -162,7 +163,7 @@ bool TypeTree::addNode(const TypeOrd &ord, Node *&parentNode, bool &incrHeight)
 
 			return true;
 		}
-		else if (TypeTree::compare(ord, parentNode->data) > 0)
+		else if (cmp > 0)
 		{
 			if (!this->addNode(ord, parentNode->right, incrHeight))
 				return false;
@@ -215,6 +216,7 @@ TypeDef * TypeTree::add(KTYPETAG tag, kushort_t dim, const void *udt)
 {
 	TypeDef type = { tag, dim };
 	type.cls = (ClassDef *)udt;
+	type.localIndex = 0;
 
 	TypeOrd ord = { };
 	ord.type = type;
