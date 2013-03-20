@@ -252,7 +252,7 @@ struct ParamDef
 	const TypeDef  *declType;
 	bool            byRef;
 
-	ktoken16_t      globalIndex;
+	ktoken32_t      globalIndex;
 };
 
 struct MetaParamDef

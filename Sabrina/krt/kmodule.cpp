@@ -293,6 +293,8 @@ bool ModuleLoader::bake(void)
 	ModuleDef *module = new ModuleDef;
 	this->module = module;
 
+	module->path = this->filename;
+
 	// code stream
 
 	module->code = this->code;
@@ -454,7 +456,7 @@ bool ModuleLoader::bake(void)
 		const MetaClassDef &classRow = classRows[i];
 		ClassDef *cls;
 
-		if (classRow.farIndex)
+		if (classRow.moduleIndex)
 		{
 			cls = moduleList[classRow.moduleIndex]->classList[classRow.farIndex];
 		}
@@ -598,7 +600,7 @@ bool ModuleLoader::bake(void)
 			cls->methodList = methodList;
 		}
 
-		allClassList[i+1] = cls;
+		allClassList[i + 1] = cls;
 	}
 
 	// delegate param table
@@ -631,43 +633,51 @@ bool ModuleLoader::bake(void)
 	for (kushort_t i = 0; i < allDelegateCount; ++i)
 	{
 		MetaDelegateDef &delegateRow = delegateRows[i];
+		DelegateDef *del;
 
-		DelegateDef *del = new DelegateDef;
-		allDelegateList[i + 1] = del;
-
-		del->size = sizeof(DelegateDef);
-		del->attrs = delegateRow.attrs;
-		del->name = strings[delegateRow.name];
-
-		kuint_t paramCount = 0;
-			
-		if (delegateRow.paramList)
+		if (delegateRow.moduleIndex)
 		{
-			if (i == allDelegateCount - 1)
-			{
-				paramCount = this->dparamTable.rowCount - delegateRow.paramList + 1;
-			}
-			else
-			{
-				ktoken32_t nextDParamList = 0;
-				for (kuint_t j = i + 1; j < allDelegateCount; ++j)
-					if (nextDParamList = delegateRows[j].paramList)
-						break;
-
-				if (nextDParamList)
-					paramCount = nextDParamList - delegateRow.paramList;
-				else
-					paramCount = this->dparamTable.rowCount - delegateRow.paramList + 1;
-			}
+			del = moduleList[delegateRow.moduleIndex]->delegateList[delegateRow.farIndex];
 		}
+		else
+		{
+			del = new DelegateDef;
+			del->size = sizeof(DelegateDef);
+			del->attrs = delegateRow.attrs;
+			del->name = strings[delegateRow.name];
+
+			kuint_t paramCount = 0;
 			
-		ParamDef **paramList = new ParamDef* [paramCount];
+			if (delegateRow.paramList)
+			{
+				if (i == allDelegateCount - 1)
+				{
+					paramCount = this->dparamTable.rowCount - delegateRow.paramList + 1;
+				}
+				else
+				{
+					ktoken32_t nextDParamList = 0;
+					for (kuint_t j = i + 1; j < allDelegateCount; ++j)
+						if (nextDParamList = delegateRows[j].paramList)
+							break;
 
-		for (kuint_t k = delegateRow.paramList, j = 0; j < paramCount; ++k, ++j)
-			paramList[j] = &allDParamList[k];
+					if (nextDParamList)
+						paramCount = nextDParamList - delegateRow.paramList;
+					else
+						paramCount = this->dparamTable.rowCount - delegateRow.paramList + 1;
+				}
+			}
+			
+			ParamDef **paramList = new ParamDef* [paramCount];
 
-		del->paramCount = paramCount;
-		del->paramList = paramList;
+			for (kuint_t k = delegateRow.paramList, j = 0; j < paramCount; ++k, ++j)
+				paramList[j] = &allDParamList[k];
+
+			del->paramCount = paramCount;
+			del->paramList = paramList;
+		}
+		
+		allDelegateList[i + 1] = del;
 	}
 
 	// type table
@@ -1027,11 +1037,11 @@ bool ModuleLoader::loadClassTable()
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
 
-		_READ(row.farIndex, uint16_t);
+		_READ(row.moduleIndex, uint16_t);
 
-		if (row.farIndex)
+		if (row.moduleIndex)
 		{
-			_READ(row.moduleIndex, ktoken16_t);
+			_READ(row.farIndex, ktoken16_t);
 		}
 		else
 		{
@@ -1067,11 +1077,11 @@ bool ModuleLoader::loadDelegateTable()
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
 
-		_READ(row.farIndex, uint16_t);
+		_READ(row.moduleIndex, uint16_t);
 
-		if (row.farIndex)
+		if (row.moduleIndex)
 		{
-			_READ(row.moduleIndex, ktoken16_t);
+			_READ(row.farIndex, ktoken16_t);
 		}
 		else
 		{

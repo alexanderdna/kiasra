@@ -34,5 +34,5 @@
 	#define ISWIN
 	#define KCORLIB_NAME	L"kcorlib.dll"
 #else
-	#define KCORLIB_NAME	L"libkcore.so"
+	#define KCORLIB_NAME	L"kcorlib.so"
 #endif

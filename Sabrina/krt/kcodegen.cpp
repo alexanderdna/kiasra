@@ -1,6 +1,6 @@
 #include "kcodegen.hpp"
 
-#include <cstdlib>
+#include <cstring>
 
 #define DEFAULT_CODE_BUFFER	16
 
@@ -11,7 +11,7 @@
 CodeGen::CodeGen(MethodBuilder *methodBuilder)
 	: methodBuilder(methodBuilder),
 	size(0), capacity(DEFAULT_CODE_BUFFER),
-	isFinished(false)
+	finished(false)
 {
 	this->moduleBuilder = methodBuilder->classBuilder->moduleBuilder;
 	this->buffer = new unsigned char[this->capacity];
@@ -26,14 +26,14 @@ CodeGen::~CodeGen(void)
 		this->buffer = NULL;
 	}
 
-	for (std::vector<Label *>::const_iterator it = this->labels.begin();
+	for (std::vector<Label *>::iterator it = this->labels.begin();
 		it != this->labels.end(); ++it)
 	{
 		delete *it;
 		this->labels.erase(it);
 	}
 
-	for (std::vector<Fixup *>::const_iterator it = this->fixups.begin();
+	for (std::vector<Fixup *>::iterator it = this->fixups.begin();
 		it != this->fixups.end(); ++it)
 	{
 		delete *it;
@@ -45,7 +45,7 @@ CodeGen::~CodeGen(void)
 //public
 void CodeGen::finish(void)
 {
-	if (this->isFinished)
+	if (this->finished)
 		return;
 
 	for (std::vector<Fixup *>::const_iterator it = this->fixups.begin();
@@ -58,7 +58,13 @@ void CodeGen::finish(void)
 		*(kshort_t *)(this->buffer + position) = this->calculateDistance(position, label->position);
 	}
 
-	this->isFinished = true;
+	this->finished = true;
+}
+
+//public
+bool CodeGen::isFinished(void)
+{
+	return this->finished;
 }
 
 

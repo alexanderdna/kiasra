@@ -37,7 +37,7 @@ protected:
 	std::vector<Label *> labels;
 	std::vector<Fixup *> fixups;
 
-	bool isFinished;
+	bool finished;
 
 protected:
 	void ensureCapacity(kuint_t extra);
@@ -48,6 +48,7 @@ public:
 	~CodeGen(void);
 
 	void finish(void);
+	bool isFinished(void);
 
 	const unsigned char * getCodeStream(void);
 	kuint_t getCodeSize(void);

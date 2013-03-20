@@ -20,7 +20,11 @@ extern "C" {
 		#define KCS_API __declspec(dllimport)
 	#endif
 #else
-	#define KCS_API
+	#ifdef KRT_EXPORTS
+		#define KCS_API __attribute__ ((visibility("default")))
+	#else
+		#define KCS_API
+	#endif
 #endif
 
 /*===================================================*/
@@ -47,9 +51,17 @@ enum KCSERRORS
 	KCSE_DUPLICATE_DELEGATE,
 	KCSE_DUPLICATE_FIELD,
 	KCSE_DUPLICATE_METHOD,
+
+	KCSE_NATIVE_NOT_ALLOWED,
+	KCSE_METHOD_IS_NATIVE,
+	KCSE_NO_METHOD_BODY,
 	
-	KCSE_INCOMPLETE_MODULE,
+	KCSE_MODULE_BAKED,
+	KCSE_CLASS_BAKED,
+
 	KCSE_NO_ENTRY,
+	KCSE_ENTRY_NOT_ALLOWED,
+	KCSE_INCOMPLETE_MODULE,
 
 	KCSE_INVALID_PATH,
 	KCSE_IO_ERROR,
@@ -138,7 +150,7 @@ KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo);
 /*===================================================*/
 
 /* Creates a builder service for making a new module. */
-KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULEATTRIBUTES attrs, KMODULETYPES type);
+KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(kbool_t isNative, KMODULETYPES type);
 
 /* Bakes a module to prepare for saving. */
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder);
@@ -166,6 +178,9 @@ KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t
 
 /* Declares a new local variable in the given method. */
 KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType);
+
+/* Bakes a class */
+KCS_API KRESULT KcsBakeClass(HKCLASSBUILDER hKClassBuilder);
 
 /*===================================================*/
 

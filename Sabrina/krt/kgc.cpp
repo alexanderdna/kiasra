@@ -3,6 +3,7 @@
 #include "kenv.hpp"
 #include "kobject.hpp"
 
+#include <cstring>
 #include <cstdlib>
 
 #define assert(v) ((void)0)

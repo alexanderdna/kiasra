@@ -7,7 +7,7 @@
 
 class StringPool
 {
-protected:
+public:
 	struct StringInfo
 	{
 		kstring_t str;
@@ -24,5 +24,7 @@ public:
 	~StringPool(void);
 
 	ktoken32_t addString(kstring_t s, kuint_t length);
+
+	std::vector<StringInfo> * getStringList(void);
 };
 

@@ -4,6 +4,8 @@
 #include "kobject.hpp"
 #include "kenv.hpp"
 
+#include <cstring>
+
 //===================================================
 // Stack manipulation
 

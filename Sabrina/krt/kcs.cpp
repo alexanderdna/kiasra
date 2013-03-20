@@ -14,24 +14,24 @@
 
 //===================================================
 
-static KCSERRORS lastError;
+KCSERRORS lastCompileError;
 
 KCS_API KCSERRORS KcsGetLastError(void)
 {
-	return lastError;
+	return lastCompileError;
 }
 
 KCS_API KRESULT KcsCreateEnvironment()
 {
 	KEnvironment::initialize(false);
-	lastError = KCSE_NO_ERROR;
+	lastCompileError = KCSE_NO_ERROR;
 	return KRESULT_OK;
 }
 
 KCS_API void KcsDestroyEnvironment(void)
 {
 	KEnvironment::finalize();
-	lastError = KCSE_NO_ERROR;
+	lastCompileError = KCSE_NO_ERROR;
 }
 
 KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule)
@@ -58,12 +58,12 @@ KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKM
 	if (!loader->load())
 	{
 		*pHKModule = NULL;
-		lastError = KCSE_CANNOT_LOAD_MODULE;
+		lastCompileError = KCSE_CANNOT_LOAD_MODULE;
 		return KRESULT_ERR;
 	}
 
 	*pHKModule = loader->getModule();
-	lastError = KCSE_NO_ERROR;
+	lastCompileError = KCSE_NO_ERROR;
 
 	return KRESULT_OK;
 }
@@ -167,9 +167,9 @@ KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo)
 
 //===================================================
 
-KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(KMODULEATTRIBUTES attrs, KMODULETYPES type)
+KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(kbool_t isNative, KMODULETYPES type)
 {
-	return new ModuleBuilder(attrs, type);
+	return new ModuleBuilder(isNative != 0, type);
 }
 
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
@@ -217,6 +217,14 @@ KCS_API HKMETHODBUILDER KcsDefineMethod(HKCLASSBUILDER hKClassBuilder, kstring_t
 KCS_API HKLOCALBUILDER KcsDeclareLocal(HKMETHODBUILDER hKMethodBuilder, HKTYPE hDeclType)
 {
 	return ((MethodBuilder *)hKMethodBuilder)->declareLocal((TypeDef *)hDeclType);
+}
+
+KCS_API KRESULT KcsBakeClass(HKCLASSBUILDER hKClassBuilder)
+{
+	if (!((ClassBuilder *)hKClassBuilder)->bake())
+		return KRESULT_ERR;
+	else
+		return KRESULT_OK;
 }
 
 //===================================================
