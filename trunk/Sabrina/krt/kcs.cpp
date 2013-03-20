@@ -10,6 +10,8 @@
 
 #include "kstringutils.hpp"
 
+#include <cstdio>
+
 #define CGen	((CodeGen *)hKCodeGen)
 
 //===================================================
@@ -172,6 +174,11 @@ KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(kbool_t isNative, KMODULETYPES ty
 	return new ModuleBuilder(isNative != 0, type);
 }
 
+KCS_API void KcsDestroyModuleBuilder(HKMODULEBUILDER hKModuleBuilder)
+{
+	delete ((ModuleBuilder *)hKModuleBuilder);
+}
+
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 {
 	if (((ModuleBuilder *)hKModuleBuilder)->bake())
@@ -182,6 +189,25 @@ KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 
 KCS_API KRESULT KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPath)
 {
+	kuint_t codeSize;
+	const unsigned char *codeStream = ((ModuleBuilder *)hKModuleBuilder)->getCodeStream(codeSize);
+
+	FILE *fp = fopen(szPath, "wb");
+	if (!fp)
+	{
+		lastCompileError = KCSE_IO_ERROR;
+		return KRESULT_ERR;
+	}
+
+	if (fwrite(codeStream, sizeof(unsigned char), codeSize, fp) < codeSize)
+	{
+		fclose(fp);
+		lastCompileError = KCSE_IO_ERROR;
+		return KRESULT_ERR;
+	}
+
+	fclose(fp);
+
 	return KRESULT_OK;
 }
 

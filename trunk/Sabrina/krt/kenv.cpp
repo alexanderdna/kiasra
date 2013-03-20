@@ -127,21 +127,34 @@ void KEnvironment::initialize(bool isForExecution)
 	//===================================
 	// prepare basic types
 
-	TypeTree *typeTree = new TypeTree;
-	KEnvironment::typeTree = typeTree;
+	if (isForExecution)
+	{
+		TypeTree *typeTree = new TypeTree;
+		KEnvironment::typeTree = typeTree;
 
-	const TypeDef **primitiveTypes = new const TypeDef * [(knuint_t)KT_STRING + 1];
-	KEnvironment::primitiveTypes = primitiveTypes;
+		const TypeDef **primitiveTypes = new const TypeDef * [(knuint_t)KT_STRING + 1];
+		KEnvironment::primitiveTypes = primitiveTypes;
 
-	for (knuint_t i = 0; i <= (knuint_t)KT_STRING; ++i)
-		primitiveTypes[i] = typeTree->add((KTYPETAG)i, 0, NULL);
+		for (knuint_t i = 0; i <= (knuint_t)KT_STRING; ++i)
+			primitiveTypes[i] = typeTree->add((KTYPETAG)i, 0, NULL);
 
-	KEnvironment::voidType = typeTree->add(KT_VOID, 0, NULL);
-	KEnvironment::arrayType = typeTree->add(KT_ARRAY, 0, NULL);
-	KEnvironment::objectType = typeTree->add(KT_OBJECT, 0, NULL);
-	KEnvironment::rawType = typeTree->add(KT_RAW, 0, NULL);
+		KEnvironment::voidType = typeTree->add(KT_VOID, 0, NULL);
+		KEnvironment::arrayType = typeTree->add(KT_ARRAY, 0, NULL);
+		KEnvironment::objectType = typeTree->add(KT_OBJECT, 0, NULL);
+		KEnvironment::rawType = typeTree->add(KT_RAW, 0, NULL);
 	
-	KEnvironment::nullType = new TypeDef; // nothing special, just a unique reference
+		KEnvironment::nullType = new TypeDef; // nothing special, just a unique reference
+	}
+	else
+	{
+		KEnvironment::typeTree = NULL;
+		KEnvironment::primitiveTypes = NULL;
+		KEnvironment::voidType = NULL;
+		KEnvironment::arrayType = NULL;
+		KEnvironment::objectType = NULL;
+		KEnvironment::rawType = NULL;
+		KEnvironment::nullType = NULL;
+	}
 
 	//===================================
 	// prepare module loaders
@@ -186,13 +199,16 @@ void KEnvironment::initialize(bool isForExecution)
 	//===================================
 	// misc
 
-	KObject::objectType = KEnvironment::objectType;
-	KObject::nullType = KEnvironment::nullType;
-	KObject::stringType = KEnvironment::primitiveTypes[KT_STRING];
+	if (isForExecution)
+	{
+		KObject::objectType = KEnvironment::objectType;
+		KObject::nullType = KEnvironment::nullType;
+		KObject::stringType = KEnvironment::primitiveTypes[KT_STRING];
 
-	KObject::nullObject.type = KObject::nullType;
-	KObject::nullObject.setRef(NULL, 0);
-	
+		KObject::nullObject.type = KObject::nullType;
+		KObject::nullObject.setRef(NULL, 0);
+	}
+
 	//===================================
 
 	KEnvironment::isInitialized = true;
@@ -255,6 +271,8 @@ void KEnvironment::initSystemLibPath(void)
 		for (knuint_t i = 0; i < len; ++i)
 			s[i] = buffer[i];
 		s[len] = 0;
+		delete []buffer;
+
 		KEnvironment::systemLibPath = s;
 	}
 #else
@@ -273,6 +291,8 @@ void KEnvironment::initSystemLibPath(void)
 		for (knuint_t i = 0; i < len; ++i)
 			s[i] = buffer[i];
 		s[len] = 0;
+		delete []buffer;
+
 		KEnvironment::systemLibPath = s;
 	}
 #endif

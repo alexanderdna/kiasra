@@ -1,5 +1,10 @@
 #pragma once
 
+// using Visual Leak Detector
+#ifdef USE_VLD
+#include <vld.h>
+#endif
+
 #if defined(_MSC_VER)
 	#if defined(_M_IA64) || defined(_M_X64) || defined(_M_AMD64) || defined(_WIN64)
 		#define IS64BIT

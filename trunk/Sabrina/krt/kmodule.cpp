@@ -100,6 +100,7 @@ ModuleLoader::ModuleLoader(KMODULEATTRIBUTES attrs,  kstring_t importerPath, kst
 	code(NULL)
 {
 	this->stringTable.rows = NULL;
+	this->stringTable.lengths = NULL;
 	this->typeTable.rows = NULL;
 	this->moduleTable.rows = NULL;
 	this->classTable.rows = NULL;
@@ -827,6 +828,7 @@ void ModuleLoader::clean()
 	DELETE_IF_NOT_NULL(this->filename);
 
 	DELETE_IF_NOT_NULL(this->stringTable.rows);
+	DELETE_IF_NOT_NULL(this->stringTable.lengths);
 	DELETE_IF_NOT_NULL(this->typeTable.rows);
 	DELETE_IF_NOT_NULL(this->moduleTable.rows);
 	DELETE_IF_NOT_NULL(this->classTable.rows);
