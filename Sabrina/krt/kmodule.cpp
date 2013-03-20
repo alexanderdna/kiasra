@@ -92,7 +92,7 @@ ModuleLoader * ModuleLoader::create(KMODULEATTRIBUTES attrs, kstring_t importerP
 
 //protected
 ModuleLoader::ModuleLoader(KMODULEATTRIBUTES attrs,  kstring_t importerPath, kstring_t fullPath, kstring_t filename)
-	: moduleLoaders(NULL), err(ModuleLoadError::OK),
+	: moduleLoaders(NULL), err(ModuleLoadError::OK), attrs(attrs),
 	importerPath(importerPath), fullPath(fullPath), filename(filename),
 	hash(hash), libHandle(NULL),
 	stream(NULL), pos(0), isCleaned(false),
@@ -327,10 +327,13 @@ bool ModuleLoader::bake(void)
 	kuint_t moduleCount = this->moduleTable.rowCount;
 	MetaModuleDef *metaModuleRows = this->moduleTable.rows;
 
-	ModuleLoader **moduleLoaderList = new ModuleLoader* [moduleCount];
-	ModuleDef **moduleList = new ModuleDef * [moduleCount];
+	ModuleLoader **moduleLoaderList = new ModuleLoader* [moduleCount + 1];
+	ModuleDef **moduleList = new ModuleDef * [moduleCount + 1];
 	module->moduleCount = moduleCount;
 	module->moduleList = moduleList;
+
+	moduleLoaderList[0] = NULL;
+	moduleList[0] = NULL;
 
 	for (kuint_t i = 0; i < moduleCount; ++i)
 	{
@@ -346,8 +349,8 @@ bool ModuleLoader::bake(void)
 			}
 		}
 
-		moduleLoaderList[i] = moduleLoader;
-		moduleList[i] = moduleLoader->module;
+		moduleLoaderList[i + 1] = moduleLoader;
+		moduleList[i + 1] = moduleLoader->module;
 	}
 
 	// field table
@@ -515,9 +518,9 @@ bool ModuleLoader::bake(void)
 			for (kuint_t k = 0, j = 0, m = 0; k < fieldCount; ++k)
 			{
 				if (fieldList[k]->attrs & KFA_STATIC)
-					iFieldList[j++] = fieldList[k];
+					sFieldList[j++] = fieldList[k];
 				else
-					sFieldList[m++] = fieldList[k];
+					iFieldList[m++] = fieldList[k];
 			}
 
 			cls->fieldCount = fieldCount;
@@ -601,7 +604,7 @@ bool ModuleLoader::bake(void)
 			cls->methodList = methodList;
 		}
 
-		allClassList[i + 1] = cls;
+		allClassList[i] = cls;
 	}
 
 	// delegate param table
@@ -626,7 +629,7 @@ bool ModuleLoader::bake(void)
 	kushort_t allDelegateCount = this->delegateTable.rowCount;
 	MetaDelegateDef *delegateRows = this->delegateTable.rows;
 
-	DelegateDef **allDelegateList = new DelegateDef* [allDelegateCount + 1];
+	DelegateDef **allDelegateList = new DelegateDef* [allDelegateCount];
 	module->delegateCount = allDelegateCount;
 	module->delegateList = allDelegateList;
 
@@ -678,7 +681,7 @@ bool ModuleLoader::bake(void)
 			del->paramList = paramList;
 		}
 		
-		allDelegateList[i + 1] = del;
+		allDelegateList[i] = del;
 	}
 
 	// type table
@@ -774,8 +777,10 @@ bool ModuleLoader::bake(void)
 
 	// entry point
 
-	if (this->entryClass)
+	if (this->moduleType != ModuleType::Library)
 		module->entryMethod = allClassList[this->entryClass]->methodList[this->entryMethod];
+	else
+		module->entryMethod = NULL;
 
 	// DONE!
 
@@ -1034,7 +1039,7 @@ bool ModuleLoader::loadClassTable()
 	{
 		MetaClassDef &row = rows[i];
 
-		_READ(row.attrs, KCLASSATTRIBUTES);
+		_READ(row.attrs, uint16_t);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1074,7 +1079,7 @@ bool ModuleLoader::loadDelegateTable()
 	{
 		MetaDelegateDef &row = rows[i];
 
-		_READ(row.attrs, KCLASSATTRIBUTES);
+		_READ(row.attrs, uint16_t);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1105,8 +1110,8 @@ bool ModuleLoader::loadFieldTable()
 	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
-	unsigned int rowCount = *(uint16_t *)(stream + pos);
-	pos += sizeof(uint16_t);
+	unsigned int rowCount = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	MetaFieldDef *rows = new MetaFieldDef[rowCount];
 
@@ -1114,7 +1119,7 @@ bool ModuleLoader::loadFieldTable()
 	{
 		MetaFieldDef &row = rows[i];
 
-		_READ(row.attrs, KFIELDATTRIBUTES);
+		_READ(row.attrs, uint16_t);
 
 		_VREAD(nameToken, uint32_t);
 		row.name = nameToken;
@@ -1135,8 +1140,8 @@ bool ModuleLoader::loadMethodTable()
 	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
-	unsigned int rowCount = *(uint16_t *)(stream + pos);
-	pos += sizeof(uint16_t);
+	unsigned int rowCount = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	MetaMethodDef *rows = new MetaMethodDef[rowCount];
 
@@ -1146,7 +1151,7 @@ bool ModuleLoader::loadMethodTable()
 	{
 		MetaMethodDef &row = rows[i];
 
-		_READ(row.attrs, KMETHODATTRIBUTES);
+		_READ(row.attrs, uint16_t);
 
 		if (nonNative && (row.attrs & KMA_NATIVE))
 		{
@@ -1178,8 +1183,8 @@ bool ModuleLoader::loadParamTable()
 	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
-	unsigned int rowCount = *(uint16_t *)(stream + pos);
-	pos += sizeof(uint16_t);
+	unsigned int rowCount = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	MetaParamDef *rows = new MetaParamDef[rowCount];
 
@@ -1209,8 +1214,8 @@ bool ModuleLoader::loadDelegateParamTable()
 	knuint_t pos = this->pos;
 	kstring_t *stringRows = this->stringTable.rows;
 	
-	unsigned int rowCount = *(uint16_t *)(stream + pos);
-	pos += sizeof(uint16_t);
+	unsigned int rowCount = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	MetaParamDef *rows = new MetaParamDef[rowCount];
 
@@ -1239,8 +1244,8 @@ bool ModuleLoader::loadLocalTable()
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
 	
-	unsigned int rowCount = *(uint16_t *)(stream + pos);
-	pos += sizeof(uint16_t);
+	unsigned int rowCount = *(uint32_t *)(stream + pos);
+	pos += sizeof(uint32_t);
 
 	ktoken32_t *rows = new ktoken32_t[rowCount];
 

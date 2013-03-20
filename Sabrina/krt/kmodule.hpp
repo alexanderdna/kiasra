@@ -125,7 +125,6 @@ protected:
 	bool hasDebugInfo;
 	uint32_t hash;
 
-	// two-part token for the entry point
 	ktoken16_t entryClass;
 	ktoken16_t entryMethod;
 
