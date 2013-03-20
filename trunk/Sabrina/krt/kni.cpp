@@ -272,7 +272,7 @@ KNI_API kfloat_t KniGetFieldFloat(HKFIELD hKField)
 KNI_API kdouble_t KniGetFieldDouble(HKFIELD hKField)
 {
 	const KObject &obj = KEnvironment::stackPop();
-	CHECK_GET_FIELD(NULL);
+	CHECK_GET_FIELD(0);
 
 	return obj.getField(Fld->localIndex).getDouble();
 }

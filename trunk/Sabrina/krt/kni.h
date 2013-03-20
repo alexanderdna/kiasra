@@ -1,6 +1,7 @@
 #ifndef _KNI_H
 #define _KNI_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include <wchar.h>
 
@@ -17,7 +18,11 @@ extern "C" {
 		#define KNI_API __declspec(dllimport)
 	#endif
 #else
-	#define KNI_API
+	#ifdef KRT_EXPORTS
+		#define KNI_API __attribute__ ((visibility("default")))
+	#else
+		#define KNI_API
+	#endif
 #endif
 
 /*===================================================*/

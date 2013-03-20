@@ -10,7 +10,7 @@ StringPool::StringPool(ModuleBuilder *moduleBuilder)
 
 StringPool::~StringPool(void)
 {
-	for (std::vector<StringInfo>::const_iterator it = this->stringList.begin();
+	for (std::vector<StringInfo>::iterator it = this->stringList.begin();
 		it != this->stringList.end(); ++it)
 	{
 		delete [](it->str);
@@ -31,4 +31,9 @@ ktoken32_t StringPool::addString(kstring_t s, kuint_t length)
 	StringInfo si = { newS, length };
 	this->stringList.push_back(si);
 	return (ktoken32_t)(this->stringList.size() - 1);
+}
+
+std::vector<StringPool::StringInfo> * StringPool::getStringList(void)
+{
+	return &this->stringList;
 }

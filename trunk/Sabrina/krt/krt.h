@@ -16,7 +16,11 @@ extern "C" {
 		#define KRT_API __declspec(dllimport)
 	#endif
 #else
-	#define KRT_API
+	#ifdef KRT_EXPORTS
+		#define KRT_API __attribute__ ((visibility("default")))
+	#else
+		#define KRT_API
+	#endif
 #endif
 
 /*===================================================*/

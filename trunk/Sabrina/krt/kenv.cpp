@@ -13,9 +13,14 @@
 #include "kmodule.hpp"
 
 #include <set>
-#include <cstdlib>
 #include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <cwchar>
+
+#ifndef ISWIN
+#include <unistd.h>
+#endif
 
 //===================================================
 // Defines
@@ -100,7 +105,7 @@ void KEnvironment::initialize(bool isForExecution)
 	KEnvironment::locals = NULL;
 	KEnvironment::args = NULL;
 	KEnvironment::code = NULL;
-	KEnvironment::ip = NULL;
+	KEnvironment::ip = 0;
 	KEnvironment::exc = NULL;
 
 	//===================================
@@ -694,7 +699,7 @@ KRESULT KEnvironment::invoke(const MethodDef *method)
 
 	if (method->attrs & KMA_NATIVE)
 	{
-		if (method->func() == KRESULT_ERR)
+		if (method->func() == NINVOKE_ERR)
 		{
 			KEnvironment::throwException();
 			return KRESULT_ERR;
@@ -761,7 +766,7 @@ KRESULT KEnvironment::invokeDelegate(const DelegateDef *dele)
 
 	if (method->attrs & KMA_NATIVE)
 	{
-		if (method->func() == KRESULT_ERR)
+		if (method->func() == NINVOKE_ERR)
 		{
 			KEnvironment::throwException();
 			return KRESULT_ERR;
@@ -808,7 +813,7 @@ KRESULT KEnvironment::invokeLastThis(const MethodDef *method)
 
 	if (method->attrs & KMA_NATIVE)
 	{
-		if (method->func() == KRESULT_ERR)
+		if (method->func() == NINVOKE_ERR)
 		{
 			KEnvironment::throwException();
 			return KRESULT_ERR;
@@ -846,7 +851,7 @@ KRESULT KEnvironment::invokeExceptionCtor(const MethodDef *ctor)
 
 	if (ctor->attrs & KMA_NATIVE)
 	{
-		if (method->func() == KRESULT_ERR)
+		if (method->func() == NINVOKE_ERR)
 		{
 			KEnvironment::throwException();
 			return KRESULT_ERR;

@@ -329,7 +329,7 @@ void KObject::clean(void)
 	if (IS_STRING(this->type) && this->vString)
 	{
 		delete [] this->vString;
-		this->vULong = NULL; //long to ensure 64 bits are unset
+		this->vULong = 0; //long to ensure 64 bits are unset
 	}
 }
 

@@ -23,11 +23,81 @@ class ModuleBuilder
 	friend class CodeGen;
 
 protected:
-	ModuleDef *moduleDef;
-	bool isBaked;
-
 	KMODULEATTRIBUTES attrs;
-	KMODULETYPES mdlType;
+
+	struct
+	{
+		uint32_t   rowCount;
+		kuint_t   *lengths;
+		kstring_t *rows;
+	} stringTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		MetaTypeDef *rows;
+	} typeTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaModuleDef *rows;
+	} moduleTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaClassDef *rows;
+	} classTable;
+
+	struct
+	{
+		uint16_t rowCount;
+		MetaDelegateDef *rows;
+	} delegateTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		MetaFieldDef *rows;
+	} fieldTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		MetaMethodDef *rows;
+	} methodTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		MetaParamDef *rows;
+	} paramTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		MetaParamDef *rows;
+	} dparamTable;
+
+	struct
+	{
+		uint32_t rowCount;
+		ktoken32_t *rows;
+	} localTable;
+
+	ktoken16_t entryClassToken;
+	ktoken16_t entryMethodToken;
+
+	unsigned char *codeStream;
+	kuint_t codeSize;
+
+	kuint_t binarySize; // size of binary file
+
+protected:
+	bool baked;
+	bool native;
+	KMODULETYPES type;
 
 	StringPool *stringPool;
 
@@ -52,9 +122,18 @@ protected:
 
 	const MethodBuilder *entryPoint;
 
+protected:
+	bool validateBaking(void);
+	void bakeBinary(void);
+
 public:
-	ModuleBuilder(KMODULEATTRIBUTES attrs, KMODULETYPES type);
+	ModuleBuilder(bool isNative, KMODULETYPES type);
 	~ModuleBuilder(void);
+
+	bool isBaked(void);
+	bool isNative(void);
+
+	bool bake(void);
 
 	const TypeDef * createType(KTYPETAG tag, kushort_t dim, HKUSERTYPE classOrDelegate);
 
@@ -76,15 +155,16 @@ public:
 
 	ktoken32_t addString(kstring_t s, kuint_t length);
 
-	void setEntryPoint(MethodBuilder *method);
-	ModuleDef * getModule(void);
-
-	bool bake(void);
+	bool setEntryPoint(MethodBuilder *method);
 };
 
 struct ClassBuilder : public ClassDef
 {
 	ModuleBuilder *moduleBuilder;
+
+	kuint_t relativeAddr;
+	kuint_t codeSize;
+	bool baked;
 
 	std::vector<FieldBuilder *>  *fieldBuilderList;
 	std::vector<MethodBuilder *> *methodBuilderList;
@@ -96,6 +176,8 @@ struct ClassBuilder : public ClassDef
 
 	MethodBuilder * defineMethod(KMETHODATTRIBUTES attrs, kstring_t name,
 		const TypeDef *returnType, const KPARAMINFO *params, kushort_t paramCount);
+
+	bool bake(void);
 };
 
 struct DelegateBuilder : public DelegateDef

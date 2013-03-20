@@ -3,6 +3,7 @@
 #include "kconfig.hpp"
 
 #include <cstring>
+#include <cwchar>
 
 kbool_t krt_strequ(kstring_t s1, kstring_t s2)
 {
@@ -46,7 +47,7 @@ kstring_t krt_strdup(kstring_t src)
 	kchar_t *s = new kchar_t[len + 1];
 	for (knuint_t i = 0; i < len; ++i)
 		s[i] = src[i];
-	s[len] = NULL;
+	s[len] = L'\0';
 	return s;
 }
 
@@ -55,7 +56,7 @@ kstring_t krt_strdup(kstring_t src, knuint_t len)
 	kchar_t *s = new kchar_t[len + 1];
 	for (knuint_t i = 0; i < len; ++i)
 		s[i] = src[i];
-	s[len] = NULL;
+	s[len] = L'\0';
 	return s;
 }
 
@@ -72,7 +73,7 @@ kstring_t krt_strcat(kstring_t s1, kstring_t s2)
 	for (i = 0; i < len2; ++i, ++j)
 		s[j] = s2[i];
 
-	s[len] = NULL;
+	s[len] = L'\0';
 	return s;
 }
 
@@ -88,7 +89,7 @@ kstring_t krt_strcat(kstring_t s1, knuint_t len1, kstring_t s2, knuint_t len2)
 	for (i = 0; i < len2; ++i, ++j)
 		s[j] = s2[i];
 
-	s[len] = NULL;
+	s[len] = L'\0';
 	return s;
 }
 
@@ -121,7 +122,7 @@ const char * krt_wcstostr(kstring_t src)
 	char *s = new char[len + 1];
 	for (knuint_t i = 0; i < len; ++i)
 		s[i] = (char)src[i];
-	s[len] = 0;
+	s[len] = '\0';
 
 	return s;
 }
