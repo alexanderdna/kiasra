@@ -196,7 +196,7 @@ struct FieldBuilder : public FieldDef
 {
 	ClassBuilder *classBuilder;
 
-	ktoken16_t globalIndex; // position in module
+	ktoken32_t globalIndex; // position in module
 
 	FieldBuilder(ClassBuilder *classBuilder, KFIELDATTRIBUTES attrs, kstring_t name, const TypeDef *declType);
 };
@@ -206,7 +206,7 @@ struct MethodBuilder : public MethodDef
 	ClassBuilder *classBuilder;
 	CodeGen *codeGen;
 
-	ktoken16_t globalIndex; // position in module
+	ktoken32_t globalIndex; // position in module
 
 	std::vector<LocalBuilder *> localBuilderList;
 
@@ -227,5 +227,5 @@ struct LocalBuilder
 	const TypeDef *declType;
 	
 	kushort_t  localIndex;  // position in method
-	ktoken16_t globalIndex; // position in module
+	ktoken32_t globalIndex; // position in module
 };

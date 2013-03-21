@@ -126,6 +126,32 @@ bool ModuleBuilder::bake(void)
 		else
 		{
 			ClassBuilder *builder = (ClassBuilder *)def;
+
+			// add fields to list
+			{
+				decltype(builder->fieldBuilderList) fieldBuilderList = builder->fieldBuilderList;
+				decltype(this->fieldList) fieldList = this->fieldList;
+				ktoken32_t idx = fieldList->size();
+				for (std::vector<FieldBuilder *>::const_iterator it = fieldBuilderList->begin();
+					it != fieldBuilderList->end(); ++it)
+				{
+					fieldList->push_back(*it);
+					(*it)->globalIndex = ++idx;
+				}
+			}
+
+			// add methods to list
+			{
+				decltype(builder->methodBuilderList) methodBuilderList = builder->methodBuilderList;
+				decltype(this->methodList) methodList = this->methodList;
+				ktoken32_t idx = methodList->size();
+				for (std::vector<MethodBuilder *>::const_iterator it = methodBuilderList->begin();
+					it != methodBuilderList->end(); ++it)
+				{
+					methodList->push_back(*it);
+					(*it)->globalIndex = ++idx;
+				}
+			}
 			
 			if (builder->fieldCount)
 				meta.fieldList = (ktoken32_t)((*builder->fieldBuilderList->begin())->globalIndex);
@@ -184,7 +210,7 @@ bool ModuleBuilder::bake(void)
 			meta.moduleIndex = 0;
 
 			//attrs+name+moduleIndex+returnType+paramList
-			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t);
+			binarySize += sizeof(uint16_t)+sizeof(ktoken32_t)+sizeof(ktoken16_t)+sizeof(ktoken32_t)+sizeof(ktoken32_t);
 		}
 	}
 
@@ -225,6 +251,19 @@ bool ModuleBuilder::bake(void)
 	{
 		MetaMethodDef &meta = methodRows[i];
 		MethodBuilder *builder = methodList->operator[](i);
+
+		// add locals to list
+		{
+			const decltype(builder->localBuilderList) &localBuilderList = builder->localBuilderList;
+			decltype(this->localList) localList = this->localList;
+			ktoken32_t idx = localList->size();
+			for (std::vector<LocalBuilder *>::const_iterator it = localBuilderList.begin();
+				it != localBuilderList.end(); ++it)
+			{
+				localList->push_back(*it);
+				(*it)->globalIndex = ++idx;
+			}
+		}
 
 		meta.attrs = builder->attrs;
 		meta.name = stringPool->addString(builder->name, (kuint_t)wcslen(builder->name));
@@ -331,7 +370,7 @@ bool ModuleBuilder::bake(void)
 		stringRows[i] = si.str;
 		lengthRows[i] = si.len;
 
-		binarySize += sizeof(kuint_t) + si.len * sizeof(kchar_t); //len + lengthof(str)
+		binarySize += sizeof(kuint_t) + si.len * sizeof(uint16_t); //len + lengthof(str)
 	}
 
 	// now bake the binary representation
@@ -393,11 +432,18 @@ void ModuleBuilder::bakeBinary(void)
 
 	for (kuint_t i = 0; i < stringCount; ++i)
 	{
-		BINWRITE(lengthRows[i], kuint_t, pos);
+		kstring_t s = stringRows[i];
+		kuint_t slen = lengthRows[i];
+
+		BINWRITE(slen, kuint_t, pos);
 		pos += sizeof(kuint_t);
 
-		memcpy(stream+pos, stringRows[i], lengthRows[i] * sizeof(kchar_t));
-		pos += lengthRows[i] * sizeof(kchar_t);
+		kuint_t j = 0;
+		uint16_t *p = (uint16_t *)(stream + pos);
+		for (; j < slen; ++j, ++p)
+			*p = (uint16_t)s[j];
+
+		pos += slen * sizeof(uint16_t);
 	}
 
 	// type table
@@ -714,9 +760,6 @@ ModuleBuilder::ModuleBuilder(bool isNative, KMODULETYPES type)
 	this->localTable.rows = NULL;
 }
 
-#define DELETE_IF_NOT_NULL(p) if (p) { delete p; p = NULL; }
-#define ADELETE_IF_NOT_NULL(p) if (p) { delete p; p = NULL; }
-
 ModuleBuilder::~ModuleBuilder(void)
 {
 	DELETE_IF_NOT_NULL(this->stringPool);
@@ -1027,10 +1070,6 @@ ClassBuilder::ClassBuilder(ModuleBuilder *moduleBuilder, KCLASSATTRIBUTES attrs,
 	this->iFieldCount = 0;
 	this->sFieldCount = 0;
 	this->methodCount = 0;
-	this->fieldList = NULL;
-	this->iFieldList = NULL;
-	this->sFieldList = NULL;
-	this->methodList = NULL;
 
 	this->fieldBuilderList = new std::vector<FieldBuilder *>;
 	this->methodBuilderList = new std::vector<MethodBuilder *>;
@@ -1081,7 +1120,7 @@ FieldBuilder * ClassBuilder::defineField(KFIELDATTRIBUTES attrs, kstring_t name,
 	
 	this->fieldBuilderList->push_back(builder);
 
-	this->moduleBuilder->addField(builder);
+//	this->moduleBuilder->addField(builder);
 	
 	lastCompileError = KCSE_NO_ERROR;
 	return builder;
@@ -1129,7 +1168,7 @@ MethodBuilder * ClassBuilder::defineMethod(KMETHODATTRIBUTES attrs, kstring_t na
 
 	this->methodBuilderList->push_back(builder);
 
-	this->moduleBuilder->addMethod(builder);
+//	this->moduleBuilder->addMethod(builder);
 	
 	lastCompileError = KCSE_NO_ERROR;
 	return builder;
@@ -1195,7 +1234,7 @@ DelegateBuilder::DelegateBuilder(ModuleBuilder *moduleBuilder, KCLASSATTRIBUTES 
 
 DelegateBuilder::~DelegateBuilder(void)
 {
-	DELETE_IF_NOT_NULL(this->paramList);
+//	ADELETE_IF_NOT_NULL(this->paramList);
 }
 
 //===================================================
@@ -1238,7 +1277,7 @@ MethodBuilder::MethodBuilder(ClassBuilder *classBuilder, KMETHODATTRIBUTES attrs
 
 MethodBuilder::~MethodBuilder(void)
 {
-	DELETE_IF_NOT_NULL(this->paramList);
+//	ADELETE_IF_NOT_NULL(this->paramList);
 	for (std::vector<LocalBuilder *>::const_iterator it = this->localBuilderList.begin();
 		it != this->localBuilderList.end(); ++it)
 	{
@@ -1255,7 +1294,7 @@ LocalBuilder * MethodBuilder::declareLocal(const TypeDef *declType)
 	builder->localIndex = this->localCount++;
 
 	this->localBuilderList.push_back(builder);
-	this->classBuilder->moduleBuilder->addLocal(builder);
+//	this->classBuilder->moduleBuilder->addLocal(builder);
 
 	if (!(this->attrs & KMA_STATIC))
 		++builder->localIndex;

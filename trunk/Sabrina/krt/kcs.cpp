@@ -48,12 +48,12 @@ KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKM
 
 	if (attrs & KMODA_SYSTEM)
 	{
-		loader = KEnvironment::createModuleLoader(attrs, KEnvironment::getSystemLibPath(), lastSlash);
+		loader = KEnvironment::createModuleLoader(attrs, KEnvironment::getSystemLibPath(), lastSlash ? lastSlash : szFullPath);
 	}
 	else
 	{
 		kstring_t dirPath = krt_getdirpath(szFullPath);
-		loader = KEnvironment::createModuleLoader(attrs, dirPath, lastSlash);
+		loader = KEnvironment::createModuleLoader(attrs, dirPath, lastSlash ? lastSlash : szFullPath);
 		delete []dirPath;
 	}
 
@@ -189,6 +189,9 @@ KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 
 KCS_API KRESULT KcsSaveModule(HKMODULEBUILDER hKModuleBuilder, const char *szPath)
 {
+	if (lastCompileError != KCSE_NO_ERROR)
+		return KRESULT_ERR;
+
 	kuint_t codeSize;
 	const unsigned char *codeStream = ((ModuleBuilder *)hKModuleBuilder)->getCodeStream(codeSize);
 

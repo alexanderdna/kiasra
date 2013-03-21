@@ -294,6 +294,7 @@ bool ModuleLoader::bake(void)
 	ModuleDef *module = new ModuleDef;
 	this->module = module;
 
+	module->attrs = this->attrs;
 	module->path = this->filename;
 
 	// code stream
@@ -331,6 +332,7 @@ bool ModuleLoader::bake(void)
 	ModuleDef **moduleList = new ModuleDef * [moduleCount + 1];
 	module->moduleCount = moduleCount;
 	module->moduleList = moduleList;
+	this->moduleLoaders = moduleLoaderList;
 
 	moduleLoaderList[0] = NULL;
 	moduleList[0] = NULL;
@@ -449,11 +451,12 @@ bool ModuleLoader::bake(void)
 	MetaClassDef *classRows = this->classTable.rows;
 
 	ClassDef **allClassList = new ClassDef* [allClassCount];
-	MetaClassDef *metaClassList = new MetaClassDef[allClassCount];
+	bool *extClassFlags = new bool[allClassCount];
 	module->classCount = allClassCount;
 	module->classList = allClassList;
+	module->extClassFlags = extClassFlags;
 
-	memcpy(metaClassList, classRows, sizeof(MetaClassDef) * allClassCount);
+	memset(extClassFlags, 0, sizeof(bool) * allClassCount);
 
 	for (kuint_t i = 0; i < allClassCount; ++i)
 	{
@@ -463,6 +466,7 @@ bool ModuleLoader::bake(void)
 		if (classRow.moduleIndex)
 		{
 			cls = moduleList[classRow.moduleIndex]->classList[classRow.farIndex];
+			extClassFlags[i] = true;
 		}
 		else
 		{
@@ -501,14 +505,13 @@ bool ModuleLoader::bake(void)
 			for (kuint_t k = classRow.fieldList, j = 0; j < fieldCount; ++k, ++j)
 			{
 				FieldDef *fld = &allFieldList[k];
+				fieldList[j] = fld;
 
 				fld->klass = cls;
 				if (fld->attrs & KFA_STATIC)
-					fld->localIndex = ++sFieldCount;
+					fld->localIndex = sFieldCount++;
 				else
-					fld->localIndex = ++iFieldCount;
-
-				fieldList[j] = fld;
+					fld->localIndex = iFieldCount++;
 			}
 
 			FieldDef **iFieldList = new FieldDef* [iFieldCount];
@@ -561,8 +564,8 @@ bool ModuleLoader::bake(void)
 			for (kuint_t k = classRow.methodList, j = 0; j < methodCount; ++k, ++j)
 			{
 				MethodDef *met = &allMethodList[k];
-				methodList[j + 1] = met;
-				met->localIndex = j + 1;
+				methodList[j] = met;
+				met->localIndex = j;
 
 				met->klass = cls;
 
@@ -596,8 +599,6 @@ bool ModuleLoader::bake(void)
 
 					met->func = func;
 				}
-
-				methodList[j] = met;
 			}
 
 			cls->methodCount = methodCount;
@@ -630,10 +631,13 @@ bool ModuleLoader::bake(void)
 	MetaDelegateDef *delegateRows = this->delegateTable.rows;
 
 	DelegateDef **allDelegateList = new DelegateDef* [allDelegateCount];
+	bool *extDelegateFlags = new bool[allDelegateCount];
 	module->delegateCount = allDelegateCount;
 	module->delegateList = allDelegateList;
+	module->extDelegateFlags = extDelegateFlags;
 
-	allDelegateList[0] = NULL;
+	memset(extDelegateFlags, 0, sizeof(bool) * allDelegateCount);
+
 	for (kushort_t i = 0; i < allDelegateCount; ++i)
 	{
 		MetaDelegateDef &delegateRow = delegateRows[i];
@@ -642,6 +646,7 @@ bool ModuleLoader::bake(void)
 		if (delegateRow.moduleIndex)
 		{
 			del = moduleList[delegateRow.moduleIndex]->delegateList[delegateRow.farIndex];
+			extDelegateFlags[i] = true;
 		}
 		else
 		{
@@ -820,37 +825,43 @@ void ModuleLoader::onDispose(void)
 		this->clean();
 		this->isCleaned = true;
 	}
-
-	//TODO: release this->module and all its resources
 }
 
 void ModuleLoader::clean()
 {
-#define DELETE_IF_NOT_NULL(var) if (var) { delete []var; var = NULL; }
+	ADELETE_IF_NOT_NULL(this->importerPath);
+	ADELETE_IF_NOT_NULL(this->fullPath);
+	ADELETE_IF_NOT_NULL(this->filename);
 
-	DELETE_IF_NOT_NULL(this->importerPath);
-	DELETE_IF_NOT_NULL(this->fullPath);
-	DELETE_IF_NOT_NULL(this->filename);
+	ADELETE_IF_NOT_NULL(this->stringTable.rows);
+	ADELETE_IF_NOT_NULL(this->stringTable.lengths);
+	ADELETE_IF_NOT_NULL(this->typeTable.rows);
+	ADELETE_IF_NOT_NULL(this->moduleTable.rows);
+	ADELETE_IF_NOT_NULL(this->classTable.rows);
+	ADELETE_IF_NOT_NULL(this->delegateTable.rows);
+	ADELETE_IF_NOT_NULL(this->fieldTable.rows);
+	ADELETE_IF_NOT_NULL(this->methodTable.rows);
+	ADELETE_IF_NOT_NULL(this->paramTable.rows);
+	ADELETE_IF_NOT_NULL(this->dparamTable.rows);
+	ADELETE_IF_NOT_NULL(this->localTable.rows);
 
-	DELETE_IF_NOT_NULL(this->stringTable.rows);
-	DELETE_IF_NOT_NULL(this->stringTable.lengths);
-	DELETE_IF_NOT_NULL(this->typeTable.rows);
-	DELETE_IF_NOT_NULL(this->moduleTable.rows);
-	DELETE_IF_NOT_NULL(this->classTable.rows);
-	DELETE_IF_NOT_NULL(this->delegateTable.rows);
-	DELETE_IF_NOT_NULL(this->fieldTable.rows);
-	DELETE_IF_NOT_NULL(this->methodTable.rows);
-	DELETE_IF_NOT_NULL(this->paramTable.rows);
-	DELETE_IF_NOT_NULL(this->dparamTable.rows);
-	DELETE_IF_NOT_NULL(this->localTable.rows);
+	ADELETE_IF_NOT_NULL(this->stream);
 
-	DELETE_IF_NOT_NULL(this->stream);
+	ADELETE_IF_NOT_NULL(this->moduleLoaders);
 
 	if (this->code && this->loadPhase < ModuleLoadPhase::Baked)
 	{
 		delete [] this->code;
 		this->code = NULL;
 	}
+
+	if (this->module)
+	{
+		delete this->module;
+		this->module = NULL;
+	}
+
+	this->loadPhase = ModuleLoadPhase::Initial;
 }
 
 ModuleLoader::ModuleValidationResult ModuleLoader::validateHeader()
@@ -1276,4 +1287,134 @@ bool ModuleLoader::loadCode()
 	this->pos = pos + codeSize;
 
 	return true;
+}
+
+//=============================================================
+
+ModuleDef::ModuleDef(void)
+	: stringCount(0), strings(NULL), stringLengths(NULL),
+	moduleCount(0), moduleList(NULL),
+	typeCount(0), typeList(NULL),
+	classCount(0), classList(NULL), extClassFlags(NULL),
+	delegateCount(0), delegateList(NULL), extDelegateFlags(NULL),
+	fieldCount(0), fieldList(NULL),
+	methodCount(0), methodList(NULL),
+	paramCount(0), paramList(NULL),
+	dparamCount(0), dparamList(NULL),
+	localCount(0), localList(NULL),
+	code(NULL),
+	staticData(NULL),
+	entryMethod(NULL)
+{
+}
+
+ModuleDef::~ModuleDef(void)
+{
+	kuint_t i, count;
+
+	if (this->strings)
+	{
+		count = this->stringCount;
+		for (i = 0; i < count; ++i)
+			delete []this->strings[i];
+
+		delete []this->strings;
+		delete []this->stringLengths;
+
+		this->strings = NULL;
+		this->stringLengths = NULL;
+	}
+
+	if (this->moduleList)
+	{
+		count = this->moduleCount;
+		for (i = 1; i < count; ++i)
+			delete this->moduleList[i];
+
+		delete []this->moduleList;
+		this->moduleList = NULL;
+	}
+
+	if (this->classList)
+	{
+		count = this->classCount;
+		for (i = 0; i < count; ++i)
+			// delete only internal classes
+			if (!this->extClassFlags[i])
+				delete this->classList[i];
+
+		delete []this->classList;
+		delete []this->extClassFlags;
+
+		this->classList = NULL;
+		this->extClassFlags = NULL;
+	}
+
+	if (this->delegateList)
+	{
+		count = this->delegateCount;
+		for (i = 0; i < count; ++i)
+			// delete only internal delegates
+				if (!this->extDelegateFlags[i])
+					delete this->delegateList[i];
+
+		delete []this->delegateList;
+		delete []this->extDelegateFlags;
+
+		this->delegateList = NULL;
+		this->extDelegateFlags = NULL;
+	}
+
+	ADELETE_IF_NOT_NULL(this->typeList);
+	ADELETE_IF_NOT_NULL(this->fieldList);
+	ADELETE_IF_NOT_NULL(this->methodList);
+	ADELETE_IF_NOT_NULL(this->paramList);
+	ADELETE_IF_NOT_NULL(this->dparamList);
+	ADELETE_IF_NOT_NULL(this->localList);
+	ADELETE_IF_NOT_NULL(this->code);
+
+	this->entryMethod = NULL;
+
+	// GC will take care of this
+	this->staticData = NULL;
+}
+
+//=============================================================
+
+ClassDef::ClassDef(void)
+	: fieldList(NULL), iFieldList(NULL), sFieldList(NULL), methodList(NULL)
+{
+}
+
+ClassDef::~ClassDef(void)
+{
+	ADELETE_IF_NOT_NULL(this->fieldList);
+	ADELETE_IF_NOT_NULL(this->iFieldList);
+	ADELETE_IF_NOT_NULL(this->sFieldList);
+	ADELETE_IF_NOT_NULL(this->methodList);
+}
+
+//=============================================================
+
+DelegateDef::DelegateDef(void)
+	: paramList(NULL)
+{
+}
+
+DelegateDef::~DelegateDef(void)
+{
+	ADELETE_IF_NOT_NULL(this->paramList);
+}
+
+//=============================================================
+
+MethodDef::MethodDef(void)
+	: paramList(NULL), localList(NULL)
+{
+}
+
+MethodDef::~MethodDef(void)
+{
+	ADELETE_IF_NOT_NULL(this->paramList);
+	ADELETE_IF_NOT_NULL(this->localList);
 }

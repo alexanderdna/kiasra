@@ -88,11 +88,11 @@ struct ModuleDef
 
 	kushort_t        classCount;
 	ClassDef       **classList;		// array of pointers to internal and external classes
-	MetaClassDef    *metaClassList;	// for internal/external detection
+	bool            *extClassFlags;	// for internal/external detection
 
 	kushort_t        delegateCount;
 	DelegateDef    **delegateList;	// array of pointers to internal and external delegates
-	MetaDelegateDef *metaDelegateList;	// for internal/external detection
+	bool            *extDelegateFlags;	// for internal/external detection
 
 	kuint_t          fieldCount;
 	FieldDef        *fieldList;		// array of class fields
@@ -119,6 +119,9 @@ struct ModuleDef
 #else
 		void        *libHandle;
 #endif
+
+	ModuleDef(void);  // definition in kmodule.cpp
+	~ModuleDef(void); // definition in kmodule.cpp
 };
 
 struct MetaModuleDef
@@ -153,6 +156,9 @@ struct ClassDef
 
 	MethodDef      *ctor;		// instance constructor
 	MethodDef      *cctor;		// static constructor
+
+	ClassDef(void);
+	~ClassDef(void);
 };
 
 struct MetaClassDef
@@ -180,6 +186,9 @@ struct DelegateDef
 	ModuleDef      *module;		// pointer to importing module
 
 	ktoken16_t      localIndex;	// position in defining module
+
+	DelegateDef(void);
+	~DelegateDef(void);
 };
 
 struct MetaDelegateDef
@@ -234,6 +243,9 @@ struct MethodDef
 
 	ClassDef        *klass;			// pointer to parent class
 	ktoken16_t       localIndex;	// position in parent class
+
+	MethodDef(void);
+	~MethodDef(void);
 };
 
 struct MetaMethodDef
