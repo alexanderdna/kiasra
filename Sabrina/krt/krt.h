@@ -74,10 +74,10 @@ KRT_API KRESULT KrtCreateEnvironment(void);
 KRT_API void KrtDestroyEnvironment(void);
 
 /* Loads a module from the specified path */
-KRT_API KRESULT KrtLoadModule(kstring_t ksPath, HKMODULE *pHKModule);
+KRT_API KRESULT KrtLoadModule(KMODULEATTRIBUTES attrs, kstring_t ksPath, HKMODULE *pHKModule);
 
 /* Runs a loaded module */
-KRT_API KRESULT KrtRunModule(HKMODULE hKModule);
+KRT_API KRESULT KrtRunModule(kuint_t argc, kstring_t *argv);
 
 /*===================================================*/
 

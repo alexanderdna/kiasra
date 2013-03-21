@@ -41,3 +41,6 @@
 #else
 	#define KCORLIB_NAME	L"kcorlib.so"
 #endif
+
+#define DELETE_IF_NOT_NULL(var) if (var) { delete var; var = NULL; }
+#define ADELETE_IF_NOT_NULL(var) if (var) { delete []var; var = NULL; }

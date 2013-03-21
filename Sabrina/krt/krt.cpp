@@ -23,9 +23,9 @@ KRT_API void KrtDestroyEnvironment(void)
 }
 
 // Loads a module from the specified path
-KRT_API KRESULT KrtLoadModule(kstring_t path, HKMODULE *pHKModule)
+KRT_API KRESULT KrtLoadModule(KMODULEATTRIBUTES attrs, kstring_t path, HKMODULE *pHKModule)
 {
-	ModuleLoader *loader = KEnvironment::createModuleLoader((KMODULEATTRIBUTES)(KMODA_KIASRA | KMODA_USER), L"", path);
+	ModuleLoader *loader = KEnvironment::createModuleLoader(attrs, L"", path);
 	if (!loader->load())
 	{
 		*pHKModule = NULL;
@@ -37,7 +37,7 @@ KRT_API KRESULT KrtLoadModule(kstring_t path, HKMODULE *pHKModule)
 }
 
 // Runs a loaded module
-KRT_API KRESULT KrtRunModule(HKMODULE hKModule)
+KRT_API KRESULT KrtRunModule(kuint_t argc, kstring_t *argv)
 {
 	return KRESULT_OK;
 }

@@ -127,11 +127,11 @@ void KEnvironment::initialize(bool isForExecution)
 	//===================================
 	// prepare basic types
 
+	TypeTree *typeTree = new TypeTree;
+	KEnvironment::typeTree = typeTree;
+
 	if (isForExecution)
 	{
-		TypeTree *typeTree = new TypeTree;
-		KEnvironment::typeTree = typeTree;
-
 		const TypeDef **primitiveTypes = new const TypeDef * [(knuint_t)KT_STRING + 1];
 		KEnvironment::primitiveTypes = primitiveTypes;
 
@@ -147,7 +147,6 @@ void KEnvironment::initialize(bool isForExecution)
 	}
 	else
 	{
-		KEnvironment::typeTree = NULL;
 		KEnvironment::primitiveTypes = NULL;
 		KEnvironment::voidType = NULL;
 		KEnvironment::arrayType = NULL;
@@ -234,9 +233,6 @@ void KEnvironment::finalize(void)
 		delete KEnvironment::loadedModules;
 		KEnvironment::loadedModules = NULL;
 	}
-
-#define DELETE_IF_NOT_NULL(p) if (p) { delete p; p = NULL; }
-#define ADELETE_IF_NOT_NULL(p) if (p) { delete []p; p = NULL; }
 
 	DELETE_IF_NOT_NULL(KEnvironment::typeTree);
 	ADELETE_IF_NOT_NULL(KEnvironment::primitiveTypes);
@@ -493,9 +489,9 @@ const ClassDef * KEnvironment::findClass(kstring_t name, const ModuleDef *module
 	
 	kushort_t classCount = module->classCount;
 	ClassDef **classList = module->classList;
-	MetaClassDef *metaClassList = module->metaClassList;
+	bool *extClassFlags = module->extClassFlags;
 	for (kushort_t i = 0; i < classCount; ++i)
-		if (!metaClassList[i].farIndex && krt_strequ(classList[i]->name, name))
+		if (!extClassFlags[i] && krt_strequ(classList[i]->name, name))
 			return classList[i];
 
 	return NULL;
@@ -517,9 +513,9 @@ const DelegateDef * KEnvironment::findDelegate(kstring_t name, const ModuleDef *
 
 	kushort_t delegateCount = module->delegateCount;
 	DelegateDef **delegateList = module->delegateList;
-	MetaDelegateDef *metaDelegateList = module->metaDelegateList;
+	bool *extDelegateFlags = module->extDelegateFlags;
 	for (kushort_t i = 0; i < delegateCount; ++i)
-		if (!metaDelegateList[i].farIndex && krt_strequ(delegateList[i]->name, name))
+		if (!extDelegateFlags[i] && krt_strequ(delegateList[i]->name, name))
 			return delegateList[i];
 
 	return NULL;
