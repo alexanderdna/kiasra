@@ -152,8 +152,11 @@ KCS_API void KcsFreeParameters(KPARAMINFO **ppKParamInfo);
 /* Creates a builder service for making a new module. */
 KCS_API HKMODULEBUILDER KcsCreateModuleBuilder(kbool_t isNative, KMODULETYPES type);
 
-/* Destroys a module builder and its resources */
+/* Destroys a module builder and its resources. */
 KCS_API void KcsDestroyModuleBuilder(HKMODULEBUILDER hKModuleBuilder);
+
+/* Sets the entry point method for the given module/ */
+KCS_API KRESULT KcsSetEntryPoint(HKMODULEBUILDER hKModuleBuilder, HKMETHODBUILDER hEntryPoint);
 
 /* Bakes a module to prepare for saving. */
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder);

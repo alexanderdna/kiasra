@@ -60,6 +60,7 @@ const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 			nameBuffer[j] = (char)className[i];
 	}
 
+	nameBuffer[j++] = '_';
 	for (knuint_t i = 0; i < len2; ++i, ++j)
 		nameBuffer[j] = (char)memberName[i];
 
@@ -297,9 +298,10 @@ bool ModuleLoader::bake(void)
 	module->attrs = this->attrs;
 	module->path = this->filename;
 
-	// code stream
+	// transfer code stream
 
 	module->code = this->code;
+	this->code = NULL;
 
 	// native library (if any)
 
@@ -317,8 +319,11 @@ bool ModuleLoader::bake(void)
 	module->strings = strings;
 	module->stringLengths = stringLengths;
 
+	memset(strings, 0, sizeof(kstring_t) * stringCount);
+
 	for (kuint_t i = 0; i < stringCount; ++i)
 	{
+		// transfer
 		strings[i] = stringRows[i];
 		stringLengths[i] = lengthRows[i];
 	}
@@ -334,8 +339,7 @@ bool ModuleLoader::bake(void)
 	module->moduleList = moduleList;
 	this->moduleLoaders = moduleLoaderList;
 
-	moduleLoaderList[0] = NULL;
-	moduleList[0] = NULL;
+	memset(moduleLoaderList, 0, sizeof(ModuleLoader *) * (moduleCount + 1));
 
 	for (kuint_t i = 0; i < moduleCount; ++i)
 	{
@@ -456,6 +460,7 @@ bool ModuleLoader::bake(void)
 	module->classList = allClassList;
 	module->extClassFlags = extClassFlags;
 
+	memset(allClassList, 0, sizeof(ClassDef *) * allClassCount);
 	memset(extClassFlags, 0, sizeof(bool) * allClassCount);
 
 	for (kuint_t i = 0; i < allClassCount; ++i)
@@ -467,10 +472,13 @@ bool ModuleLoader::bake(void)
 		{
 			cls = moduleList[classRow.moduleIndex]->classList[classRow.farIndex];
 			extClassFlags[i] = true;
+
+			allClassList[i] = cls;
 		}
 		else
 		{
 			cls = new ClassDef;
+			allClassList[i] = cls;
 
 			cls->size = sizeof(ClassDef);
 			cls->attrs = classRow.attrs;
@@ -502,6 +510,9 @@ bool ModuleLoader::bake(void)
 			
 			FieldDef **fieldList = new FieldDef* [fieldCount];
 
+			cls->fieldCount = fieldCount;
+			cls->fieldList = fieldList;
+
 			for (kuint_t k = classRow.fieldList, j = 0; j < fieldCount; ++k, ++j)
 			{
 				FieldDef *fld = &allFieldList[k];
@@ -515,8 +526,14 @@ bool ModuleLoader::bake(void)
 			}
 
 			FieldDef **iFieldList = new FieldDef* [iFieldCount];
+
+			cls->iFieldCount = iFieldCount;
+			cls->iFieldList = iFieldList;
 			
 			FieldDef **sFieldList = new FieldDef* [sFieldCount];
+
+			cls->sFieldCount = sFieldCount;
+			cls->sFieldList = sFieldList;
 
 			for (kuint_t k = 0, j = 0, m = 0; k < fieldCount; ++k)
 			{
@@ -525,15 +542,6 @@ bool ModuleLoader::bake(void)
 				else
 					iFieldList[m++] = fieldList[k];
 			}
-
-			cls->fieldCount = fieldCount;
-			cls->fieldList = fieldList;
-
-			cls->iFieldCount = iFieldCount;
-			cls->iFieldList = iFieldList;
-
-			cls->sFieldCount = sFieldCount;
-			cls->sFieldList = sFieldList;
 
 			//================================
 
@@ -560,6 +568,9 @@ bool ModuleLoader::bake(void)
 			}
 			
 			MethodDef **methodList = new MethodDef* [methodCount];
+
+			cls->methodCount = methodCount;
+			cls->methodList = methodList;
 
 			for (kuint_t k = classRow.methodList, j = 0; j < methodCount; ++k, ++j)
 			{
@@ -600,12 +611,7 @@ bool ModuleLoader::bake(void)
 					met->func = func;
 				}
 			}
-
-			cls->methodCount = methodCount;
-			cls->methodList = methodList;
 		}
-
-		allClassList[i] = cls;
 	}
 
 	// delegate param table
@@ -636,6 +642,7 @@ bool ModuleLoader::bake(void)
 	module->delegateList = allDelegateList;
 	module->extDelegateFlags = extDelegateFlags;
 
+	memset(allDelegateList, 0, sizeof(DelegateDef *) * allDelegateCount);
 	memset(extDelegateFlags, 0, sizeof(bool) * allDelegateCount);
 
 	for (kushort_t i = 0; i < allDelegateCount; ++i)
@@ -647,10 +654,14 @@ bool ModuleLoader::bake(void)
 		{
 			del = moduleList[delegateRow.moduleIndex]->delegateList[delegateRow.farIndex];
 			extDelegateFlags[i] = true;
+		
+			allDelegateList[i] = del;
 		}
 		else
 		{
 			del = new DelegateDef;
+			allDelegateList[i] = del;
+
 			del->size = sizeof(DelegateDef);
 			del->attrs = delegateRow.attrs;
 			del->name = strings[delegateRow.name];
@@ -685,8 +696,6 @@ bool ModuleLoader::bake(void)
 			del->paramCount = paramCount;
 			del->paramList = paramList;
 		}
-		
-		allDelegateList[i] = del;
 	}
 
 	// type table
@@ -833,7 +842,6 @@ void ModuleLoader::clean()
 	ADELETE_IF_NOT_NULL(this->fullPath);
 	ADELETE_IF_NOT_NULL(this->filename);
 
-	ADELETE_IF_NOT_NULL(this->stringTable.rows);
 	ADELETE_IF_NOT_NULL(this->stringTable.lengths);
 	ADELETE_IF_NOT_NULL(this->typeTable.rows);
 	ADELETE_IF_NOT_NULL(this->moduleTable.rows);
@@ -849,13 +857,28 @@ void ModuleLoader::clean()
 
 	ADELETE_IF_NOT_NULL(this->moduleLoaders);
 
+	if (this->stringTable.rows && this->loadPhase < ModuleLoadPhase::Baked)
+	{
+		kuint_t count = this->stringTable.rowCount;
+		kstring_t *rows = this->stringTable.rows;
+		for (kuint_t i = 0; i < count; ++i)
+			ADELETE_IF_NOT_NULL(rows[i]);
+
+		delete []rows;
+		delete []this->stringTable.lengths;
+
+		this->stringTable.rows = NULL;
+		this->stringTable.lengths = NULL;
+	}
+		ADELETE_IF_NOT_NULL(this->stringTable.rows);
+
 	if (this->code && this->loadPhase < ModuleLoadPhase::Baked)
 	{
 		delete [] this->code;
 		this->code = NULL;
 	}
 
-	if (this->module)
+	if (this->loadPhase == ModuleLoadPhase::Baked && this->module)
 	{
 		delete this->module;
 		this->module = NULL;
@@ -1012,7 +1035,6 @@ bool ModuleLoader::loadModuleTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
 	pos += sizeof(uint16_t);
@@ -1039,7 +1061,6 @@ bool ModuleLoader::loadClassTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
 	pos += sizeof(uint16_t);
@@ -1079,7 +1100,6 @@ bool ModuleLoader::loadDelegateTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint16_t *)(stream + pos);
 	pos += sizeof(uint16_t);
@@ -1119,7 +1139,6 @@ bool ModuleLoader::loadFieldTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -1149,7 +1168,6 @@ bool ModuleLoader::loadMethodTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -1178,7 +1196,10 @@ bool ModuleLoader::loadMethodTable()
 		_READ(row.paramList, ktoken32_t);
 		_READ(row.localList, ktoken32_t);
 
-		_READ(row.addr, kuint_t);
+		if (!(row.attrs & KMA_NATIVE))
+		{
+			_READ(row.addr, kuint_t);
+		}
 	}
 
 	this->methodTable.rowCount = (uint32_t)rowCount;
@@ -1192,7 +1213,6 @@ bool ModuleLoader::loadParamTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -1223,7 +1243,6 @@ bool ModuleLoader::loadDelegateParamTable()
 {
 	unsigned char *stream = this->stream;
 	knuint_t pos = this->pos;
-	kstring_t *stringRows = this->stringTable.rows;
 	
 	unsigned int rowCount = *(uint32_t *)(stream + pos);
 	pos += sizeof(uint32_t);
@@ -1304,7 +1323,8 @@ ModuleDef::ModuleDef(void)
 	localCount(0), localList(NULL),
 	code(NULL),
 	staticData(NULL),
-	entryMethod(NULL)
+	entryMethod(NULL),
+	libHandle(NULL)
 {
 }
 
@@ -1316,7 +1336,7 @@ ModuleDef::~ModuleDef(void)
 	{
 		count = this->stringCount;
 		for (i = 0; i < count; ++i)
-			delete []this->strings[i];
+			ADELETE_IF_NOT_NULL(this->strings[i]);
 
 		delete []this->strings;
 		delete []this->stringLengths;
@@ -1341,7 +1361,7 @@ ModuleDef::~ModuleDef(void)
 		for (i = 0; i < count; ++i)
 			// delete only internal classes
 			if (!this->extClassFlags[i])
-				delete this->classList[i];
+				DELETE_IF_NOT_NULL(this->classList[i]);
 
 		delete []this->classList;
 		delete []this->extClassFlags;
@@ -1356,7 +1376,7 @@ ModuleDef::~ModuleDef(void)
 		for (i = 0; i < count; ++i)
 			// delete only internal delegates
 				if (!this->extDelegateFlags[i])
-					delete this->delegateList[i];
+					DELETE_IF_NOT_NULL(this->delegateList[i]);
 
 		delete []this->delegateList;
 		delete []this->extDelegateFlags;
@@ -1377,6 +1397,16 @@ ModuleDef::~ModuleDef(void)
 
 	// GC will take care of this
 	this->staticData = NULL;
+
+	if (this->libHandle)
+	{
+#ifdef ISWIN
+		FreeLibrary(this->libHandle);
+#else
+		dlclose(this->libHandle);
+#endif
+		this->libHandle = NULL;
+	}
 }
 
 //=============================================================

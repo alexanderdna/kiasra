@@ -179,6 +179,14 @@ KCS_API void KcsDestroyModuleBuilder(HKMODULEBUILDER hKModuleBuilder)
 	delete ((ModuleBuilder *)hKModuleBuilder);
 }
 
+KCS_API KRESULT KcsSetEntryPoint(HKMODULEBUILDER hKModuleBuilder, HKMETHODBUILDER hEntryPoint)
+{
+	if (((ModuleBuilder *)hKModuleBuilder)->setEntryPoint((MethodBuilder *)hEntryPoint))
+		return KRESULT_OK;
+	else
+		return KRESULT_ERR;
+}
+
 KCS_API KRESULT KcsBakeModule(HKMODULEBUILDER hKModuleBuilder)
 {
 	if (((ModuleBuilder *)hKModuleBuilder)->bake())
