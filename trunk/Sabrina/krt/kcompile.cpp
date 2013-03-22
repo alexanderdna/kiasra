@@ -658,7 +658,7 @@ void ModuleBuilder::bakeBinary(void)
 				it != builder->methodBuilderList->end(); ++it)
 			{
 				MethodBuilder *mb = *it;
-				if (!(mb->addr & KMA_NATIVE))
+				if (!(mb->attrs & KMA_NATIVE))
 				{
 					kuint_t codeSize = mb->getCodeGenerator()->getCodeSize();
 					memcpy(stream+pos, mb->getCodeGenerator()->getCodeStream(), codeSize);
@@ -713,7 +713,7 @@ bool ModuleBuilder::setEntryPoint(MethodBuilder *method)
 	}
 
 	this->entryPoint = method;
-	this->entryClassToken = method->klass->localIndex;
+	this->entryClassToken = method->classBuilder->localIndex;
 	this->entryMethodToken = method->localIndex;
 
 	lastCompileError = KCSE_NO_ERROR;
@@ -767,15 +767,7 @@ ModuleBuilder::~ModuleBuilder(void)
 	DELETE_IF_NOT_NULL(this->importedClassMap);
 	DELETE_IF_NOT_NULL(this->importedDelegateMap);
 
-	if (this->moduleList)
-	{
-		for (std::vector<ModuleDef *>::const_iterator it = this->moduleList->begin();
-			it != this->moduleList->end(); ++it)
-			delete *it;
-
-		delete this->moduleList;
-		this->moduleList = NULL;
-	}
+	DELETE_IF_NOT_NULL(this->moduleList);
 
 	if (this->classList)
 	{
@@ -783,7 +775,7 @@ ModuleBuilder::~ModuleBuilder(void)
 			it != this->classList->end(); ++it)
 		{
 			if ((*it)->size == sizeof(ClassBuilder))
-				delete ((ClassBuilder *)(*it));
+				delete (ClassBuilder *)(*it);
 		}
 
 		delete this->classList;
@@ -803,25 +795,8 @@ ModuleBuilder::~ModuleBuilder(void)
 		this->delegateList = NULL;
 	}
 
-	if (this->fieldList)
-	{
-		for (std::vector<FieldBuilder *>::const_iterator it = this->fieldList->begin();
-			it != this->fieldList->end(); ++it)
-			delete *it;
-
-		delete this->fieldList;
-		this->fieldList = NULL;
-	}
-
-	if (this->methodList)
-	{
-		for (std::vector<MethodBuilder *>::const_iterator it = this->methodList->begin();
-			it != this->methodList->end(); ++it)
-			delete *it;
-
-		delete this->methodList;
-		this->methodList = NULL;
-	}
+	DELETE_IF_NOT_NULL(this->fieldList);
+	DELETE_IF_NOT_NULL(this->methodList);
 
 	if (this->paramList)
 	{
@@ -1077,8 +1052,31 @@ ClassBuilder::ClassBuilder(ModuleBuilder *moduleBuilder, KCLASSATTRIBUTES attrs,
 
 ClassBuilder::~ClassBuilder(void)
 {
-	DELETE_IF_NOT_NULL(this->fieldBuilderList);
-	DELETE_IF_NOT_NULL(this->methodBuilderList);
+	if (this->fieldBuilderList)
+	{
+		{
+			decltype(this->fieldBuilderList) fieldBuilderList = this->fieldBuilderList;
+			for (std::vector<FieldBuilder *>::const_iterator fit = fieldBuilderList->begin();
+					fit != fieldBuilderList->end(); ++fit)
+				delete *fit;
+		}
+
+		delete this->fieldBuilderList;
+		this->fieldBuilderList = NULL;
+	}
+
+	if (this->methodBuilderList)
+	{
+		{
+			decltype(this->methodBuilderList) methodBuilderList = this->methodBuilderList;
+			for (std::vector<MethodBuilder *>::const_iterator mit = methodBuilderList->begin();
+					mit != methodBuilderList->end(); ++mit)
+				delete *mit;
+		}
+
+		delete this->methodBuilderList;
+		this->methodBuilderList = NULL;
+	}
 }
 
 FieldBuilder * ClassBuilder::defineField(KFIELDATTRIBUTES attrs, kstring_t name, const TypeDef *declType)
@@ -1119,8 +1117,6 @@ FieldBuilder * ClassBuilder::defineField(KFIELDATTRIBUTES attrs, kstring_t name,
 		builder->localIndex = this->iFieldCount++;
 	
 	this->fieldBuilderList->push_back(builder);
-
-//	this->moduleBuilder->addField(builder);
 	
 	lastCompileError = KCSE_NO_ERROR;
 	return builder;
@@ -1167,8 +1163,6 @@ MethodBuilder * ClassBuilder::defineMethod(KMETHODATTRIBUTES attrs, kstring_t na
 	builder->localIndex = this->methodCount++;
 
 	this->methodBuilderList->push_back(builder);
-
-//	this->moduleBuilder->addMethod(builder);
 	
 	lastCompileError = KCSE_NO_ERROR;
 	return builder;
@@ -1198,7 +1192,8 @@ bool ClassBuilder::bake(void)
 			relativeAddr += builder->getCodeGenerator()->getCodeSize();
 		}
 
-		this->codeSize += builder->getCodeGenerator()->getCodeSize();
+		if (!(builder->attrs & KMA_NATIVE))
+			this->codeSize += builder->getCodeGenerator()->getCodeSize();
 	}
 	
 	this->baked = true;
@@ -1234,7 +1229,6 @@ DelegateBuilder::DelegateBuilder(ModuleBuilder *moduleBuilder, KCLASSATTRIBUTES 
 
 DelegateBuilder::~DelegateBuilder(void)
 {
-//	ADELETE_IF_NOT_NULL(this->paramList);
 }
 
 //===================================================
@@ -1277,7 +1271,6 @@ MethodBuilder::MethodBuilder(ClassBuilder *classBuilder, KMETHODATTRIBUTES attrs
 
 MethodBuilder::~MethodBuilder(void)
 {
-//	ADELETE_IF_NOT_NULL(this->paramList);
 	for (std::vector<LocalBuilder *>::const_iterator it = this->localBuilderList.begin();
 		it != this->localBuilderList.end(); ++it)
 	{
@@ -1294,7 +1287,6 @@ LocalBuilder * MethodBuilder::declareLocal(const TypeDef *declType)
 	builder->localIndex = this->localCount++;
 
 	this->localBuilderList.push_back(builder);
-//	this->classBuilder->moduleBuilder->addLocal(builder);
 
 	if (!(this->attrs & KMA_STATIC))
 		++builder->localIndex;
