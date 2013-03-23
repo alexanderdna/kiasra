@@ -13,6 +13,7 @@
 #include "kmodule.hpp"
 
 #include <set>
+#include <vector>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -20,6 +21,7 @@
 
 #ifndef ISWIN
 #include <unistd.h>
+#include <linux/limits.h>
 #endif
 
 //===================================================
@@ -37,7 +39,8 @@
 bool KEnvironment::isInitialized = false;
 bool KEnvironment::isForExecution = false;
 
-kstring_t KEnvironment::systemLibPath;
+const char *KEnvironment::currentWorkingDirectory;
+const char *KEnvironment::systemLibPath;
 
 TypeTree *KEnvironment::typeTree;
 
@@ -45,6 +48,7 @@ const TypeDef **KEnvironment::primitiveTypes;
 const TypeDef  *KEnvironment::voidType;
 const TypeDef  *KEnvironment::arrayType;
 const TypeDef  *KEnvironment::objectType;
+const TypeDef  *KEnvironment::objectArrayType;
 const TypeDef  *KEnvironment::rawType;
 const TypeDef  *KEnvironment::excType;
 const TypeDef  *KEnvironment::nullType;
@@ -141,6 +145,7 @@ void KEnvironment::initialize(bool isForExecution)
 		KEnvironment::voidType = typeTree->add(KT_VOID, 0, NULL);
 		KEnvironment::arrayType = typeTree->add(KT_ARRAY, 0, NULL);
 		KEnvironment::objectType = typeTree->add(KT_OBJECT, 0, NULL);
+		KEnvironment::objectArrayType = typeTree->add(KT_OBJECT, 1, NULL);
 		KEnvironment::rawType = typeTree->add(KT_RAW, 0, NULL);
 	
 		KEnvironment::nullType = new TypeDef; // nothing special, just a unique reference
@@ -241,6 +246,8 @@ void KEnvironment::finalize(void)
 	DELETE_IF_NOT_NULL(KEnvironment::catchStack);
 	DELETE_IF_NOT_NULL(KEnvironment::traceDeque);
 	DELETE_IF_NOT_NULL(KEnvironment::gc);
+
+	ADELETE_IF_NOT_NULL(KEnvironment::currentWorkingDirectory);
 	ADELETE_IF_NOT_NULL(KEnvironment::systemLibPath);
 
 	KEnvironment::isInitialized = false;
@@ -251,29 +258,29 @@ void KEnvironment::finalize(void)
 //protected static
 void KEnvironment::initSystemLibPath(void)
 {
+	KEnvironment::currentWorkingDirectory = krt_getcwd();
+
 #ifdef ISWIN
 	{
-		LPSTR buffer = (LPSTR)malloc(1024 * sizeof(CHAR));
-		DWORD result = GetModuleFileNameA(NULL, buffer, 1024);
-		if (result == ERROR_INSUFFICIENT_BUFFER)
-		{
-			buffer[1023] = 0;
-		}
+		char *buffer = new char[512];
+		DWORD result = GetModuleFileNameA(NULL, buffer, 512);
+		if (!result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+			buffer[511] = 0;
 
-		CHAR * lastSlash = strrchr(buffer, '\\');
+		char *lastSlash = strrchr(buffer, '\\');
 		knuint_t len = lastSlash - buffer + 1; //we will take the slash too
 
-		kchar_t *s = new kchar_t[len + 1];
-		for (knuint_t i = 0; i < len; ++i)
-			s[i] = buffer[i];
-		s[len] = 0;
+		char *s = new char[len + 1];
+		memcpy(s, buffer, len);
+		s[len] = '\0';
+
 		delete []buffer;
 
 		KEnvironment::systemLibPath = s;
 	}
 #else
 	{
-		char *buffer = (char *)malloc(1024 * sizeof(char));
+		char *buffer = new char[1024];
 		ssize_t _len = readlink("/proc/self/exe", buffer, 1023);
 		if (_len != -1)
 			buffer[_len] = 0;
@@ -283,10 +290,10 @@ void KEnvironment::initSystemLibPath(void)
 		char * lastSlash = strrchr(buffer, '/');
 		knuint_t len = lastSlash - buffer + 1;
 
-		kchar_t *s = new kchar_t[len + 1];
-		for (knuint_t i = 0; i < len; ++i)
-			s[i] = buffer[i];
-		s[len] = 0;
+		char *s = new char[len + 1];
+		memcpy(s, buffer, len);
+		s[len] = '\0';
+
 		delete []buffer;
 
 		KEnvironment::systemLibPath = s;
@@ -297,13 +304,19 @@ void KEnvironment::initSystemLibPath(void)
 //protected static
 void KEnvironment::initCorLib(void)
 {
-	ModuleLoader *corlibLoader = KEnvironment::createModuleLoader((KMODULEATTRIBUTES)(KMODA_NATIVE | KMODA_SYSTEM),
-		KEnvironment::systemLibPath, KCORLIB_NAME);
+	const char *fullpath = KEnvironment::getModuleFullPath(KCORLIB_NAME);
+	if (!fullpath)
+	{
+		// corlib not found => panic exit
+		fprintf(stderr, "Cannot load %s. Installation might be corrupted.\n", KCORLIB_NAME);
+		exit(1);
+	}
 
+	ModuleLoader *corlibLoader = KEnvironment::createModuleLoader(KCORLIB_NAME, true);
 	if (!corlibLoader->load())
 	{
 		// corlib not found => panic exit
-		fwprintf(stderr, L"Cannot load %s. Installation might be corrupted.\n", KCORLIB_NAME);
+		fprintf(stderr, "Cannot load %s. Installation might be corrupted.\n", KCORLIB_NAME);
 		exit(1);
 	}
 
@@ -388,6 +401,133 @@ void KEnvironment::initExceptions(void)
 //===================================================
 
 //protected static
+KRESULT KEnvironment::initStatic(ModuleDef *module)
+{
+	kuint_t count, i;
+
+	count = module->moduleCount;
+	for (i = 0; i <count; ++i)
+		if (KEnvironment::initStatic(module->moduleList[i]) != KRESULT_OK)
+			return KRESULT_ERR;
+
+	struct StaticInfo
+	{
+		KObject  *fields;
+		kuint_t   length;
+	};
+	std::vector<StaticInfo> staticFieldList;
+
+	count = module->classCount;
+	for (i = 0; i < count; ++i)
+	{
+		ClassDef *cls = module->classList[i];
+		if (!module->extClassFlags[i])
+		{
+			StaticInfo si;
+			kuint_t fieldCount = cls->sFieldCount;
+			si.fields = GC_ALLOC(fieldCount);
+			si.length = fieldCount;
+
+			staticFieldList.push_back(si);
+
+			FieldDef **fieldList = cls->sFieldList;
+			for (kuint_t j = 0; j < fieldCount; ++j)
+				INIT_DEFAULT_VALUE(si.fields[j], fieldList[i]->declType);
+		}
+	}
+
+	count = staticFieldList.size();
+	KObject *staticData = GC_ALLOC(count);
+	GC_REGISTER(staticData);
+
+	for (i = 0; i < count; ++i)
+	{
+		StaticInfo &si = staticFieldList[i];
+		KObject &obj = staticData[i];
+		obj.vObj = si.fields;
+		obj.length = si.length;
+		obj.type = KEnvironment::objectArrayType;
+	}
+
+	module->staticData = staticData;
+
+	return KRESULT_OK;
+}
+
+//protected static
+KRESULT KEnvironment::invokeStaticCtor(ModuleDef *module)
+{
+	kuint_t count, i;
+
+	count = module->moduleCount;
+	for (i = 0; i <count; ++i)
+		if (KEnvironment::invokeStaticCtor(module->moduleList[i]) != KRESULT_OK)
+			return KRESULT_ERR;
+
+	count = module->classCount;
+	for (i = 0; i < count; ++i)
+	{
+		ClassDef *cls = module->classList[i];
+		if (!module->extClassFlags[i])
+			if (cls->cctor)
+				if (KEnvironment::invoke(cls->cctor) != KRESULT_OK)
+					return KRESULT_ERR;
+	}
+
+	return KRESULT_OK;
+}
+
+//public static
+KRESULT KEnvironment::run(kuint_t argc, kstring_t *argv)
+{
+	KEnvironment::running = true;
+	KEnvironment::hasException = false;
+
+	KEnvironment::stackPointer = 0;
+	
+	while (KEnvironment::callStack->size())
+		KEnvironment::callStack->pop();
+
+	while (KEnvironment::catchStack->size())
+		KEnvironment::catchStack->pop();
+
+	KEnvironment::traceDeque->clear();
+
+	ModuleDef *mdl = KEnvironment::rootModule->getModule();
+
+	if (KEnvironment::initStatic(mdl) != KRESULT_OK)
+		return KRESULT_ERR;
+
+	if (KEnvironment::invokeStaticCtor(mdl) != KRESULT_OK)
+		return KRESULT_ERR;
+
+
+	if (mdl->entryMethod->paramCount != 0)
+	{
+		KObject *args = GC_ALLOC(argc);
+		for (kuint_t i = 0; i < argc; ++i)
+			args[i].setString(argv[i], wcslen(argv[i]));
+		KObject objArgs;
+		objArgs.type = KEnvironment::createType(KT_STRING, 1);
+		objArgs.vObj = args;
+		objArgs.length = argc;
+		KEnvironment::stackPush(objArgs);
+	}
+
+	if (KEnvironment::invoke(mdl->entryMethod) != KRESULT_OK)
+		return KRESULT_ERR;
+
+	return KRESULT_OK;
+}
+
+
+//public static
+void KEnvironment::setRootModule(ModuleLoader *moduleLoader)
+{
+	KEnvironment::rootModule = moduleLoader;
+}
+
+//protected static
 KRESULT KEnvironment::execute(void)
 {
 	while (KEnvironment::running)
@@ -449,23 +589,107 @@ KRESULT KEnvironment::execute(void)
 //===================================================
 
 //public static
-ModuleLoader * KEnvironment::createModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename)
+const char * KEnvironment::getModuleFullPath(const char *baseDir, const char *path)
+{
+	if (strchr(path, PATH_SLASH))
+	{
+		// relative path
+#ifdef ISWIN
+		char *buffer = new char[512];
+		DWORD res = GetFullPathNameA(path, 512, buffer, NULL);
+		if (res > 512)
+		{
+			delete []buffer;
+			buffer = new char[res];
+			res = GetFullPathNameA(path, res, buffer, NULL);
+			if (!res)
+			{
+				delete []buffer;
+				return NULL;
+			}
+		}
+
+		// check if file exists
+		FILE *fp = fopen(buffer, "rb");
+		if (!fp)
+		{
+			delete []buffer;
+			return NULL;
+		}
+		fclose(fp);
+
+		return buffer;
+
+#else
+		char *buffer = new char[PATH_MAX];
+		char *fullpath = realpath(path, buffer);
+		if (!fullpath)
+		{
+			delete []buffer;
+			return NULL;
+		}
+
+		return buffer;
+#endif
+	}
+	else
+	{
+		// filename only
+
+		// try looking in base directory
+		const char *fullpath = krt_combpath(baseDir, path);
+		
+		FILE *fp = fopen(fullpath, "rb");
+		if (fp)
+		{
+			fclose(fp);
+			return fullpath;
+		}
+		else
+		{
+			delete []fullpath;
+
+			// try looking in the framework directory
+			fullpath = krt_combpath(KEnvironment::systemLibPath, path);
+
+			fp = fopen(fullpath, "rb");
+			if (fp)
+			{
+				fclose(fp);
+				return fullpath;
+			}
+			else
+			{
+				delete []fullpath;
+				return NULL;
+			}
+		}
+	}
+}
+
+//public static
+const char * KEnvironment::getModuleFullPath(const char *path)
+{
+	return KEnvironment::getModuleFullPath(KEnvironment::currentWorkingDirectory, path);
+}
+
+//public static
+ModuleLoader * KEnvironment::createModuleLoader(const char *fullpath, bool isNative)
 {
 	for (std::set<ModuleLoader *>::iterator it = KEnvironment::loadedModules->begin();
 		it != KEnvironment::loadedModules->end(); ++it)
 	{
-		if (krt_strequ((*it)->getFilename(), filename)
-			&& ((attrs & KMODA_USER) ? krt_strequ((*it)->getImporterPath(), importerPath) : true))
+		if (krt_pathequ((*it)->getFullPath(), fullpath))
 			return (*it);
 	}
 
-	ModuleLoader *loader = ModuleLoader::create(attrs, importerPath, filename);
+	ModuleLoader *loader = ModuleLoader::create(fullpath, isNative);
 	KEnvironment::loadedModules->insert(loader);
 	return loader;
 }
 
 //public static
-kstring_t KEnvironment::getSystemLibPath(void)
+const char * KEnvironment::getSystemLibPath(void)
 {
 	return KEnvironment::systemLibPath;
 }

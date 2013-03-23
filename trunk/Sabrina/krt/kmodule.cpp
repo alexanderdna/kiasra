@@ -71,20 +71,17 @@ const char * getFullyQualifiedName(kstring_t className, kstring_t memberName)
 //=============================================================
 
 //public static
-ModuleLoader * ModuleLoader::create(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename)
+ModuleLoader * ModuleLoader::create(const char *fullpath, bool isNative)
 {
-	kstring_t _dirPath = krt_getdirpath(importerPath);
-	kstring_t _importerPath = krt_strdup(importerPath);
-	kstring_t _fullPath = krt_strcat(_dirPath, filename);
-	kstring_t _filename = krt_getfilename(filename);
+	const char *_fullpath = krt_pathdup(fullpath);
+	const char *_dirpath  = krt_getdirpath(fullpath);
+	const char *_filename = krt_getfilename(fullpath);
 
-	delete []_dirPath;
-
-	ModuleLoader *loader = new ModuleLoader(attrs, _importerPath, _fullPath, _filename);
+	ModuleLoader *loader = new ModuleLoader(_fullpath, _dirpath, _filename, isNative);
 	if (loader == NULL)
 	{
-		delete []_importerPath;
-		delete []_fullPath;
+		delete []_fullpath;
+		delete []_dirpath;
 		delete []_filename;
 	}
 
@@ -92,14 +89,16 @@ ModuleLoader * ModuleLoader::create(KMODULEATTRIBUTES attrs, kstring_t importerP
 }
 
 //protected
-ModuleLoader::ModuleLoader(KMODULEATTRIBUTES attrs,  kstring_t importerPath, kstring_t fullPath, kstring_t filename)
+ModuleLoader::ModuleLoader(const char *fullpath, const char *dirpath, const char *filename, bool isNative)
 	: moduleLoaders(NULL), err(ModuleLoadError::OK), attrs(attrs),
-	importerPath(importerPath), fullPath(fullPath), filename(filename),
+	fullpath(fullpath), dirpath(dirpath), filename(filename),
 	hash(hash), libHandle(NULL),
 	stream(NULL), pos(0), isCleaned(false),
 	loadPhase(ModuleLoadPhase::Initial), module(NULL),
 	code(NULL)
 {
+	this->attrs = isNative ? KMODA_NATIVE : KMODA_KIASRA;
+
 	this->stringTable.rows = NULL;
 	this->stringTable.lengths = NULL;
 	this->typeTable.rows = NULL;
@@ -142,9 +141,10 @@ bool ModuleLoader::open(void)
 	if (this->loadPhase >= ModuleLoadPhase::Opened)
 		return true;
 
-	const char *pathA = krt_wcstostr(this->fullPath);
+	const char *pathA = this->fullpath;
 
 	FILE *fp;
+	size_t result;
 
 	unsigned char *stream;
 	knuint_t streamLength;
@@ -153,7 +153,6 @@ bool ModuleLoader::open(void)
 
 	if (!fp)
 	{
-		delete []pathA;
 		this->err = ModuleLoadError::CannotOpen;
 		return false;
 	}
@@ -166,12 +165,10 @@ bool ModuleLoader::open(void)
 		stream = new unsigned char[streamLength];
 
 		fseek(fp, 0, SEEK_SET);
-		fread(stream, sizeof(unsigned char), streamLength, fp);
+		result = fread(stream, sizeof(unsigned char), streamLength, fp);
 
 		fclose(fp);
 		fp = NULL;
-
-		delete []pathA;
 	}
 	else
 	{
@@ -180,14 +177,13 @@ bool ModuleLoader::open(void)
 		fseek(fp, -4, SEEK_END);
 
 		unsigned char rmagic[4] = { };
-		fread(rmagic, sizeof(unsigned char), sizeof(rmagic), fp);
+		result = fread(rmagic, sizeof(unsigned char), sizeof(rmagic), fp);
 
 		if (rmagic[0] != 0x0A
 		|| rmagic[1] != 0xCE
 		|| rmagic[2] != 0xCA
 		|| rmagic[3] != 0xDE)
 		{
-			delete []pathA;
 			this->err = ModuleLoadError::InvalidLib;
 			return false;
 		}
@@ -198,12 +194,11 @@ bool ModuleLoader::open(void)
 		fseek(fp, -4 - (long)sizeof(kuint_t), SEEK_END);
 
 		kuint_t offset;
-		fread(&offset, sizeof(kuint_t), 1, fp);
+		result = fread(&offset, sizeof(kuint_t), 1, fp);
 
 		kuint_t dataSize = fileSize - offset - sizeof(rmagic) - sizeof(kuint_t);
 		if (dataSize == 0)
 		{
-			delete []pathA;
 			this->err = ModuleLoadError::InvalidLib;
 			return false;
 		}
@@ -211,7 +206,7 @@ bool ModuleLoader::open(void)
 		stream = new unsigned char[dataSize];
 
 		fseek(fp, offset, SEEK_SET);
-		fread(stream, sizeof(unsigned char), dataSize, fp);
+		result = fread(stream, sizeof(unsigned char), dataSize, fp);
 
 		fclose(fp);
 		fp = NULL;
@@ -223,7 +218,6 @@ bool ModuleLoader::open(void)
 
 		if (!this->libHandle)
 		{
-			delete []pathA;
 			this->err = ModuleLoadError::CannotLoadLib;
 			return false;
 		}
@@ -232,13 +226,10 @@ bool ModuleLoader::open(void)
 
 		if (!this->libHandle)
 		{
-			delete []pathA;
 			this->err = ModuleLoadError::CannotLoadLib;
 			return false;
 		}
 #endif
-		
-		delete []pathA;
 	}
 
 	this->stream = stream;
@@ -296,7 +287,7 @@ bool ModuleLoader::bake(void)
 	this->module = module;
 
 	module->attrs = this->attrs;
-	module->path = this->filename;
+	module->path = krt_strtowcs(this->filename);
 
 	// transfer code stream
 
@@ -343,13 +334,27 @@ bool ModuleLoader::bake(void)
 
 	for (kuint_t i = 0; i < moduleCount; ++i)
 	{
-		ModuleLoader *moduleLoader = KEnvironment::createModuleLoader((KMODULEATTRIBUTES)metaModuleRows[i].attrs,
-			this->fullPath, strings[metaModuleRows[i].path]);
+		const char *filename = krt_wcstostr(strings[metaModuleRows[i].path]);
 
+		const char *fullpath = KEnvironment::getModuleFullPath(this->dirpath, filename);
+		if (!fullpath)
+		{
+			delete []filename;
+			this->err = ModuleLoadError::CannotLoadImportedModule;
+			return false;
+		}
+
+		const char *ext = krt_getfileext(filename);
+		bool isNative = ext ? (!krt_pathequ(ext, "km")) : true;
+
+		ModuleLoader *moduleLoader = KEnvironment::createModuleLoader(fullpath, isNative);
 		if (moduleLoader->loadPhase < ModuleLoadPhase::Baked)
 		{
 			if (moduleLoader->load() == false)
 			{
+				delete []filename;
+				delete moduleLoader;
+
 				this->err = ModuleLoadError::CannotLoadImportedModule;
 				return false;
 			}
@@ -463,6 +468,7 @@ bool ModuleLoader::bake(void)
 	memset(allClassList, 0, sizeof(ClassDef *) * allClassCount);
 	memset(extClassFlags, 0, sizeof(bool) * allClassCount);
 
+	ktoken16_t internalClassIndex = 0;
 	for (kuint_t i = 0; i < allClassCount; ++i)
 	{
 		const MetaClassDef &classRow = classRows[i];
@@ -484,6 +490,7 @@ bool ModuleLoader::bake(void)
 			cls->attrs = classRow.attrs;
 			cls->name = strings[classRow.name];
 			cls->module = module;
+			cls->localIndex = internalClassIndex++;
 
 			kuint_t fieldCount = 0;
 			kuint_t iFieldCount = 0, sFieldCount = 0;
@@ -645,6 +652,7 @@ bool ModuleLoader::bake(void)
 	memset(allDelegateList, 0, sizeof(DelegateDef *) * allDelegateCount);
 	memset(extDelegateFlags, 0, sizeof(bool) * allDelegateCount);
 
+	ktoken16_t internalDelegateIndex = 0;
 	for (kushort_t i = 0; i < allDelegateCount; ++i)
 	{
 		MetaDelegateDef &delegateRow = delegateRows[i];
@@ -665,6 +673,7 @@ bool ModuleLoader::bake(void)
 			del->size = sizeof(DelegateDef);
 			del->attrs = delegateRow.attrs;
 			del->name = strings[delegateRow.name];
+			del->localIndex = internalDelegateIndex++;
 
 			kuint_t paramCount = 0;
 			
@@ -807,17 +816,17 @@ ModuleDef * ModuleLoader::getModule(void)
 	return this->module;
 }
 
-kstring_t ModuleLoader::getImporterPath(void)
+const char * ModuleLoader::getFullPath(void)
 {
-	return this->importerPath;
+	return this->fullpath;
 }
 
-kstring_t ModuleLoader::getFullPath(void)
+const char * ModuleLoader::getDirPath(void)
 {
-	return this->fullPath;
+	return this->dirpath;
 }
 
-kstring_t ModuleLoader::getFilename(void)
+const char * ModuleLoader::getFilename(void)
 {
 	return this->filename;
 }
@@ -838,11 +847,10 @@ void ModuleLoader::onDispose(void)
 
 void ModuleLoader::clean()
 {
-	ADELETE_IF_NOT_NULL(this->importerPath);
-	ADELETE_IF_NOT_NULL(this->fullPath);
+	ADELETE_IF_NOT_NULL(this->fullpath);
+	ADELETE_IF_NOT_NULL(this->dirpath);
 	ADELETE_IF_NOT_NULL(this->filename);
 
-	ADELETE_IF_NOT_NULL(this->stringTable.lengths);
 	ADELETE_IF_NOT_NULL(this->typeTable.rows);
 	ADELETE_IF_NOT_NULL(this->moduleTable.rows);
 	ADELETE_IF_NOT_NULL(this->classTable.rows);
@@ -857,20 +865,22 @@ void ModuleLoader::clean()
 
 	ADELETE_IF_NOT_NULL(this->moduleLoaders);
 
-	if (this->stringTable.rows && this->loadPhase < ModuleLoadPhase::Baked)
+	if (this->stringTable.rows)
 	{
-		kuint_t count = this->stringTable.rowCount;
-		kstring_t *rows = this->stringTable.rows;
-		for (kuint_t i = 0; i < count; ++i)
-			ADELETE_IF_NOT_NULL(rows[i]);
+		if (this->loadPhase < ModuleLoadPhase::Baked)
+		{
+			kuint_t count = this->stringTable.rowCount;
+			kstring_t *rows = this->stringTable.rows;
+			for (kuint_t i = 0; i < count; ++i)
+				ADELETE_IF_NOT_NULL(rows[i]);
+		}
 
-		delete []rows;
+		delete []this->stringTable.rows;
 		delete []this->stringTable.lengths;
 
 		this->stringTable.rows = NULL;
 		this->stringTable.lengths = NULL;
 	}
-		ADELETE_IF_NOT_NULL(this->stringTable.rows);
 
 	if (this->code && this->loadPhase < ModuleLoadPhase::Baked)
 	{
@@ -1324,7 +1334,7 @@ ModuleDef::ModuleDef(void)
 	code(NULL),
 	staticData(NULL),
 	entryMethod(NULL),
-	libHandle(NULL)
+	libHandle(NULL), path(NULL)
 {
 }
 
@@ -1392,6 +1402,7 @@ ModuleDef::~ModuleDef(void)
 	ADELETE_IF_NOT_NULL(this->dparamList);
 	ADELETE_IF_NOT_NULL(this->localList);
 	ADELETE_IF_NOT_NULL(this->code);
+	ADELETE_IF_NOT_NULL(this->path);
 
 	this->entryMethod = NULL;
 

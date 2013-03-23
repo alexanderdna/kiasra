@@ -47,7 +47,8 @@ protected:
 	static bool isInitialized;
 	static bool isForExecution;
 
-	static kstring_t systemLibPath;
+	static const char *currentWorkingDirectory;
+	static const char *systemLibPath;
 
 	static EXECUTOR *executors[256];
 	static EXECUTOR *defaultExecutors[];
@@ -58,6 +59,7 @@ protected:
 	static const TypeDef  *voidType;
 	static const TypeDef  *arrayType;
 	static const TypeDef  *objectType;
+	static const TypeDef  *objectArrayType;
 	static const TypeDef  *rawType;
 	static const TypeDef  *excType;
 	static const TypeDef  *nullType;	// type for null value (Singleton)
@@ -97,13 +99,22 @@ private:
 	KEnvironment(void) { }
 	~KEnvironment(void) { }
 
+protected:
+	static KRESULT initStatic(ModuleDef *module);
+	static KRESULT invokeStaticCtor(ModuleDef *module);
+
 public:
 	static void initialize(bool isForExecution);
 	static void finalize(void);
+	
+	static const char * getModuleFullPath(const char *baseDir, const char *path);
+	static const char * getModuleFullPath(const char *path);
+	static ModuleLoader * createModuleLoader(const char *fullpath, bool isNative);
 
-	static ModuleLoader * createModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename);
+	static void setRootModule(ModuleLoader *moduleLoader);
+	static KRESULT run(kuint_t argc, kstring_t *argv);
 
-	static kstring_t getSystemLibPath(void);
+	static const char * getSystemLibPath(void);
 
 	// Meta
 

@@ -36,26 +36,20 @@ KCS_API void KcsDestroyEnvironment(void)
 	lastCompileError = KCSE_NO_ERROR;
 }
 
-KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule)
+KCS_API KRESULT KcsLoadModule(const char *szPath, int isNative, HKMODULE *pHKModule)
 {
 	ModuleLoader *loader;
 
-#ifdef ISWIN
-	const kchar_t *lastSlash = wcsrchr(szFullPath, '\\');
-#else
-	const kchar_t *lastSlash = wcsrchr(szFullPath, '/');
-#endif
+	const char *fullpath = KEnvironment::getModuleFullPath(szPath);
+	if (!fullpath)
+	{
+		*pHKModule = NULL;
+		lastCompileError = KCSE_CANNOT_LOAD_MODULE;
+		return KRESULT_ERR;
+	}
 
-	if (attrs & KMODA_SYSTEM)
-	{
-		loader = KEnvironment::createModuleLoader(attrs, KEnvironment::getSystemLibPath(), lastSlash ? lastSlash : szFullPath);
-	}
-	else
-	{
-		kstring_t dirPath = krt_getdirpath(szFullPath);
-		loader = KEnvironment::createModuleLoader(attrs, dirPath, lastSlash ? lastSlash : szFullPath);
-		delete []dirPath;
-	}
+	loader = KEnvironment::createModuleLoader(fullpath, isNative != 0);
+	delete []fullpath;
 
 	if (!loader->load())
 	{

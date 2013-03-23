@@ -23,21 +23,24 @@ KRT_API void KrtDestroyEnvironment(void)
 }
 
 // Loads a module from the specified path
-KRT_API KRESULT KrtLoadModule(KMODULEATTRIBUTES attrs, kstring_t path, HKMODULE *pHKModule)
+KRT_API KRESULT KrtLoadModule(const char *szPath, int isNative)
 {
-	ModuleLoader *loader = KEnvironment::createModuleLoader(attrs, L"", path);
-	if (!loader->load())
-	{
-		*pHKModule = NULL;
+	const char *fullpath = KEnvironment::getModuleFullPath(szPath);
+	if (!fullpath)
 		return KRESULT_ERR;
-	}
 
-	*pHKModule = loader->getModule();
+	ModuleLoader *loader = KEnvironment::createModuleLoader(fullpath, isNative != 0);
+	delete []fullpath;
+
+	if (!loader->load())
+		return KRESULT_ERR;
+
+	KEnvironment::setRootModule(loader);
 	return KRESULT_OK;
 }
 
 // Runs a loaded module
 KRT_API KRESULT KrtRunModule(kuint_t argc, kstring_t *argv)
 {
-	return KRESULT_OK;
+	return KEnvironment::run(argc, argv);
 }

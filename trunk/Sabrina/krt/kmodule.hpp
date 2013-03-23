@@ -111,9 +111,9 @@ protected:
 
 	KMODULEATTRIBUTES attrs;
 
-	kstring_t importerPath;
-	kstring_t fullPath;
-	kstring_t filename;
+	const char *fullpath;
+	const char *dirpath;
+	const char *filename;
 
 	ModuleLoader **moduleLoaders;
 
@@ -145,10 +145,10 @@ protected:
 	ModuleDef *module;
 
 public:
-	static ModuleLoader * create(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t filename);
+	static ModuleLoader * create(const char *fullpath, bool isNative);
 
 protected:
-	ModuleLoader(KMODULEATTRIBUTES attrs, kstring_t importerPath, kstring_t fullPath, kstring_t filename);
+	ModuleLoader(const char *fullpath, const char *dirpath, const char *filename, bool isNative);
 public:
 	~ModuleLoader(void);
 
@@ -157,9 +157,9 @@ public:
 
 	ModuleDef * getModule(void);
 
-	kstring_t getImporterPath(void);
-	kstring_t getFullPath(void);
-	kstring_t getFilename(void);
+	const char * getFullPath(void);
+	const char * getDirPath(void);
+	const char * getFilename(void);
 
 	ModuleLoadError getError(void);
 
