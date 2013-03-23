@@ -725,6 +725,8 @@ bool ModuleBuilder::setEntryPoint(MethodBuilder *method)
 ModuleBuilder::ModuleBuilder(bool isNative, KMODULETYPES type)
 	: baked(false), native(isNative), type(type), entryPoint(NULL), codeSize(0), entryClassToken(0), entryMethodToken(0)
 {
+	this->attrs = isNative ? KMODA_NATIVE : KMODA_KIASRA;
+
 	this->importedModuleMap = new std::map<ModuleDef *, kushort_t>;
 	this->importedClassMap = new std::map<ClassDef *, kushort_t>;
 	this->importedDelegateMap = new std::map<DelegateDef *, kushort_t>;

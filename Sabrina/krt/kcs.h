@@ -101,7 +101,7 @@ KCS_API KRESULT KcsCreateEnvironment(void);
 KCS_API void KcsDestroyEnvironment(void);
 
 /* Loads an existing module. */
-KCS_API KRESULT KcsLoadModule(KMODULEATTRIBUTES attrs, kstring_t szFullPath, HKMODULE *pHKModule);
+KCS_API KRESULT KcsLoadModule(const char *szPath, int isNative, HKMODULE *pHKModule);
 
 /*===================================================*/
 

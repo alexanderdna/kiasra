@@ -37,9 +37,11 @@
 
 #if defined(_WIN32) || defined(_MSC_VER)
 	#define ISWIN
-	#define KCORLIB_NAME	L"kcorlib.dll"
+	#define KCORLIB_NAME	"kcorlib.dll"
+	#define PATH_SLASH		'\\'
 #else
-	#define KCORLIB_NAME	L"kcorlib.so"
+	#define KCORLIB_NAME	"kcorlib.so"
+	#define PATH_SLASH		'/'
 #endif
 
 #define DELETE_IF_NOT_NULL(var) if (var) { delete var; var = NULL; }
