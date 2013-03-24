@@ -399,17 +399,20 @@ void ModuleBuilder::bakeBinary(void)
 		// version
 		0x01, 0x00,
 		// type
-		(unsigned char)((this->type == KMOD_WINDOW) ? 0x00 : (this->type == KMOD_CONSOLE) ? 0x01 : 0x02),
+		(unsigned char)this->type,
 		// debug
 		0x00,
 		// hash
 		0x00, 0x00, 0x00, 0x00,
 		// entry
-		(unsigned char)((this->entryClassToken & 0xFF00) >> 8),
-		(unsigned char)(this->entryClassToken & 0x00FF),
-		(unsigned char)((this->entryMethodToken & 0xFF00) >> 8),
-		(unsigned char)(this->entryMethodToken & 0x00FF)
+		0x00, 0x00, 0x00, 0x00
 	};
+
+	// hash
+	*(uint32_t *)(header + 8) = 0; //not used just yet
+	// entry point
+	*(ktoken16_t *)(header + 12) = this->entryClassToken;
+	*(ktoken16_t *)(header + 14) = this->entryMethodToken;
 
 	this->binarySize += sizeof(header) + this->codeSize;
 
